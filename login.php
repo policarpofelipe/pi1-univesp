@@ -16,7 +16,7 @@ $erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $email = trim($_POST['email'] ?? '');
+    $email = mb_strtolower(trim($_POST['email'] ?? ''));
     $senha = $_POST['senha'] ?? '';
 
     if ($email === '' || $senha === '') {
