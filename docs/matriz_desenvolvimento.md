@@ -1,12 +1,12 @@
 1. Fundação do sistema
 Esses vêm primeiro porque todo o resto depende deles.
-conexao.php
-auth.php
-componentes.php
-menu.php
-index.php
-login.php
-logout.php
+✅ conexao.php
+✅ auth.php
+✅ componentes.php
+✅ menu.php
+✅ index.php
+✅ login.php
+✅ logout.php
 painel.php
 
 2. Cadastros-base de peças
