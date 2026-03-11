@@ -137,11 +137,11 @@ function render_item_menu(array $item, string $paginaAtual, bool $open = true, b
     $isAtivo = (arquivo_url($item['url']) === $paginaAtual);
 
     $classeFundo = $isAtivo
-        ? 'bg-gradient-to-r from-emerald-500/20 to-green-600/20 border-l-4 border-emerald-500'
-        : 'hover:bg-slate-800/60';
+        ? 'bg-gradient-to-r from-blue-50 to-sky-50 border-l-4 border-blue-600'
+        : 'hover:bg-gray-100';
 
-    $classeIcone = $isAtivo ? 'text-emerald-400' : 'text-slate-300';
-    $classeTexto = $isAtivo ? 'text-white font-medium' : 'text-slate-300';
+    $classeIcone = $isAtivo ? 'text-blue-600' : 'text-gray-500';
+    $classeTexto = $isAtivo ? 'text-gray-900 font-medium' : 'text-gray-700';
     $paddingY = $sub ? 'py-2' : 'py-3';
     $marginLeft = $sub ? 'ml-3' : 'ml-4';
     $iconSize = $sub ? 'h-4 w-4' : 'h-5 w-5';
@@ -150,18 +150,18 @@ function render_item_menu(array $item, string $paginaAtual, bool $open = true, b
     ?>
     <a
         href="<?= htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8') ?>"
-        class="group flex w-full items-center justify-start rounded-lg px-4 <?= $paddingY ?> transition-all duration-300 <?= $classeFundo ?>"
+        class="group flex w-full items-center justify-start rounded-lg px-4 <?= $paddingY ?> transition-all duration-200 <?= $classeFundo ?>"
         :title="!open ? '<?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>' : ''"
     >
         <svg xmlns="http://www.w3.org/2000/svg"
-             class="<?= $iconSize ?> flex-shrink-0 <?= $classeIcone ?> transition-colors group-hover:text-emerald-300"
+             class="<?= $iconSize ?> flex-shrink-0 <?= $classeIcone ?> transition-colors group-hover:text-blue-600"
              fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="<?= htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8') ?>" />
         </svg>
 
         <?php if ($open): ?>
-            <span class="<?= $marginLeft ?> whitespace-nowrap text-left <?= $classeTexto ?> <?= $textSize ?> transition-colors group-hover:text-white">
+            <span class="<?= $marginLeft ?> whitespace-nowrap text-left <?= $classeTexto ?> <?= $textSize ?> transition-colors group-hover:text-gray-900">
                 <?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>
             </span>
         <?php endif; ?>
@@ -173,20 +173,20 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
 {
     $isAtivo = submenu_ativo($itens, $paginaAtual);
     $classeFundo = $isAtivo
-        ? 'bg-gradient-to-r from-emerald-500/20 to-green-600/20 border-l-4 border-emerald-500'
-        : 'hover:bg-slate-800/60';
+        ? 'bg-gradient-to-r from-blue-50 to-sky-50 border-l-4 border-blue-600'
+        : 'hover:bg-gray-100';
 
-    $classeIcone = $isAtivo ? 'text-emerald-400' : 'text-slate-300';
-    $classeTexto = $isAtivo ? 'text-white font-medium' : 'text-slate-300';
+    $classeIcone = $isAtivo ? 'text-blue-600' : 'text-gray-500';
+    $classeTexto = $isAtivo ? 'text-gray-900 font-medium' : 'text-gray-700';
     ?>
     <div class="w-full">
         <button
             @click="if (!open) { open = true }; <?= $stateName ?> = !<?= $stateName ?>"
-            class="group flex w-full items-center justify-start rounded-lg px-4 py-3 transition-all duration-300 <?= $classeFundo ?>"
+            class="group flex w-full items-center justify-start rounded-lg px-4 py-3 transition-all duration-200 <?= $classeFundo ?>"
             :title="!open ? '<?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?>' : ''"
         >
             <svg xmlns="http://www.w3.org/2000/svg"
-                 class="h-5 w-5 flex-shrink-0 <?= $classeIcone ?> transition-colors group-hover:text-emerald-300"
+                 class="h-5 w-5 flex-shrink-0 <?= $classeIcone ?> transition-colors group-hover:text-blue-600"
                  fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="<?= htmlspecialchars($icone, ENT_QUOTES, 'UTF-8') ?>" />
@@ -194,7 +194,7 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
 
             <span
                 x-show="open"
-                class="ml-4 whitespace-nowrap text-left <?= $classeTexto ?> transition-colors group-hover:text-white"
+                class="ml-4 whitespace-nowrap text-left <?= $classeTexto ?> transition-colors group-hover:text-gray-900"
             >
                 <?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?>
             </span>
@@ -233,59 +233,44 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
 <aside
     x-data="{
         open: false,
-        hoverTimer: null,
         cadastrosOpen: <?= $isCadastrosAtivo ? 'true' : 'false' ?>,
         catalogoOpen: <?= $isCatalogoAtivo ? 'true' : 'false' ?>,
         estoqueOpen: <?= $isEstoqueAtivo ? 'true' : 'false' ?>,
         relatoriosOpen: <?= $isRelatoriosAtivo ? 'true' : 'false' ?>,
-        configuracoesOpen: <?= $isConfiguracoesAtivo ? 'true' : 'false' ?>,
-
-        startHover() {
-            this.hoverTimer = setTimeout(() => { this.open = true }, 250);
-        },
-        clearHover() {
-            clearTimeout(this.hoverTimer);
-        },
-        handleMouseLeave() {
-            this.clearHover();
-            setTimeout(() => {
-                if (!this.open) return;
-                if (!this.cadastrosOpen && !this.catalogoOpen && !this.estoqueOpen && !this.relatoriosOpen && !this.configuracoesOpen) {
-                    this.open = false;
-                }
-            }, 180);
-        }
+        configuracoesOpen: <?= $isConfiguracoesAtivo ? 'true' : 'false' ?>
     }"
-    @mouseenter="startHover()"
-    @mouseleave="handleMouseLeave()"
-    @mousemove="clearHover(); startHover()"
-    class="relative hidden h-screen flex-col border-r border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-black text-white shadow-2xl transition-all duration-300 md:flex"
+    class="relative hidden h-screen flex-col border-r border-gray-200 bg-white text-gray-900 shadow-lg transition-all duration-300 md:flex"
     :class="open ? 'w-72' : 'w-20'"
 >
-    <div class="flex items-center justify-center border-b border-slate-800 px-4 py-4">
+    <div class="flex items-center justify-between border-b border-gray-200 px-4 py-4">
         <button
             @click="open = !open"
-            class="text-2xl font-black tracking-widest transition-all duration-300 focus:outline-none"
+            class="rounded-lg p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             title="Alternar menu"
-            style="font-family: Arial Black, Gadget, sans-serif;"
         >
-            <template x-if="open">
-                <span>[<span class="text-emerald-500">PI1</span> Estoque]</span>
-            </template>
-            <template x-if="!open">
-                <span>[<span class="text-emerald-500">P1</span>]</span>
-            </template>
+            <svg xmlns="http://www.w3.org/2000/svg" 
+                 class="h-6 w-6 text-gray-700" 
+                 fill="none" 
+                 viewBox="0 0 24 24" 
+                 stroke="currentColor">
+                <path stroke-linecap="round" 
+                      stroke-linejoin="round" 
+                      stroke-width="2" 
+                      d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
         </button>
+        
+        <span x-show="open" class="text-lg font-semibold text-gray-800">PI Estoque</span>
     </div>
 
     <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-3
                 [&::-webkit-scrollbar]:w-1
                 [&::-webkit-scrollbar-track]:bg-transparent
                 [&::-webkit-scrollbar-thumb]:rounded-full
-                [&::-webkit-scrollbar-thumb]:bg-slate-700
-                hover:[&::-webkit-scrollbar-thumb]:bg-slate-600
+                [&::-webkit-scrollbar-thumb]:bg-gray-300
+                hover:[&::-webkit-scrollbar-thumb]:bg-gray-400
                 [scrollbar-width]:thin
-                [scrollbar-color]:rgb(51_65_85)_transparent">
+                [scrollbar-color]:rgb(209_213_219)_transparent">
 
         <?php foreach ($menuPrincipal as $item): ?>
             <?php render_item_menu($item, $paginaAtual); ?>
@@ -334,7 +319,7 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
         ?>
     </nav>
 
-    <div class="border-t border-slate-800 px-4 py-4 text-center text-sm text-slate-400">
+    <div class="border-t border-gray-200 px-4 py-4 text-center text-sm text-gray-500">
         <span x-text="open ? 'Projeto Integrador UNIVESP • Grupo 21' : 'PI'"></span>
     </div>
 </aside>
@@ -343,7 +328,7 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
     x-data="{ mobilePanel: null }"
     class="md:hidden"
 >
-    <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-800/80 bg-gradient-to-t from-black via-slate-900 to-slate-900/95 backdrop-blur">
+    <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur shadow-lg">
         <div class="flex items-stretch justify-around py-1">
             <?php
             $itemMobile = $menuPrincipal[0];
@@ -351,15 +336,15 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
             ?>
             <a href="<?= htmlspecialchars($itemMobile['url'], ENT_QUOTES, 'UTF-8') ?>"
                class="flex flex-1 flex-col items-center justify-center py-1">
-                <div class="flex items-center justify-center rounded-full p-1.5 <?= $ativoMobile ? 'border border-emerald-500/60 bg-emerald-500/15' : '' ?>">
+                <div class="flex items-center justify-center rounded-full p-1.5 <?= $ativoMobile ? 'border border-blue-500 bg-blue-50' : '' ?>">
                     <svg xmlns="http://www.w3.org/2000/svg"
-                         class="h-5 w-5 <?= $ativoMobile ? 'text-emerald-400' : 'text-slate-300' ?>"
+                         class="h-5 w-5 <?= $ativoMobile ? 'text-blue-600' : 'text-gray-500' ?>"
                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="<?= htmlspecialchars($itemMobile['icon'], ENT_QUOTES, 'UTF-8') ?>" />
                     </svg>
                 </div>
-                <span class="mt-0.5 text-[11px] leading-none <?= $ativoMobile ? 'text-emerald-400' : 'text-slate-400' ?>">
+                <span class="mt-0.5 text-[11px] leading-none <?= $ativoMobile ? 'text-blue-600' : 'text-gray-500' ?>">
                     <?= htmlspecialchars($itemMobile['label'], ENT_QUOTES, 'UTF-8') ?>
                 </span>
             </a>
@@ -369,20 +354,20 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
                     class="flex flex-1 flex-col items-center justify-center py-1">
                 <div class="flex items-center justify-center rounded-full p-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg"
-                         class="h-5 w-5 text-slate-300"
+                         class="h-5 w-5 text-gray-500"
                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M5 12h14M5 6h14M5 18h14" />
                     </svg>
                 </div>
-                <span class="mt-0.5 text-[11px] leading-none text-slate-400">Mais</span>
+                <span class="mt-0.5 text-[11px] leading-none text-gray-500">Mais</span>
             </button>
         </div>
     </nav>
 
     <div x-show="mobilePanel !== null"
          x-transition.opacity
-         class="fixed inset-0 z-40 bg-black/50"
+         class="fixed inset-0 z-40 bg-gray-900/20 backdrop-blur-sm"
          @click="mobilePanel = null"></div>
 
     <div
@@ -393,13 +378,13 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="translate-y-0"
         x-transition:leave-end="translate-y-full"
-        class="fixed inset-x-0 bottom-0 z-50 flex max-h-[82vh] flex-col rounded-t-2xl border-t border-slate-700 bg-slate-900 shadow-2xl"
+        class="fixed inset-x-0 bottom-0 z-50 flex max-h-[82vh] flex-col rounded-t-2xl border-t border-gray-200 bg-white shadow-2xl"
     >
-        <div class="flex items-center justify-between border-b border-slate-800 px-4 pb-2 pt-3">
-            <h2 class="text-sm font-semibold text-slate-100">Menu</h2>
-            <button type="button" @click="mobilePanel = null" class="rounded-full p-1 hover:bg-slate-800">
+        <div class="flex items-center justify-between border-b border-gray-200 px-4 pb-2 pt-3">
+            <h2 class="text-sm font-semibold text-gray-800">Menu</h2>
+            <button type="button" @click="mobilePanel = null" class="rounded-full p-1 hover:bg-gray-100">
                 <svg xmlns="http://www.w3.org/2000/svg"
-                     class="h-5 w-5 text-slate-300"
+                     class="h-5 w-5 text-gray-500"
                      fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M6 18L18 6M6 6l12 12" />
@@ -411,8 +396,8 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
                     [&::-webkit-scrollbar]:w-1
                     [&::-webkit-scrollbar-track]:bg-transparent
                     [&::-webkit-scrollbar-thumb]:rounded-full
-                    [&::-webkit-scrollbar-thumb]:bg-slate-700
-                    hover:[&::-webkit-scrollbar-thumb]:bg-slate-600">
+                    [&::-webkit-scrollbar-thumb]:bg-gray-300
+                    hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
 
             <?php
             $gruposMobile = [
@@ -426,18 +411,18 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
 
             foreach ($gruposMobile as $tituloGrupo => $itensGrupo):
             ?>
-                <div class="border-t border-slate-800 pt-2 first:border-t-0 first:pt-0">
-                    <div class="mb-1 rounded-xl border border-slate-700/60 bg-slate-800/60 px-3 py-2 text-sm text-slate-200">
+                <div class="border-t border-gray-200 pt-2 first:border-t-0 first:pt-0">
+                    <div class="mb-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                         <?= htmlspecialchars($tituloGrupo, ENT_QUOTES, 'UTF-8') ?>
                     </div>
 
                     <?php foreach ($itensGrupo as $item):
                         $isAtivo = (arquivo_url($item['url']) === $paginaAtual);
                         $clsBG   = $isAtivo
-                            ? 'bg-gradient-to-r from-emerald-500/15 to-green-600/15 border border-emerald-500/50'
-                            : 'bg-slate-800/60 border border-slate-700/60';
-                        $clsText = $isAtivo ? 'text-white' : 'text-slate-200';
-                        $clsIcon = $isAtivo ? 'text-emerald-400' : 'text-slate-300';
+                            ? 'bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-200'
+                            : 'bg-gray-50 border border-gray-200';
+                        $clsText = $isAtivo ? 'text-gray-900' : 'text-gray-700';
+                        $clsIcon = $isAtivo ? 'text-blue-600' : 'text-gray-500';
                     ?>
                         <a href="<?= htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8') ?>"
                            class="ml-3 flex w-auto items-center justify-between rounded-xl px-3 py-2 transition-transform duration-100 active:scale-[0.99] <?= $clsBG ?>"
@@ -455,7 +440,7 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
                             </div>
 
                             <svg xmlns="http://www.w3.org/2000/svg"
-                                 class="h-4 w-4 text-slate-500"
+                                 class="h-4 w-4 text-gray-400"
                                  fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M9 5l7 7-7 7" />
