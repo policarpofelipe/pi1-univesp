@@ -144,7 +144,7 @@ function render_item_menu(array $item, string $paginaAtual, bool $open = true, b
     $classeTexto = $isAtivo ? 'text-gray-900 font-medium' : 'text-gray-700';
     $paddingY = $sub ? 'py-2' : 'py-3';
     $marginLeft = $sub ? 'ml-3' : 'ml-4';
-    $iconSize = $sub ? 'h-6 w-6' : 'h-7 w-7';
+    $iconSize = $sub ? 'h-4 w-4' : 'h-5 w-5';
     $textSize = $sub ? 'text-sm' : '';
 
     ?>
@@ -160,11 +160,11 @@ function render_item_menu(array $item, string $paginaAtual, bool $open = true, b
                   d="<?= htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8') ?>" />
         </svg>
 
-        <?php if ($open): ?>
-            <span class="<?= $marginLeft ?> whitespace-nowrap text-left <?= $classeTexto ?> <?= $textSize ?> transition-colors group-hover:text-gray-900">
-                <?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>
-            </span>
-        <?php endif; ?>
+        <span x-show="open" 
+              x-cloak
+              class="<?= $marginLeft ?> whitespace-nowrap text-left <?= $classeTexto ?> <?= $textSize ?> transition-colors group-hover:text-gray-900">
+            <?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>
+        </span>
     </a>
     <?php
 }
@@ -192,29 +192,25 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
                       d="<?= htmlspecialchars($icone, ENT_QUOTES, 'UTF-8') ?>" />
             </svg>
 
-            <span
-                x-show="open"
-                class="ml-4 whitespace-nowrap text-left <?= $classeTexto ?> transition-colors group-hover:text-gray-900"
-            >
+            <span x-show="open" 
+                  x-cloak
+                  class="ml-4 whitespace-nowrap text-left <?= $classeTexto ?> transition-colors group-hover:text-gray-900">
                 <?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?>
             </span>
 
-            <svg
-                x-show="open"
-                xmlns="http://www.w3.org/2000/svg"
-                class="ml-auto h-4 w-4 transition-transform duration-300 <?= $classeIcone ?>"
-                :class="{ 'rotate-180': <?= $stateName ?> }"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            >
+            <svg x-show="open" 
+                 x-cloak
+                 xmlns="http://www.w3.org/2000/svg"
+                 class="ml-auto h-4 w-4 transition-transform duration-300 <?= $classeIcone ?>"
+                 :class="{ 'rotate-180': <?= $stateName ?> }"
+                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
         </button>
 
-        <div
-            x-show="<?= $stateName ?> && open"
-            x-collapse
-            class="mt-1 space-y-1 overflow-hidden pl-6"
-        >
+        <div x-show="<?= $stateName ?> && open"
+             x-collapse
+             class="mt-1 space-y-1 overflow-hidden pl-6">
             <?php foreach ($itens as $item): ?>
                 <?php render_item_menu($item, $paginaAtual, true, true); ?>
             <?php endforeach; ?>
@@ -230,6 +226,10 @@ $isRelatoriosAtivo = submenu_ativo($menuRelatorios, $paginaAtual);
 $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
 ?>
 
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+
 <aside
     x-data="{
         open: false,
@@ -239,7 +239,7 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
         relatoriosOpen: <?= $isRelatoriosAtivo ? 'true' : 'false' ?>,
         configuracoesOpen: <?= $isConfiguracoesAtivo ? 'true' : 'false' ?>
     }"
-    class="relative hidden h-screen flex-col border-r border-gray-200 bg-white text-gray-900 shadow-lg transition-all duration-300 md:flex"
+    class="relative hidden h-screen flex-col border-r border-gray-200 bg-white text-gray-900 shadow-lg transition-all duration-300 md:flex overflow-x-hidden"
     :class="open ? 'w-72' : 'w-20'"
 >
     <div class="flex items-center justify-between border-b border-gray-200 px-4 py-4">
@@ -260,10 +260,10 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
             </svg>
         </button>
         
-        <span x-show="open" class="text-lg font-semibold text-gray-800">PI Estoque</span>
+        <span x-show="open" x-cloak class="text-lg font-semibold text-gray-800">PI Estoque</span>
     </div>
 
-    <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-3
+    <nav class="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3 py-3
                 [&::-webkit-scrollbar]:w-1
                 [&::-webkit-scrollbar-track]:bg-transparent
                 [&::-webkit-scrollbar-thumb]:rounded-full
@@ -320,7 +320,8 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
     </nav>
 
     <div class="border-t border-gray-200 px-4 py-4 text-center text-sm text-gray-500">
-        <span x-text="open ? 'Projeto Integrador UNIVESP • Grupo 21' : 'PI'"></span>
+        <span x-show="open" x-cloak>Projeto Integrador UNIVESP • Grupo 21</span>
+        <span x-show="!open" x-cloak>PI</span>
     </div>
 </aside>
 
