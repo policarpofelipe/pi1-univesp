@@ -17,7 +17,7 @@ $menuPrincipal = [
     [
         'url'   => 'relatorio_estoque_baixo.php',
         'label' => 'Estoque Baixo',
-        'icon'  => 'M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+        'icon'  => 'M0 0h24v24H0z" fill="none"/><path d="M4 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0 M6 5l14 1l-.854 5.976m-2.646 1.024h-10.5" /><path d="M19 16v3',
     ],
 ];
 
