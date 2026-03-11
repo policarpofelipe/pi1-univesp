@@ -144,7 +144,7 @@ function render_item_menu(array $item, string $paginaAtual, bool $open = true, b
     $classeTexto = $isAtivo ? 'text-gray-900 font-medium' : 'text-gray-700';
     $paddingY = $sub ? 'py-2' : 'py-3';
     $marginLeft = $sub ? 'ml-3' : 'ml-4';
-    $iconSize = $sub ? 'h-4 w-4' : 'h-5 w-5';
+    $iconSize = $sub ? 'h-6 w-6' : 'h-7 w-7';
     $textSize = $sub ? 'text-sm' : '';
 
     ?>
