@@ -260,7 +260,7 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
             </svg>
         </button>
         
-        <span x-show="open" x-cloak class="text-lg font-semibold text-gray-800">PI Estoque</span>
+        <span x-show="open" x-cloak class="text-lg font-semibold text-gray-800">PI.1 Grupo 21</span>
     </div>
 
     <nav class="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3 py-3
