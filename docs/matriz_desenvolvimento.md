@@ -11,10 +11,10 @@ painel.php
 
 2. Cadastros-base de peças
 Sem isso, produto nenhum pode existir de forma coerente.
-listar_categorias_peca.php
-form_categoria_peca.php
-salvar_categoria_peca.php
-excluir_categoria_peca.php
+✅listar_categorias_peca.php
+✅form_categoria_peca.php
+✅salvar_categoria_peca.php
+✅excluir_categoria_peca.php
 listar_tipos_peca.php
 form_tipo_peca.php
 salvar_tipo_peca.php
