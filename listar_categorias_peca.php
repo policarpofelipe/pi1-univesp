@@ -1,0 +1,207 @@
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/auth.php';
+require __DIR__ . '/conexao.php';
+require __DIR__ . '/componentes.php';
+
+date_default_timezone_set('America/Sao_Paulo');
+
+function esc(?string $valor): string
+{
+    return htmlspecialchars($valor ?? '', ENT_QUOTES, 'UTF-8');
+}
+
+$busca = trim($_GET['busca'] ?? '');
+
+$sql = "
+    SELECT
+        id,
+        nome,
+        descricao,
+        ativo,
+        criado_em,
+        atualizado_em
+    FROM categorias_peca
+    WHERE 1=1
+";
+
+$params = [];
+
+if ($busca !== '') {
+    $sql .= " AND (nome LIKE :busca OR descricao LIKE :busca)";
+    $params[':busca'] = '%' . $busca . '%';
+}
+
+$sql .= " ORDER BY nome ASC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$totalCategorias = count($categorias);
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categorias de Peça</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            if (window.Alpine && window.AlpineCollapse) {
+                Alpine.plugin(window.AlpineCollapse);
+            }
+        });
+    </script>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+<div class="min-h-screen md:flex">
+    <?php require __DIR__ . '/menu.php'; ?>
+
+    <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6">
+        <div class="mx-auto max-w-7xl">
+
+            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900">Categorias de Peça</h1>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Gerencie as categorias que estruturam o catálogo de peças.
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
+                    <?= botao_link('form_categoria_peca.php', 'Nova categoria', 'salvar') ?>
+                </div>
+            </div>
+
+            <div class="<?= classe_box() ?> mb-6">
+                <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
+                    <div class="md:col-span-9">
+                        <label for="busca" class="<?= classe_label() ?>">Buscar categoria</label>
+                        <?= input_texto('busca', $busca, [
+                            'id' => 'busca',
+                            'placeholder' => 'Digite nome ou descrição da categoria'
+                        ]) ?>
+                    </div>
+
+                    <div class="md:col-span-3 flex gap-2">
+                        <?= botao_submit('Buscar', 'busca', ['class' => classe_botao('busca') . ' w-full']) ?>
+                        <?= botao_link('listar_categorias_peca.php', 'Limpar', 'cancelar', ['class' => classe_botao('cancelar') . ' w-full text-center']) ?>
+                    </div>
+                </form>
+            </div>
+
+            <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="<?= classe_box() ?>">
+                    <div class="text-sm text-slate-500">Total listado</div>
+                    <div class="mt-2 text-3xl font-bold text-slate-900"><?= $totalCategorias ?></div>
+                </div>
+
+                <div class="<?= classe_box() ?>">
+                    <div class="text-sm text-slate-500">Usuário logado</div>
+                    <div class="mt-2 text-base font-semibold text-slate-900">
+                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="<?= classe_box() ?>">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-slate-900">Lista de categorias</h2>
+                </div>
+
+                <?php if (!$categorias): ?>
+                    <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+                        <p class="text-sm text-slate-600">
+                            Nenhuma categoria encontrada.
+                        </p>
+
+                        <div class="mt-4">
+                            <?= botao_link('form_categoria_peca.php', 'Cadastrar primeira categoria', 'salvar') ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full border-separate border-spacing-y-2">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ID</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Nome</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Descrição</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Atualizado em</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($categorias as $categoria): ?>
+                                    <?php
+                                    $ativo = (int)($categoria['ativo'] ?? 0) === 1;
+                                    ?>
+                                    <tr class="overflow-hidden rounded-xl bg-slate-50 shadow-sm">
+                                        <td class="rounded-l-xl px-4 py-4 text-sm text-slate-600">
+                                            <?= (int)$categoria['id'] ?>
+                                        </td>
+
+                                        <td class="px-4 py-4">
+                                            <div class="font-semibold text-slate-900">
+                                                <?= esc($categoria['nome']) ?>
+                                            </div>
+                                        </td>
+
+                                        <td class="px-4 py-4 text-sm text-slate-600">
+                                            <?= esc($categoria['descricao'] ?: '—') ?>
+                                        </td>
+
+                                        <td class="px-4 py-4">
+                                            <?php if ($ativo): ?>
+                                                <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+                                                    Ativa
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+                                                    Inativa
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
+
+                                        <td class="px-4 py-4 text-sm text-slate-600">
+                                            <?= esc($categoria['atualizado_em'] ?: $categoria['criado_em'] ?: '—') ?>
+                                        </td>
+
+                                        <td class="rounded-r-xl px-4 py-4">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <?= botao_link(
+                                                    'form_categoria_peca.php?id=' . (int)$categoria['id'],
+                                                    'Editar',
+                                                    'editar'
+                                                ) ?>
+
+                                                <?= botao_excluir(
+                                                    'excluir_categoria_peca.php?id=' . (int)$categoria['id'],
+                                                    'Tem certeza que deseja excluir esta categoria?',
+                                                    'Excluir'
+                                                ) ?>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>
