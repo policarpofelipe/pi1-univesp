@@ -12,7 +12,64 @@ function esc(?string $valor): string
     return htmlspecialchars($valor ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-$busca = trim($_GET['busca'] ?? '');
+function mensagemRetorno(?string $tipo, ?string $codigo): ?array
+{
+    $mapa = [
+        'sucesso' => [
+            'cadastrado' => [
+                'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
+                'texto'  => 'Categoria cadastrada com sucesso.',
+            ],
+            'editado' => [
+                'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
+                'texto'  => 'Categoria atualizada com sucesso.',
+            ],
+            'excluido' => [
+                'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
+                'texto'  => 'Categoria excluída com sucesso.',
+            ],
+            'inativado' => [
+                'classe' => 'border-yellow-200 bg-yellow-50 text-yellow-700',
+                'texto'  => 'A categoria possui vínculos e foi apenas inativada.',
+            ],
+        ],
+        'erro' => [
+            'metodo_invalido' => [
+                'classe' => 'border-red-200 bg-red-50 text-red-700',
+                'texto'  => 'Método de requisição inválido.',
+            ],
+            'id_invalido' => [
+                'classe' => 'border-red-200 bg-red-50 text-red-700',
+                'texto'  => 'ID inválido para a operação solicitada.',
+            ],
+            'registro_nao_encontrado' => [
+                'classe' => 'border-red-200 bg-red-50 text-red-700',
+                'texto'  => 'Registro não encontrado.',
+            ],
+            'erro_ao_excluir' => [
+                'classe' => 'border-red-200 bg-red-50 text-red-700',
+                'texto'  => 'Ocorreu um erro ao excluir a categoria.',
+            ],
+        ],
+    ];
+
+    if (!$tipo || !$codigo) {
+        return null;
+    }
+
+    return $mapa[$tipo][$codigo] ?? null;
+}
+
+$busca   = trim($_GET['busca'] ?? '');
+$sucesso = trim($_GET['sucesso'] ?? '');
+$erro    = trim($_GET['erro'] ?? '');
+
+$retorno = null;
+if ($sucesso !== '') {
+    $retorno = mensagemRetorno('sucesso', $sucesso);
+} elseif ($erro !== '') {
+    $retorno = mensagemRetorno('erro', $erro);
+}
 
 $sql = "
     SELECT
@@ -23,7 +80,7 @@ $sql = "
         criado_em,
         atualizado_em
     FROM categorias_peca
-    WHERE 1=1
+    WHERE 1 = 1
 ";
 
 $params = [];
@@ -82,6 +139,12 @@ $totalCategorias = count($categorias);
                 </div>
             </div>
 
+            <?php if ($retorno): ?>
+                <div class="mb-6 rounded-xl border px-4 py-3 text-sm <?= esc($retorno['classe']) ?>">
+                    <?= esc($retorno['texto']) ?>
+                </div>
+            <?php endif; ?>
+
             <div class="<?= classe_box() ?> mb-6">
                 <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
                     <div class="md:col-span-9">
@@ -93,8 +156,10 @@ $totalCategorias = count($categorias);
                     </div>
 
                     <div class="md:col-span-3 flex gap-2">
-                        <?= botao_submit('Buscar', 'busca', ['class' => classe_botao('busca') . ' w-full']) ?>
-                        <?= botao_link('listar_categorias_peca.php', 'Limpar', 'cancelar', ['class' => classe_botao('cancelar') . ' w-full text-center']) ?>
+                        <div class="w-full">
+                            <?= botao_submit('Buscar', 'busca') ?>
+                        </div>
+                        <?= botao_link('listar_categorias_peca.php', 'Limpar', 'cancelar', ['style' => 'width:100%; text-align:center;']) ?>
                     </div>
                 </form>
             </div>
@@ -143,9 +208,7 @@ $totalCategorias = count($categorias);
                             </thead>
                             <tbody>
                                 <?php foreach ($categorias as $categoria): ?>
-                                    <?php
-                                    $ativo = (int)($categoria['ativo'] ?? 0) === 1;
-                                    ?>
+                                    <?php $ativo = (int)($categoria['ativo'] ?? 0) === 1; ?>
                                     <tr class="overflow-hidden rounded-xl bg-slate-50 shadow-sm">
                                         <td class="rounded-l-xl px-4 py-4 text-sm text-slate-600">
                                             <?= (int)$categoria['id'] ?>
