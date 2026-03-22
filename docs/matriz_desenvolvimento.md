@@ -26,11 +26,11 @@ Sem isso, produto nenhum pode existir de forma coerente.
 
 3. Produtos
 Produto depende de tipo de peça e marca de produto.
-listar_produtos.php
-form_produto.php
-salvar_produto.php
-excluir_produto.php
-ver_produto.php
+✅listar_produtos.php
+✅form_produto.php
+✅salvar_produto.php
+✅excluir_produto.php
+✅ver_produto.php
 
 4. Catálogo veicular
 Antes de compatibilidade, o veículo precisa existir como estrutura.
