@@ -34,14 +34,14 @@ Produto depende de tipo de peça e marca de produto.
 
 4. Catálogo veicular
 Antes de compatibilidade, o veículo precisa existir como estrutura.
-listar_marcas_veiculo.php
-form_marca_veiculo.php
-salvar_marca_veiculo.php
-excluir_marca_veiculo.php
-listar_modelos_veiculo.php
-form_modelo_veiculo.php
-salvar_modelo_veiculo.php
-excluir_modelo_veiculo.php
+✅listar_marcas_veiculo.php
+✅form_marca_veiculo.php
+✅salvar_marca_veiculo.php
+✅excluir_marca_veiculo.php
+✅listar_modelos_veiculo.php
+✅form_modelo_veiculo.php
+✅salvar_modelo_veiculo.php
+✅excluir_modelo_veiculo.php
 listar_veiculos_configuracao.php
 form_veiculo_configuracao.php
 salvar_veiculo_configuracao.php
