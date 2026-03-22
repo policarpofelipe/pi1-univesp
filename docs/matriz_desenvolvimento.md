@@ -20,9 +20,9 @@ Sem isso, produto nenhum pode existir de forma coerente.
 ✅salvar_tipo_peca.php
 ✅excluir_tipo_peca.php
 ✅listar_marcas_produto.php
-form_marca_produto.php
-salvar_marca_produto.php
-excluir_marca_produto.php
+✅form_marca_produto.php
+✅salvar_marca_produto.php
+✅excluir_marca_produto.php
 
 3. Produtos
 Produto depende de tipo de peça e marca de produto.
