@@ -15,11 +15,11 @@ Sem isso, produto nenhum pode existir de forma coerente.
 ✅form_categoria_peca.php
 ✅salvar_categoria_peca.php
 ✅excluir_categoria_peca.php
-listar_tipos_peca.php
-form_tipo_peca.php
-salvar_tipo_peca.php
-excluir_tipo_peca.php
-listar_marcas_produto.php
+✅listar_tipos_peca.php
+✅form_tipo_peca.php
+✅salvar_tipo_peca.php
+✅excluir_tipo_peca.php
+✅listar_marcas_produto.php
 form_marca_produto.php
 salvar_marca_produto.php
 excluir_marca_produto.php
