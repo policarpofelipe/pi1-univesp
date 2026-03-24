@@ -49,11 +49,11 @@ Antes de compatibilidade, o veículo precisa existir como estrutura.
 
 5. Compatibilidade entre peça e veículo
 Aqui o sistema começa a adquirir inteligência de autopeças.
-listar_aplicacoes_peca.php
-form_aplicacao_peca.php
-salvar_aplicacao_peca.php
-excluir_aplicacao_peca.php
-ver_aplicacoes_produto.php
+✅listar_aplicacoes_peca.php
+✅form_aplicacao_peca.php
+✅salvar_aplicacao_peca.php
+✅excluir_aplicacao_peca.php
+✅ver_aplicacoes_produto.php
 
 6. Estrutura de estoque
 Sem isso, o sistema é catálogo; com isso, vira gestão.
