@@ -42,10 +42,10 @@ Antes de compatibilidade, o veículo precisa existir como estrutura.
 ✅form_modelo_veiculo.php
 ✅salvar_modelo_veiculo.php
 ✅excluir_modelo_veiculo.php
-listar_veiculos_configuracao.php
-form_veiculo_configuracao.php
-salvar_veiculo_configuracao.php
-excluir_veiculo_configuracao.php
+✅listar_veiculos_configuracao.php
+✅form_veiculo_configuracao.php
+✅salvar_veiculo_configuracao.php
+✅excluir_veiculo_configuracao.php
 
 5. Compatibilidade entre peça e veículo
 Aqui o sistema começa a adquirir inteligência de autopeças.
