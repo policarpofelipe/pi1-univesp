@@ -20,8 +20,41 @@ $observacao = trim((string)($_POST['observacao'] ?? ''));
 
 $usuarioId = (int)($_SESSION['usuario_id'] ?? 0);
 
-$redirecionarForm = function (string $erro) use ($id): void {
-    header('Location: form_movimentacao_estoque.php?erro=' . $erro . ($id > 0 ? '&id=' . $id : ''));
+/*
+|--------------------------------------------------------------------------
+| Definir tela de retorno conforme origem lógica
+|--------------------------------------------------------------------------
+*/
+$paginaRetorno = 'form_movimentacao_estoque.php';
+
+if ($tipoMovimentacao === 'entrada') {
+    $paginaRetorno = 'movimentar_entrada.php';
+} elseif ($tipoMovimentacao === 'saida') {
+    $paginaRetorno = 'movimentar_saida.php';
+} elseif ($tipoMovimentacao === 'ajuste') {
+    $paginaRetorno = 'ajustar_estoque.php';
+}
+
+if ($id > 0) {
+    $paginaRetorno = 'form_movimentacao_estoque.php';
+}
+
+$redirecionarForm = function (string $erro) use ($id, $paginaRetorno, $produtoId, $estoqueId): void {
+    $params = ['erro=' . urlencode($erro)];
+
+    if ($id > 0) {
+        $params[] = 'id=' . $id;
+    } else {
+        if ($produtoId > 0) {
+            $params[] = 'produto_id=' . $produtoId;
+        }
+
+        if ($estoqueId > 0) {
+            $params[] = 'estoque_id=' . $estoqueId;
+        }
+    }
+
+    header('Location: ' . $paginaRetorno . '?' . implode('&', $params));
     exit;
 };
 
@@ -43,15 +76,28 @@ if ($quantidadeInformada === '') {
 
 $quantidadeInformada = str_replace(',', '.', $quantidadeInformada);
 
-if (!is_numeric($quantidadeInformada) || (float)$quantidadeInformada <= 0) {
+if (!is_numeric($quantidadeInformada)) {
     $redirecionarForm('quantidade_invalida');
 }
 
 $quantidadeBase = (float)$quantidadeInformada;
 
+/*
+|--------------------------------------------------------------------------
+| Regras por tipo
+|--------------------------------------------------------------------------
+*/
+if (in_array($tipoMovimentacao, ['entrada', 'saida'], true) && $quantidadeBase <= 0) {
+    $redirecionarForm('quantidade_invalida');
+}
+
+if ($tipoMovimentacao === 'ajuste' && $quantidadeBase == 0.0) {
+    $redirecionarForm('quantidade_invalida');
+}
+
 $quantidadeFinal = match ($tipoMovimentacao) {
-    'entrada' => $quantidadeBase,
-    'saida'   => $quantidadeBase * -1,
+    'entrada' => abs($quantidadeBase),
+    'saida'   => abs($quantidadeBase) * -1,
     'ajuste'  => $quantidadeBase,
     default   => 0.0,
 };
