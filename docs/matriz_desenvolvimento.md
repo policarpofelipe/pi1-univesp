@@ -57,17 +57,17 @@ Aqui o sistema começa a adquirir inteligência de autopeças.
 
 6. Estrutura de estoque
 Sem isso, o sistema é catálogo; com isso, vira gestão.
-listar_estoques.php
-form_estoque.php
-salvar_estoque.php
-excluir_estoque.php
-listar_movimentacoes_estoque.php
-form_movimentacao_estoque.php
-salvar_movimentacao_estoque.php
-movimentar_entrada.php
-movimentar_saida.php
-ajustar_estoque.php
-saldo_estoque.php
+✅listar_estoques.php
+✅form_estoque.php
+✅salvar_estoque.php
+✅excluir_estoque.php
+✅listar_movimentacoes_estoque.php
+✅form_movimentacao_estoque.php
+✅salvar_movimentacao_estoque.php
+✅movimentar_entrada.php
+✅movimentar_saida.php
+✅ajustar_estoque.php
+✅saldo_estoque.php
 
 7. Consulta principal do sistema
 Essa é a funcionalidade mais característica do domínio.
