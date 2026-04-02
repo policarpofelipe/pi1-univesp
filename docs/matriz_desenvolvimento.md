@@ -71,14 +71,14 @@ Sem isso, o sistema é catálogo; com isso, vira gestão.
 
 7. Consulta principal do sistema
 Essa é a funcionalidade mais característica do domínio.
-consulta_veiculo.php
-buscar_produtos_por_veiculo.php
+✅consulta_veiculo.php
+✅buscar_produtos_por_veiculo.php
 
 8. Relatórios essenciais
 Entram depois que já existe massa de dados.
-relatorio_estoque_baixo.php
-relatorio_produtos_por_veiculo.php
-relatorio_produtos_sem_aplicacao.php
+✅relatorio_estoque_baixo.php
+✅relatorio_produtos_por_veiculo.php
+✅relatorio_produtos_sem_aplicacao.php
 relatorio_veiculos_sem_produtos.php
 relatorio_movimentacoes_periodo.php
 
