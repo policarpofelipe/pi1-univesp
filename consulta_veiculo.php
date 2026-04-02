@@ -18,6 +18,38 @@ $veiculoConfiguracaoId = (int)($_GET['veiculo_configuracao_id'] ?? 0);
 
 /*
 |--------------------------------------------------------------------------
+| Se vier apenas a configuração, inferir marca e modelo
+|--------------------------------------------------------------------------
+*/
+if ($veiculoConfiguracaoId > 0) {
+    $sqlInferencia = "
+        SELECT
+            vc.id,
+            vc.modelo_veiculo_id,
+            mo.marca_veiculo_id
+        FROM veiculos_configuracao vc
+        INNER JOIN modelos_veiculo mo
+            ON mo.id = vc.modelo_veiculo_id
+        WHERE vc.id = :id
+        LIMIT 1
+    ";
+
+    $stmtInferencia = $pdo->prepare($sqlInferencia);
+    $stmtInferencia->bindValue(':id', $veiculoConfiguracaoId, PDO::PARAM_INT);
+    $stmtInferencia->execute();
+
+    $inferido = $stmtInferencia->fetch(PDO::FETCH_ASSOC);
+
+    if ($inferido) {
+        $modeloVeiculoId = (int)$inferido['modelo_veiculo_id'];
+        $marcaVeiculoId = (int)$inferido['marca_veiculo_id'];
+    } else {
+        $veiculoConfiguracaoId = 0;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
 | Carregar marcas
 |--------------------------------------------------------------------------
 */
@@ -55,8 +87,19 @@ if ($marcaVeiculoId > 0) {
     $stmtModelos->execute();
     $modelos = $stmtModelos->fetchAll(PDO::FETCH_ASSOC);
 
+    $modeloExisteNaMarca = false;
+
     foreach ($modelos as $modelo) {
         $opcoesModelos[(string)$modelo['id']] = (string)$modelo['nome'];
+
+        if ((int)$modelo['id'] === $modeloVeiculoId) {
+            $modeloExisteNaMarca = true;
+        }
+    }
+
+    if (!$modeloExisteNaMarca) {
+        $modeloVeiculoId = 0;
+        $veiculoConfiguracaoId = 0;
     }
 } else {
     $modeloVeiculoId = 0;
@@ -89,6 +132,8 @@ if ($modeloVeiculoId > 0) {
     $stmtConfiguracoes->execute();
     $configuracoes = $stmtConfiguracoes->fetchAll(PDO::FETCH_ASSOC);
 
+    $configuracaoExisteNoModelo = false;
+
     foreach ($configuracoes as $config) {
         $ano = ((int)$config['ano_inicio'] === (int)$config['ano_fim'])
             ? (string)$config['ano_inicio']
@@ -109,6 +154,14 @@ if ($modeloVeiculoId > 0) {
         }
 
         $opcoesConfiguracoes[(string)$config['id']] = implode(' / ', $partes);
+
+        if ((int)$config['id'] === $veiculoConfiguracaoId) {
+            $configuracaoExisteNoModelo = true;
+        }
+    }
+
+    if ($veiculoConfiguracaoId > 0 && !$configuracaoExisteNoModelo) {
+        $veiculoConfiguracaoId = 0;
     }
 } else {
     $veiculoConfiguracaoId = 0;
