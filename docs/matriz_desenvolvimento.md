@@ -84,13 +84,13 @@ Entram depois que já existe massa de dados.
 
 9. Usuários e administração
 Podem vir depois do núcleo operacional.
-cadastro.php
-recuperar_senha.php
-listar_usuarios.php
-form_usuario.php
-salvar_usuario.php
-excluir_usuario.php
+✅cadastro.php
+✅recuperar_senha.php
+✅listar_usuarios.php
+✅form_usuario.php
+✅salvar_usuario.php
+✅excluir_usuario.php
 10. Configurações institucionais
 Importantes, mas não nucleares para o MVP.
-form_config_empresa.php
-salvar_config_empresa.php
+✅form_config_empresa.php
+✅salvar_config_empresa.php
