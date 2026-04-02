@@ -79,8 +79,8 @@ Entram depois que já existe massa de dados.
 ✅relatorio_estoque_baixo.php
 ✅relatorio_produtos_por_veiculo.php
 ✅relatorio_produtos_sem_aplicacao.php
-relatorio_veiculos_sem_produtos.php
-relatorio_movimentacoes_periodo.php
+✅relatorio_veiculos_sem_produtos.php
+✅relatorio_movimentacoes_periodo.php
 
 9. Usuários e administração
 Podem vir depois do núcleo operacional.
