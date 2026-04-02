@@ -166,16 +166,7 @@ $cards = [
                 <?php endforeach; ?>
             </div>
 
-            <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <h3 class="text-base font-semibold text-slate-900">
-                    Leitura estrutural
-                </h3>
-                <p class="mt-2 text-sm leading-6 text-slate-600">
-                    Este painel já separa três camadas do sistema: catálogo de peças, catálogo veicular e operação de estoque.
-                    Isso é importante, porque um sistema de autopeças não é apenas uma lista de produtos; ele precisa articular
-                    identidade comercial, compatibilidade técnica e movimentação física.
-                </p>
-            </div>
+
         </div>
     </main>
 </div>
