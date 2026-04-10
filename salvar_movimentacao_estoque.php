@@ -168,7 +168,7 @@ try {
                 produto_id = :produto_id,
                 estoque_id = :estoque_id,
                 usuario_id = :usuario_id,
-                tipo_movimentacao = :tipo_movimentacao,
+                tipo_movimento = :tipo_movimentacao,
                 quantidade = :quantidade,
                 observacao = :observacao
             WHERE id = :id
@@ -199,7 +199,7 @@ try {
             produto_id,
             estoque_id,
             usuario_id,
-            tipo_movimentacao,
+            tipo_movimento,
             quantidade,
             observacao,
             criado_em

@@ -54,6 +54,31 @@ CREATE TABLE `categorias_peca` (
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `config_empresa`
+--
+
+CREATE TABLE `config_empresa` (
+  `id` int UNSIGNED NOT NULL,
+  `razao_social` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nome_fantasia` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cnpj` varchar(18) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `inscricao_estadual` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `telefone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cep` varchar(9) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `logradouro` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `numero` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `complemento` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bairro` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cidade` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `uf` varchar(2) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura para tabela `estoques`
 --
 
@@ -121,7 +146,7 @@ CREATE TABLE `movimentacoes_estoque` (
   `estoque_id` int UNSIGNED NOT NULL,
   `usuario_id` int UNSIGNED DEFAULT NULL,
   `tipo_movimento` enum('entrada','saida','ajuste') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `quantidade` int NOT NULL,
+  `quantidade` decimal(10,2) NOT NULL,
   `custo_unitario` decimal(10,2) DEFAULT NULL,
   `observacao` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -222,6 +247,13 @@ ALTER TABLE `categorias_peca`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_categorias_peca_nome` (`nome`),
   ADD KEY `idx_categorias_peca_ativo` (`ativo`);
+
+--
+-- Índices de tabela `config_empresa`
+--
+ALTER TABLE `config_empresa`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_config_empresa_cnpj` (`cnpj`);
 
 --
 -- Índices de tabela `estoques`
@@ -330,6 +362,12 @@ ALTER TABLE `aplicacoes_peca`
 -- AUTO_INCREMENT de tabela `categorias_peca`
 --
 ALTER TABLE `categorias_peca`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `config_empresa`
+--
+ALTER TABLE `config_empresa`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --

@@ -38,7 +38,7 @@ if ($dataFinal !== '') {
 }
 
 if ($tipoFiltro !== '' && in_array($tipoFiltro, ['entrada', 'saida', 'ajuste'], true)) {
-    $where[] = "me.tipo_movimentacao = :tipo_movimentacao";
+    $where[] = "me.tipo_movimento = :tipo_movimentacao";
     $params[':tipo_movimentacao'] = $tipoFiltro;
 }
 
@@ -55,7 +55,7 @@ if ($busca !== '') {
 $sql = "
     SELECT
         me.id,
-        me.tipo_movimentacao,
+        me.tipo_movimento AS tipo_movimentacao,
         me.quantidade,
         me.observacao,
         me.criado_em,

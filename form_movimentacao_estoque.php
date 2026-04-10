@@ -100,7 +100,7 @@ if ($modoEdicao) {
             id,
             produto_id,
             estoque_id,
-            tipo_movimentacao,
+            tipo_movimento AS tipo_movimentacao,
             quantidade,
             observacao
         FROM movimentacoes_estoque
