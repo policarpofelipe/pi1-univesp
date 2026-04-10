@@ -64,8 +64,14 @@ $busca = trim($_GET['busca'] ?? '');
 $sucesso = trim($_GET['sucesso'] ?? '');
 $erro = trim($_GET['erro'] ?? '');
 
+$nImportacao = (int)($_GET['n'] ?? 0);
 $retorno = null;
-if ($sucesso !== '') {
+if ($sucesso === 'importacao' && $nImportacao > 0) {
+    $retorno = [
+        'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        'texto'  => 'Importação concluída: ' . $nImportacao . ' registro(s) gravado(s).',
+    ];
+} elseif ($sucesso !== '') {
     $retorno = mensagemRetorno('sucesso', $sucesso);
 } elseif ($erro !== '') {
     $retorno = mensagemRetorno('erro', $erro);
@@ -138,6 +144,7 @@ $totalEstoques = count($estoques);
 
                 <div class="flex flex-wrap gap-2">
                     <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
+                    <?= botao_link('importar_planilha.php?tipo=estoques', 'Importar planilha', 'busca') ?>
                     <?= botao_link('form_estoque.php', 'Novo local', 'salvar') ?>
                 </div>
             </div>

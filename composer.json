@@ -1,0 +1,11 @@
+{
+    "name": "pi1-univesp/sistema-estoque",
+    "description": "Projeto integrador - controle de estoque",
+    "require": {
+        "php": ">=8.1",
+        "phpoffice/phpspreadsheet": "^2.2"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
