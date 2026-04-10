@@ -1,6 +1,7 @@
 .well-known/
 .env
 vendor/
+composer.phar
 node_modules/
 uploads/
 *.log
