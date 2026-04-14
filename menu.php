@@ -7,7 +7,7 @@ $menuPrincipal = [
     [
         'url'   => 'painel.php',
         'label' => 'Painel',
-        'icon'  => 'M3 12l2-2m0 0l2 2m-2-2v6m4-10l2-2m0 0l2 2m-2-2v4m4-4l2-2m0 0l2 2m-2-2v6M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z',
+        'icon'  => 'M3 12l9-9 9 9M4.5 10.5V21h15V10.5',
     ],
     [
         'url'   => 'consulta_veiculo.php',
@@ -25,17 +25,17 @@ $menuCadastros = [
     [
         'url'   => 'listar_categorias_peca.php',
         'label' => 'Categorias de Peça',
-        'icon'  => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l5 5a2 2 0 0 1 .586 1.414V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z',
+        'icon'  => 'M3 7.5h18M3 12h18M3 16.5h12',
     ],
     [
         'url'   => 'listar_tipos_peca.php',
         'label' => 'Tipos de Peça',
-        'icon'  => 'M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+        'icon'  => 'M9 12h6M12 9v6M4.5 12a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0-15 0',
     ],
     [
         'url'   => 'listar_marcas_produto.php',
         'label' => 'Marcas de Produto',
-        'icon'  => 'M16.5 3.5L20 7l-4.5 4.5M7.5 3.5L4 7l4.5 4.5M12 2v20M3.5 7.5L7 4l4.5 4.5M20.5 7.5L17 4l-4.5 4.5',
+        'icon'  => 'M3 7.5l9-4.5 9 4.5-9 4.5-9-4.5zM5.25 9.75V16.5L12 21l6.75-4.5V9.75',
     ],
     [
         'url'   => 'listar_produtos.php',
@@ -48,17 +48,17 @@ $menuCatalogoVeicular = [
     [
         'url'   => 'listar_marcas_veiculo.php',
         'label' => 'Marcas de Veículo',
-        'icon'  => 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z',
+        'icon'  => 'M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h9',
     ],
     [
         'url'   => 'listar_modelos_veiculo.php',
         'label' => 'Modelos de Veículo',
-        'icon'  => 'M8 7h8m-8 4h5M8 15l2-6m6 6l-2-6M5 19h14a2 2 0 0 0 1.84-2.75L13.74 4a2 2 0 0 0-3.48 0L3.16 16.25A2 2 0 0 0 5 19Z',
+        'icon'  => 'M3 13.5l2.25-6.75A2.25 2.25 0 0 1 7.38 5.25h9.24a2.25 2.25 0 0 1 2.13 1.5L21 13.5M5.25 13.5h13.5M6.75 18h.008v.008H6.75V18zm10.5 0h.008v.008h-.008V18z',
     ],
     [
         'url'   => 'listar_veiculos_configuracao.php',
         'label' => 'Configurações Veiculares',
-        'icon'  => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+        'icon'  => 'M12 9.75a2.25 2.25 0 1 0 0 4.5a2.25 2.25 0 0 0 0-4.5zM12 3v2.25M12 18.75V21M4.72 4.72l1.59 1.59M17.69 17.69l1.59 1.59M3 12h2.25M18.75 12H21M4.72 19.28l1.59-1.59M17.69 6.31l1.59-1.59',
     ],
     [
         'url'   => 'listar_aplicacoes_peca.php',
@@ -71,7 +71,7 @@ $menuEstoque = [
     [
         'url'   => 'listar_estoques.php',
         'label' => 'Locais de Estoque',
-        'icon'  => 'M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4',
+        'icon'  => 'M3 7.5l9-4.5 9 4.5-9 4.5-9-4.5zM5.25 9.75V16.5L12 21l6.75-4.5V9.75',
     ],
     [
         'url'   => 'listar_movimentacoes_estoque.php',
@@ -81,7 +81,7 @@ $menuEstoque = [
     [
         'url'   => 'saldo_estoque.php',
         'label' => 'Saldo Atual',
-        'icon'  => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z',
+        'icon'  => 'M3.75 3v18h16.5V3H3.75zm3.75 12h2.25v3H7.5v-3zm3.75-4h2.25v7h-2.25v-7zm3.75-3h2.25v10H15v-10z',
     ],
 ];
 
@@ -89,7 +89,7 @@ $menuRelatorios = [
     [
         'url'   => 'relatorio_produtos_por_veiculo.php',
         'label' => 'Produtos por Veículo',
-        'icon'  => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z',
+        'icon'  => 'M3.75 3v18h16.5V3H3.75zm3.75 12h2.25v3H7.5v-3zm3.75-4h2.25v7h-2.25v-7zm3.75-3h2.25v10H15v-10z',
     ],
     [
         'url'   => 'relatorio_estoque_baixo.php',
@@ -102,12 +102,12 @@ $menuConfiguracoes = [
     [
         'url'   => 'listar_usuarios.php',
         'label' => 'Usuários',
-        'icon'  => 'M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z',
+        'icon'  => 'M15.75 6.75a3.75 3.75 0 1 1-7.5 0a3.75 3.75 0 0 1 7.5 0zM4.5 20.25a7.5 7.5 0 0 1 15 0',
     ],
     [
         'url'   => 'form_config_empresa.php',
         'label' => 'Minha Empresa',
-        'icon'  => 'M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4',
+        'icon'  => 'M3.75 21h16.5V3h-16.5v18zm4.5-12h1.5m4.5 0h1.5m-7.5 4.5h1.5m4.5 0h1.5',
     ],
     [
         'url'   => 'logout.php',
@@ -150,7 +150,8 @@ function render_item_menu(array $item, string $paginaAtual, bool $sub = false): 
     ?>
     <a
         href="<?= htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8') ?>"
-        class="group flex w-full items-center justify-start rounded-lg px-4 <?= $paddingY ?> transition-all duration-200 <?= $classeFundo ?>"
+        class="group flex w-full items-center rounded-lg px-4 <?= $paddingY ?> transition-all duration-200 <?= $classeFundo ?>"
+        :class="open ? 'justify-start' : 'justify-center'"
     >
         <svg xmlns="http://www.w3.org/2000/svg"
              class="<?= $iconSize ?> flex-shrink-0 <?= $classeIcone ?> transition-colors group-hover:text-blue-600"
@@ -159,7 +160,9 @@ function render_item_menu(array $item, string $paginaAtual, bool $sub = false): 
                   d="<?= htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8') ?>" />
         </svg>
 
-        <span class="<?= $marginLeft ?> whitespace-nowrap text-left <?= $classeTexto ?> <?= $textSize ?> transition-colors group-hover:text-gray-900">
+        <span x-show="open"
+              x-cloak
+              class="<?= $marginLeft ?> whitespace-nowrap text-left <?= $classeTexto ?> <?= $textSize ?> transition-colors group-hover:text-gray-900">
             <?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>
         </span>
     </a>
@@ -177,7 +180,8 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
     $classeTexto = $isAtivo ? 'text-gray-900 font-medium' : 'text-gray-700';
     ?>
     <div class="w-full">
-        <div class="group flex w-full items-center justify-start rounded-lg px-4 py-3 transition-all duration-200 <?= $classeFundo ?>">
+        <div class="group flex w-full items-center rounded-lg px-4 py-3 transition-all duration-200 <?= $classeFundo ?>"
+             :class="open ? 'justify-start' : 'justify-center'">
             <svg xmlns="http://www.w3.org/2000/svg"
                  class="h-5 w-5 flex-shrink-0 <?= $classeIcone ?> transition-colors group-hover:text-blue-600"
                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -185,12 +189,14 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
                       d="<?= htmlspecialchars($icone, ENT_QUOTES, 'UTF-8') ?>" />
             </svg>
 
-            <span class="ml-4 whitespace-nowrap text-left <?= $classeTexto ?> transition-colors group-hover:text-gray-900">
+            <span x-show="open"
+                  x-cloak
+                  class="ml-4 whitespace-nowrap text-left <?= $classeTexto ?> transition-colors group-hover:text-gray-900">
                 <?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?>
             </span>
         </div>
 
-        <div class="mt-1 space-y-1 overflow-hidden pl-6">
+        <div x-show="open" x-cloak class="mt-1 space-y-1 overflow-hidden pl-6">
             <?php foreach ($itens as $item): ?>
                 <?php render_item_menu($item, $paginaAtual, true); ?>
             <?php endforeach; ?>
