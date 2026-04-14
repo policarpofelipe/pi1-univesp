@@ -29,6 +29,7 @@ $paginaAtual = max(1, (int)($_GET['pagina'] ?? 1));
 $porPagina = 50;
 
 $erro = '';
+$aviso = '';
 $totalItens = 0;
 $resultados = [];
 $totalPaginas = 1;
@@ -40,57 +41,67 @@ $opcoesTiposPeca = ['' => 'Todos os tipos de peça'];
 $opcoesMarcasProduto = ['' => 'Todas as marcas de produto'];
 
 try {
-    $stmtMarcas = $pdo->query("
-        SELECT id, nome
-        FROM marcas_veiculo
-        WHERE ativo = 1
-        ORDER BY nome ASC
-    ");
-    foreach ($stmtMarcas->fetchAll(PDO::FETCH_ASSOC) as $linha) {
-        $opcoesMarcasVeiculo[(string)$linha['id']] = (string)$linha['nome'];
-    }
-
-    if ($marcaVeiculoId > 0) {
-        $stmtModelos = $pdo->prepare("
+    $filtrosVeicularesDisponiveis = true;
+    try {
+        $stmtMarcas = $pdo->query("
             SELECT id, nome
-            FROM modelos_veiculo
+            FROM marcas_veiculo
             WHERE ativo = 1
-              AND marca_veiculo_id = :marca_veiculo_id
             ORDER BY nome ASC
         ");
-        $stmtModelos->bindValue(':marca_veiculo_id', $marcaVeiculoId, PDO::PARAM_INT);
-        $stmtModelos->execute();
-        foreach ($stmtModelos->fetchAll(PDO::FETCH_ASSOC) as $linha) {
-            $opcoesModelosVeiculo[(string)$linha['id']] = (string)$linha['nome'];
+        foreach ($stmtMarcas->fetchAll(PDO::FETCH_ASSOC) as $linha) {
+            $opcoesMarcasVeiculo[(string)$linha['id']] = (string)$linha['nome'];
         }
-    }
 
-    if ($modeloVeiculoId > 0) {
-        $stmtConfigs = $pdo->prepare("
-            SELECT id, ano_inicio, ano_fim, motorizacao, combustivel, versao
-            FROM veiculos_configuracao
-            WHERE ativo = 1
-              AND modelo_veiculo_id = :modelo_veiculo_id
-            ORDER BY ano_inicio ASC, versao ASC
-        ");
-        $stmtConfigs->bindValue(':modelo_veiculo_id', $modeloVeiculoId, PDO::PARAM_INT);
-        $stmtConfigs->execute();
-        foreach ($stmtConfigs->fetchAll(PDO::FETCH_ASSOC) as $config) {
-            $ano = ((int)$config['ano_inicio'] === (int)$config['ano_fim'])
-                ? (string)$config['ano_inicio']
-                : $config['ano_inicio'] . ' a ' . $config['ano_fim'];
-            $partes = [$ano];
-            if (!empty($config['motorizacao'])) {
-                $partes[] = $config['motorizacao'];
+        if ($marcaVeiculoId > 0) {
+            $stmtModelos = $pdo->prepare("
+                SELECT id, nome
+                FROM modelos_veiculo
+                WHERE ativo = 1
+                  AND marca_veiculo_id = :marca_veiculo_id
+                ORDER BY nome ASC
+            ");
+            $stmtModelos->bindValue(':marca_veiculo_id', $marcaVeiculoId, PDO::PARAM_INT);
+            $stmtModelos->execute();
+            foreach ($stmtModelos->fetchAll(PDO::FETCH_ASSOC) as $linha) {
+                $opcoesModelosVeiculo[(string)$linha['id']] = (string)$linha['nome'];
             }
-            if (!empty($config['combustivel'])) {
-                $partes[] = $config['combustivel'];
-            }
-            if (!empty($config['versao'])) {
-                $partes[] = $config['versao'];
-            }
-            $opcoesConfiguracoes[(string)$config['id']] = implode(' / ', $partes);
         }
+
+        if ($modeloVeiculoId > 0) {
+            $stmtConfigs = $pdo->prepare("
+                SELECT id, ano_inicio, ano_fim, motorizacao, combustivel, versao
+                FROM veiculos_configuracao
+                WHERE ativo = 1
+                  AND modelo_veiculo_id = :modelo_veiculo_id
+                ORDER BY ano_inicio ASC, versao ASC
+            ");
+            $stmtConfigs->bindValue(':modelo_veiculo_id', $modeloVeiculoId, PDO::PARAM_INT);
+            $stmtConfigs->execute();
+            foreach ($stmtConfigs->fetchAll(PDO::FETCH_ASSOC) as $config) {
+                $ano = ((int)$config['ano_inicio'] === (int)$config['ano_fim'])
+                    ? (string)$config['ano_inicio']
+                    : $config['ano_inicio'] . ' a ' . $config['ano_fim'];
+                $partes = [$ano];
+                if (!empty($config['motorizacao'])) {
+                    $partes[] = $config['motorizacao'];
+                }
+                if (!empty($config['combustivel'])) {
+                    $partes[] = $config['combustivel'];
+                }
+                if (!empty($config['versao'])) {
+                    $partes[] = $config['versao'];
+                }
+                $opcoesConfiguracoes[(string)$config['id']] = implode(' / ', $partes);
+            }
+        }
+    } catch (Throwable $e) {
+        $filtrosVeicularesDisponiveis = false;
+        $marcaVeiculoId = 0;
+        $modeloVeiculoId = 0;
+        $veiculoConfiguracaoId = 0;
+        $aviso = 'Filtros de veiculo indisponiveis no momento. A consulta por pecas segue funcionando.';
+        error_log('consulta_veiculo.php (filtros veiculares): ' . $e->getMessage());
     }
 
     $stmtTipos = $pdo->query("
@@ -146,7 +157,7 @@ try {
         $params[$param] = ['%' . $termo . '%', PDO::PARAM_STR];
     }
 
-    if ($marcaVeiculoId > 0 || $modeloVeiculoId > 0 || $veiculoConfiguracaoId > 0) {
+    if ($filtrosVeicularesDisponiveis && ($marcaVeiculoId > 0 || $modeloVeiculoId > 0 || $veiculoConfiguracaoId > 0)) {
         $filtroVeiculo = [];
         if ($marcaVeiculoId > 0) {
             $filtroVeiculo[] = "mv.id = :filtro_marca_veiculo_id";
@@ -269,6 +280,11 @@ $baseParams = [
             <?php if ($erro !== ''): ?>
                 <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                     <?= esc($erro) ?>
+                </div>
+            <?php endif; ?>
+            <?php if ($aviso !== ''): ?>
+                <div class="mb-6 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                    <?= esc($aviso) ?>
                 </div>
             <?php endif; ?>
 
