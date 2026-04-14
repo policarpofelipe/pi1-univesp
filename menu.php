@@ -7,17 +7,17 @@ $menuPrincipal = [
     [
         'url'   => 'painel.php',
         'label' => 'Painel',
-        'icon'  => 'M3 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8ZM9 4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V4ZM15 9a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V9Z',
+        'icon'  => 'M3 12l2-2m0 0l2 2m-2-2v6m4-10l2-2m0 0l2 2m-2-2v4m4-4l2-2m0 0l2 2m-2-2v6M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z',
     ],
     [
         'url'   => 'consulta_veiculo.php',
         'label' => 'Consulta por Veículo',
-        'icon'  => 'M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M5 17h-2v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6-6h15m-6 0v-5',
+        'icon'  => 'M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z',
     ],
     [
         'url'   => 'relatorio_estoque_baixo.php',
         'label' => 'Estoque Baixo',
-        'icon'  => 'M4 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0 M15 17h-9v-14h-2 M6 5l14 1l-.854 5.976m-2.646 1.024h-10.5 M19 16v3 M19 22v.01',
+        'icon'  => 'M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
     ],
 ];
 
@@ -25,7 +25,7 @@ $menuCadastros = [
     [
         'url'   => 'listar_categorias_peca.php',
         'label' => 'Categorias de Peça',
-        'icon'  => 'M4 6h16M4 12h16M4 18h16',
+        'icon'  => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l5 5a2 2 0 0 1 .586 1.414V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z',
     ],
     [
         'url'   => 'listar_tipos_peca.php',
@@ -35,7 +35,7 @@ $menuCadastros = [
     [
         'url'   => 'listar_marcas_produto.php',
         'label' => 'Marcas de Produto',
-        'icon'  => 'M4 7h16M7 12h10M9 17h6',
+        'icon'  => 'M16.5 3.5L20 7l-4.5 4.5M7.5 3.5L4 7l4.5 4.5M12 2v20M3.5 7.5L7 4l4.5 4.5M20.5 7.5L17 4l-4.5 4.5',
     ],
     [
         'url'   => 'listar_produtos.php',
@@ -48,7 +48,7 @@ $menuCatalogoVeicular = [
     [
         'url'   => 'listar_marcas_veiculo.php',
         'label' => 'Marcas de Veículo',
-        'icon'  => 'M5 12h14M7 12l2-7h6l2 7M12 17v-5M7 16h.01M17 16h.01',
+        'icon'  => 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z',
     ],
     [
         'url'   => 'listar_modelos_veiculo.php',
@@ -58,12 +58,12 @@ $menuCatalogoVeicular = [
     [
         'url'   => 'listar_veiculos_configuracao.php',
         'label' => 'Configurações Veiculares',
-        'icon'  => 'M4 6h16M4 12h16M4 18h10',
+        'icon'  => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
     ],
     [
         'url'   => 'listar_aplicacoes_peca.php',
         'label' => 'Aplicações / Compatibilidade',
-        'icon'  => 'M13 10l7-7m-7 7v4m0-4h4m-9 4H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5m7 10v5a2 2 0 0 1-2 2h-5',
+        'icon'  => 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
     ],
 ];
 
@@ -71,17 +71,17 @@ $menuEstoque = [
     [
         'url'   => 'listar_estoques.php',
         'label' => 'Locais de Estoque',
-        'icon'  => 'M4 8l8-4 8 4-8 4-8-4zm0 6l8-4 8 4-8 4-8-4zm0 6l8-4 8 4-8 4-8-4z',
+        'icon'  => 'M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4',
     ],
     [
         'url'   => 'listar_movimentacoes_estoque.php',
         'label' => 'Movimentações',
-        'icon'  => 'M3 3v18h18M18 17V9m-5 8V6m-5 11v-4',
+        'icon'  => 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
     ],
     [
         'url'   => 'saldo_estoque.php',
         'label' => 'Saldo Atual',
-        'icon'  => 'M9 12h6m-6 4h6m4-8v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z',
+        'icon'  => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z',
     ],
 ];
 
@@ -89,12 +89,12 @@ $menuRelatorios = [
     [
         'url'   => 'relatorio_produtos_por_veiculo.php',
         'label' => 'Produtos por Veículo',
-        'icon'  => 'M4 7h16M4 12h10M4 17h6',
+        'icon'  => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z',
     ],
     [
         'url'   => 'relatorio_estoque_baixo.php',
         'label' => 'Estoque Mínimo',
-        'icon'  => 'M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+        'icon'  => 'M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
     ],
 ];
 
@@ -102,17 +102,17 @@ $menuConfiguracoes = [
     [
         'url'   => 'listar_usuarios.php',
         'label' => 'Usuários',
-        'icon'  => 'M9 7h6m-6 4h6m-6 4h3M5 21h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z',
+        'icon'  => 'M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z',
     ],
     [
         'url'   => 'form_config_empresa.php',
         'label' => 'Minha Empresa',
-        'icon'  => 'M4 21h16M5 21V7l7-4 7 4v14M9 7v4m6-4v4',
+        'icon'  => 'M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4',
     ],
     [
         'url'   => 'logout.php',
         'label' => 'Sair',
-        'icon'  => 'M14 8v-2a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2m5-4h-9m4-3l3 3-3 3',
+        'icon'  => 'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1',
     ],
 ];
 
@@ -132,7 +132,7 @@ function submenu_ativo(array $itens, string $paginaAtual): bool
     return false;
 }
 
-function render_item_menu(array $item, string $paginaAtual, bool $open = true, bool $sub = false): void
+function render_item_menu(array $item, string $paginaAtual, bool $sub = false): void
 {
     $isAtivo = (arquivo_url($item['url']) === $paginaAtual);
 
@@ -151,7 +151,6 @@ function render_item_menu(array $item, string $paginaAtual, bool $open = true, b
     <a
         href="<?= htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8') ?>"
         class="group flex w-full items-center justify-start rounded-lg px-4 <?= $paddingY ?> transition-all duration-200 <?= $classeFundo ?>"
-        :title="!open ? '<?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>' : ''"
     >
         <svg xmlns="http://www.w3.org/2000/svg"
              class="<?= $iconSize ?> flex-shrink-0 <?= $classeIcone ?> transition-colors group-hover:text-blue-600"
@@ -160,16 +159,14 @@ function render_item_menu(array $item, string $paginaAtual, bool $open = true, b
                   d="<?= htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8') ?>" />
         </svg>
 
-        <span x-show="open" 
-              x-cloak
-              class="<?= $marginLeft ?> whitespace-nowrap text-left <?= $classeTexto ?> <?= $textSize ?> transition-colors group-hover:text-gray-900">
+        <span class="<?= $marginLeft ?> whitespace-nowrap text-left <?= $classeTexto ?> <?= $textSize ?> transition-colors group-hover:text-gray-900">
             <?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>
         </span>
     </a>
     <?php
 }
 
-function render_bloco_submenu(string $titulo, string $icone, array $itens, string $paginaAtual, string $stateName): void
+function render_bloco_submenu(string $titulo, string $icone, array $itens, string $paginaAtual): void
 {
     $isAtivo = submenu_ativo($itens, $paginaAtual);
     $classeFundo = $isAtivo
@@ -180,11 +177,7 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
     $classeTexto = $isAtivo ? 'text-gray-900 font-medium' : 'text-gray-700';
     ?>
     <div class="w-full">
-        <button
-            @click="if (!open) { open = true }; <?= $stateName ?> = !<?= $stateName ?>"
-            class="group flex w-full items-center justify-start rounded-lg px-4 py-3 transition-all duration-200 <?= $classeFundo ?>"
-            :title="!open ? '<?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?>' : ''"
-        >
+        <div class="group flex w-full items-center justify-start rounded-lg px-4 py-3 transition-all duration-200 <?= $classeFundo ?>">
             <svg xmlns="http://www.w3.org/2000/svg"
                  class="h-5 w-5 flex-shrink-0 <?= $classeIcone ?> transition-colors group-hover:text-blue-600"
                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -192,53 +185,23 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
                       d="<?= htmlspecialchars($icone, ENT_QUOTES, 'UTF-8') ?>" />
             </svg>
 
-            <span x-show="open" 
-                  x-cloak
-                  class="ml-4 whitespace-nowrap text-left <?= $classeTexto ?> transition-colors group-hover:text-gray-900">
+            <span class="ml-4 whitespace-nowrap text-left <?= $classeTexto ?> transition-colors group-hover:text-gray-900">
                 <?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?>
             </span>
+        </div>
 
-            <svg x-show="open" 
-                 x-cloak
-                 xmlns="http://www.w3.org/2000/svg"
-                 class="ml-auto h-4 w-4 transition-transform duration-300 <?= $classeIcone ?>"
-                 :class="{ 'rotate-180': <?= $stateName ?> }"
-                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-        </button>
-
-        <div x-show="<?= $stateName ?> && open"
-             x-collapse
-             class="mt-1 space-y-1 overflow-hidden pl-6">
+        <div class="mt-1 space-y-1 overflow-hidden pl-6">
             <?php foreach ($itens as $item): ?>
-                <?php render_item_menu($item, $paginaAtual, true, true); ?>
+                <?php render_item_menu($item, $paginaAtual, true); ?>
             <?php endforeach; ?>
         </div>
     </div>
     <?php
 }
-
-$isCadastrosAtivo = submenu_ativo($menuCadastros, $paginaAtual);
-$isCatalogoAtivo = submenu_ativo($menuCatalogoVeicular, $paginaAtual);
-$isEstoqueAtivo = submenu_ativo($menuEstoque, $paginaAtual);
-$isRelatoriosAtivo = submenu_ativo($menuRelatorios, $paginaAtual);
-$isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
 ?>
 
-<style>
-    [x-cloak] { display: none !important; }
-</style>
-
 <aside
-    x-data="{
-        open: false,
-        cadastrosOpen: <?= $isCadastrosAtivo ? 'true' : 'false' ?>,
-        catalogoOpen: <?= $isCatalogoAtivo ? 'true' : 'false' ?>,
-        estoqueOpen: <?= $isEstoqueAtivo ? 'true' : 'false' ?>,
-        relatoriosOpen: <?= $isRelatoriosAtivo ? 'true' : 'false' ?>,
-        configuracoesOpen: <?= $isConfiguracoesAtivo ? 'true' : 'false' ?>
-    }"
+    x-data="{ open: false }"
     class="relative hidden h-screen flex-col border-r border-gray-200 bg-white text-gray-900 shadow-lg transition-all duration-300 md:flex overflow-x-hidden"
     :class="open ? 'w-72' : 'w-20'"
 >
@@ -281,40 +244,35 @@ $isConfiguracoesAtivo = submenu_ativo($menuConfiguracoes, $paginaAtual);
             'Cadastros',
             'M4 6h16M4 12h16M4 18h16',
             $menuCadastros,
-            $paginaAtual,
-            'cadastrosOpen'
+            $paginaAtual
         );
 
         render_bloco_submenu(
             'Catálogo Veicular',
             'M8 7h8m-8 4h5M8 15l2-6m6 6l-2-6M5 19h14a2 2 0 0 0 1.84-2.75L13.74 4a2 2 0 0 0-3.48 0L3.16 16.25A2 2 0 0 0 5 19Z',
             $menuCatalogoVeicular,
-            $paginaAtual,
-            'catalogoOpen'
+            $paginaAtual
         );
 
         render_bloco_submenu(
             'Estoque',
             'M4 8l8-4 8 4-8 4-8-4zm0 6l8-4 8 4-8 4-8-4zm0 6l8-4 8 4-8 4-8-4z',
             $menuEstoque,
-            $paginaAtual,
-            'estoqueOpen'
+            $paginaAtual
         );
 
         render_bloco_submenu(
             'Relatórios',
             'M4 7h16M4 12h10M4 17h6',
             $menuRelatorios,
-            $paginaAtual,
-            'relatoriosOpen'
+            $paginaAtual
         );
 
         render_bloco_submenu(
             'Configurações',
-            'M12 6V4m0 2a2 2 0 1 0 0 4m0-4a2 2 0 1 1 0 4m-6 8a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0m0 0v2m0-6v4m6-4v8m0-8a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0',
+            'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
             $menuConfiguracoes,
-            $paginaAtual,
-            'configuracoesOpen'
+            $paginaAtual
         );
         ?>
     </nav>
