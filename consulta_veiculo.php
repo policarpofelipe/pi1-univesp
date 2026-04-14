@@ -232,21 +232,26 @@ if (($_GET['ajax'] ?? '') === 'sugestoes') {
 
     $sqlSugestoes .= " ORDER BY p.nome_comercial ASC LIMIT 8";
 
-    $stmtSugestoes = $pdo->prepare($sqlSugestoes);
-    foreach ($paramsSugestoes as $param => $valor) {
-        $stmtSugestoes->bindValue($param, $valor);
-    }
-    $stmtSugestoes->execute();
+    try {
+        $stmtSugestoes = $pdo->prepare($sqlSugestoes);
+        foreach ($paramsSugestoes as $param => $valor) {
+            $stmtSugestoes->bindValue($param, $valor);
+        }
+        $stmtSugestoes->execute();
 
-    $items = [];
-    foreach ($stmtSugestoes->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $items[] = [
-            'texto' => trim($row['nome_comercial'] . ' [' . $row['sku_interno'] . ']'),
-            'sub'   => trim($row['tipo_peca_nome'] . ' • ' . $row['marca_produto_nome'] . ' • ' . ($row['marca_veiculo_nome'] ?? 'Sem veículo')),
-        ];
-    }
+        $items = [];
+        foreach ($stmtSugestoes->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $items[] = [
+                'texto' => trim($row['nome_comercial'] . ' [' . $row['sku_interno'] . ']'),
+                'sub'   => trim($row['tipo_peca_nome'] . ' • ' . $row['marca_produto_nome'] . ' • ' . ($row['marca_veiculo_nome'] ?? 'Sem veículo')),
+            ];
+        }
 
-    echo json_encode(['items' => $items], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['items' => $items], JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $e) {
+        error_log('Falha nas sugestoes consulta_veiculo.php: ' . $e->getMessage());
+        echo json_encode(['items' => []], JSON_UNESCAPED_UNICODE);
+    }
     exit;
 }
 
@@ -265,8 +270,10 @@ $filtroAtivo = (
 );
 
 $resultados = [];
+$erroBusca = '';
 
 if ($filtroAtivo) {
+    try {
     $sqlBusca = "
         SELECT DISTINCT
             p.id AS produto_id,
@@ -354,6 +361,75 @@ if ($filtroAtivo) {
     }
     $stmtBusca->execute();
     $resultados = $stmtBusca->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        $erroBusca = 'Nao foi possivel aplicar todos os filtros. Exibindo resultado simplificado.';
+        error_log('Falha na super busca consulta_veiculo.php: ' . $e->getMessage());
+
+        $sqlFallback = "
+            SELECT
+                p.id AS produto_id,
+                p.nome_comercial,
+                p.sku_interno,
+                p.codigo_fabricante,
+                p.codigo_barras,
+                p.preco,
+                tp.nome AS tipo_peca_nome,
+                mp.nome AS marca_produto_nome,
+                NULL AS marca_veiculo_nome,
+                NULL AS modelo_veiculo_nome,
+                NULL AS ano_inicio,
+                NULL AS ano_fim,
+                NULL AS motorizacao,
+                NULL AS combustivel,
+                NULL AS versao,
+                NULL AS aplicacao_observacao
+            FROM produtos p
+            INNER JOIN tipos_peca tp ON tp.id = p.tipo_peca_id
+            INNER JOIN marcas_produto mp ON mp.id = p.marca_produto_id
+            WHERE p.ativo = 1
+        ";
+
+        $paramsFallback = [];
+        if ($tipoPecaId > 0) {
+            $sqlFallback .= " AND tp.id = :tipo_peca_id";
+            $paramsFallback[':tipo_peca_id'] = $tipoPecaId;
+        }
+        if ($marcaProdutoId > 0) {
+            $sqlFallback .= " AND mp.id = :marca_produto_id";
+            $paramsFallback[':marca_produto_id'] = $marcaProdutoId;
+        }
+
+        $termosFallback = preg_split('/\s+/', $termoBusca) ?: [];
+        $idxFallback = 0;
+        foreach ($termosFallback as $termo) {
+            $termo = trim($termo);
+            if ($termo === '') {
+                continue;
+            }
+            $idxFallback++;
+            $param = ':f' . $idxFallback;
+            $sqlFallback .= "
+                AND (
+                    p.nome_comercial LIKE {$param}
+                    OR p.sku_interno LIKE {$param}
+                    OR p.codigo_fabricante LIKE {$param}
+                    OR p.codigo_barras LIKE {$param}
+                    OR tp.nome LIKE {$param}
+                    OR mp.nome LIKE {$param}
+                )
+            ";
+            $paramsFallback[$param] = '%' . $termo . '%';
+        }
+
+        $sqlFallback .= " ORDER BY p.nome_comercial ASC LIMIT 300";
+        $stmtFallback = $pdo->prepare($sqlFallback);
+        foreach ($paramsFallback as $param => $valor) {
+            $tipo = is_int($valor) ? PDO::PARAM_INT : PDO::PARAM_STR;
+            $stmtFallback->bindValue($param, $valor, $tipo);
+        }
+        $stmtFallback->execute();
+        $resultados = $stmtFallback->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -497,6 +573,11 @@ if ($filtroAtivo) {
                             <?= count($resultados) ?> item(ns) encontrado(s).
                         </p>
                     </div>
+                    <?php if ($erroBusca !== ''): ?>
+                        <div class="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                            <?= esc($erroBusca) ?>
+                        </div>
+                    <?php endif; ?>
 
                     <?php if (!$resultados): ?>
                         <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
