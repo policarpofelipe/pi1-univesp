@@ -229,7 +229,7 @@ function montarFiltrosBase(array $entrada): array
     return [$where, $params];
 }
 
-function montarFiltroBusca(string $termoBusca, array &$params, array &$where, bool $incluirRelacionadas = true): void
+function montarFiltroBusca(string $termoBusca, array &$params, array &$where, bool $incluirDescricao = false): void
 {
     $termos = preg_split('/\s+/', $termoBusca) ?: [];
     $i = 0;
@@ -248,7 +248,7 @@ function montarFiltroBusca(string $termoBusca, array &$params, array &$where, bo
             "tp.nome LIKE {$param}",
             "mp.nome LIKE {$param}",
         ];
-        if ($incluirRelacionadas) {
+        if ($incluirDescricao) {
             $campos[] = "p.descricao LIKE {$param}";
         }
         $where[] = '(' . implode(' OR ', $campos) . ')';
@@ -375,9 +375,10 @@ $filtros = carregarOpcoesFiltros($pdo, $estado);
 $opcoes = $filtros['opcoes'];
 $avisos = array_merge($avisos, $filtros['avisos']);
 $schemaVeicularOk = (bool)$filtros['schema_veicular_ok'];
+$colunaDescricaoExiste = colunaExiste($pdo, 'produtos', 'descricao');
 
 [$where, $params] = montarFiltrosBase($estado);
-montarFiltroBusca($estado['q'], $params, $where, true);
+montarFiltroBusca($estado['q'], $params, $where, $colunaDescricaoExiste);
 montarFiltroVeicular($estado, $params, $where, $schemaVeicularOk);
 $whereSql = implode(' AND ', $where);
 
@@ -460,27 +461,42 @@ $baseParams = [
 
                     <div>
                         <label for="marca_veiculo_id" class="<?= classe_label() ?>">Marca do veículo</label>
-                        <?= select_padrao('marca_veiculo_id', $opcoes['marcasVeiculo'], $baseParams['marca_veiculo_id'], ['id' => 'marca_veiculo_id']) ?>
+                        <?= select_padrao('marca_veiculo_id', $opcoes['marcasVeiculo'], $baseParams['marca_veiculo_id'], [
+                            'id' => 'marca_veiculo_id',
+                            'onchange' => 'this.form.submit()'
+                        ]) ?>
                     </div>
 
                     <div>
                         <label for="modelo_veiculo_id" class="<?= classe_label() ?>">Modelo do veículo</label>
-                        <?= select_padrao('modelo_veiculo_id', $opcoes['modelosVeiculo'], $baseParams['modelo_veiculo_id'], ['id' => 'modelo_veiculo_id']) ?>
+                        <?= select_padrao('modelo_veiculo_id', $opcoes['modelosVeiculo'], $baseParams['modelo_veiculo_id'], [
+                            'id' => 'modelo_veiculo_id',
+                            'onchange' => 'this.form.submit()'
+                        ]) ?>
                     </div>
 
                     <div>
                         <label for="veiculo_configuracao_id" class="<?= classe_label() ?>">Configuração</label>
-                        <?= select_padrao('veiculo_configuracao_id', $opcoes['configuracoes'], $baseParams['veiculo_configuracao_id'], ['id' => 'veiculo_configuracao_id']) ?>
+                        <?= select_padrao('veiculo_configuracao_id', $opcoes['configuracoes'], $baseParams['veiculo_configuracao_id'], [
+                            'id' => 'veiculo_configuracao_id',
+                            'onchange' => 'this.form.submit()'
+                        ]) ?>
                     </div>
 
                     <div>
                         <label for="tipo_peca_id" class="<?= classe_label() ?>">Tipo de peça</label>
-                        <?= select_padrao('tipo_peca_id', $opcoes['tiposPeca'], $baseParams['tipo_peca_id'], ['id' => 'tipo_peca_id']) ?>
+                        <?= select_padrao('tipo_peca_id', $opcoes['tiposPeca'], $baseParams['tipo_peca_id'], [
+                            'id' => 'tipo_peca_id',
+                            'onchange' => 'this.form.submit()'
+                        ]) ?>
                     </div>
 
                     <div>
                         <label for="marca_produto_id" class="<?= classe_label() ?>">Marca do produto</label>
-                        <?= select_padrao('marca_produto_id', $opcoes['marcasProduto'], $baseParams['marca_produto_id'], ['id' => 'marca_produto_id']) ?>
+                        <?= select_padrao('marca_produto_id', $opcoes['marcasProduto'], $baseParams['marca_produto_id'], [
+                            'id' => 'marca_produto_id',
+                            'onchange' => 'this.form.submit()'
+                        ]) ?>
                     </div>
 
                     <div class="md:col-span-3 flex flex-col gap-2 sm:flex-row">
