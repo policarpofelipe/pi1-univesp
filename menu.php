@@ -11,7 +11,7 @@ $menuPrincipal = [
     ],
     [
         'url'   => 'consulta_veiculo.php',
-        'label' => 'Consulta por Veículo',
+        'label' => 'Consulta',
         'icon'  => 'M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z',
     ],
     [
