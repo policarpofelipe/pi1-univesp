@@ -226,14 +226,12 @@ try {
         INNER JOIN marcas_produto mp ON mp.id = p.marca_produto_id
         WHERE {$whereSql}
         ORDER BY p.nome_comercial ASC
-        LIMIT :limite OFFSET :offset
+        LIMIT {$porPagina} OFFSET {$offset}
     ";
     $stmtLista = $pdo->prepare($sqlLista);
     foreach ($params as $chave => [$valor, $tipo]) {
         $stmtLista->bindValue($chave, $valor, $tipo);
     }
-    $stmtLista->bindValue(':limite', $porPagina, PDO::PARAM_INT);
-    $stmtLista->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmtLista->execute();
     $resultados = $stmtLista->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
@@ -306,13 +304,11 @@ try {
             INNER JOIN marcas_produto mp ON mp.id = p.marca_produto_id
             WHERE {$whereSqlFallback}
             ORDER BY p.nome_comercial ASC
-            LIMIT :limite OFFSET :offset
+            LIMIT {$porPagina} OFFSET {$offset}
         ");
         foreach ($paramsFallback as $chave => [$valor, $tipo]) {
             $stmtListaFallback->bindValue($chave, $valor, $tipo);
         }
-        $stmtListaFallback->bindValue(':limite', $porPagina, PDO::PARAM_INT);
-        $stmtListaFallback->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmtListaFallback->execute();
         $resultados = $stmtListaFallback->fetchAll(PDO::FETCH_ASSOC);
     } catch (Throwable $e2) {
