@@ -138,7 +138,7 @@ if ($produtoSelecionado > 0 && $estoqueSelecionado > 0) {
 
                 <div class="flex flex-wrap gap-2">
                     <?= botao_link('listar_movimentacoes_estoque.php', 'Voltar para movimentações', 'cancelar') ?>
-                    <?= botao_link('form_movimentacao_estoque.php', 'Formulário genérico', 'atalho') ?>
+                    <?= botao_link('form_movimentacao_estoque.php', 'Movimentação manual (avançada)', 'atalho') ?>
                 </div>
             </div>
 
