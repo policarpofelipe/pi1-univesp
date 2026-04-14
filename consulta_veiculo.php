@@ -330,10 +330,23 @@ function buscarListaProdutos(PDO $pdo, string $whereSql, array $params, int $lim
             p.codigo_barras,
             p.preco,
             tp.nome AS tipo_peca_nome,
-            mp.nome AS marca_produto_nome
+            mp.nome AS marca_produto_nome,
+            app_agg.marcas_veiculo AS marcas_veiculo_nome,
+            app_agg.modelos_veiculo AS modelos_veiculo_nome
         FROM produtos p
         INNER JOIN tipos_peca tp ON tp.id = p.tipo_peca_id
         INNER JOIN marcas_produto mp ON mp.id = p.marca_produto_id
+        LEFT JOIN (
+            SELECT
+                ap.tipo_peca_id,
+                GROUP_CONCAT(DISTINCT mv.nome ORDER BY mv.nome SEPARATOR ', ') AS marcas_veiculo,
+                GROUP_CONCAT(DISTINCT mo.nome ORDER BY mo.nome SEPARATOR ', ') AS modelos_veiculo
+            FROM aplicacoes_peca ap
+            INNER JOIN veiculos_configuracao vc ON vc.id = ap.veiculo_configuracao_id
+            INNER JOIN modelos_veiculo mo ON mo.id = vc.modelo_veiculo_id
+            INNER JOIN marcas_veiculo mv ON mv.id = mo.marca_veiculo_id
+            GROUP BY ap.tipo_peca_id
+        ) app_agg ON app_agg.tipo_peca_id = p.tipo_peca_id
         WHERE {$whereSql}
         ORDER BY p.nome_comercial ASC
         LIMIT {$limite} OFFSET {$offset}
@@ -542,6 +555,8 @@ $baseParams = [
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Produto</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de peça</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Marca</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Fabricante veículo</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Modelo veículo</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Códigos</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Preço</th>
                                 <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
@@ -556,6 +571,8 @@ $baseParams = [
                                     </td>
                                     <td class="px-4 py-4 text-sm text-slate-700"><?= esc($item['tipo_peca_nome']) ?></td>
                                     <td class="px-4 py-4 text-sm text-slate-700"><?= esc($item['marca_produto_nome']) ?></td>
+                                    <td class="px-4 py-4 text-sm text-slate-700"><?= esc($item['marcas_veiculo_nome'] ?: '—') ?></td>
+                                    <td class="px-4 py-4 text-sm text-slate-700"><?= esc($item['modelos_veiculo_nome'] ?: '—') ?></td>
                                     <td class="px-4 py-4 text-sm text-slate-600">
                                         <div>Fab.: <?= esc($item['codigo_fabricante'] ?: '—') ?></div>
                                         <div>Barras: <?= esc($item['codigo_barras'] ?: '—') ?></div>
