@@ -55,6 +55,32 @@ if (!$produto) {
     exit;
 }
 
+$sqlSaldosPorEstoque = "
+    SELECT
+        e.id,
+        e.nome,
+        e.localizacao,
+        COALESCE(SUM(me.quantidade), 0) AS saldo_atual
+    FROM estoques e
+    LEFT JOIN movimentacoes_estoque me
+        ON me.estoque_id = e.id
+       AND me.produto_id = :produto_id
+    WHERE e.ativo = 1
+    GROUP BY e.id, e.nome, e.localizacao
+    HAVING COALESCE(SUM(me.quantidade), 0) <> 0
+    ORDER BY e.nome ASC
+";
+
+$stmtSaldos = $pdo->prepare($sqlSaldosPorEstoque);
+$stmtSaldos->bindValue(':produto_id', (int)$produto['id'], PDO::PARAM_INT);
+$stmtSaldos->execute();
+$saldosPorEstoque = $stmtSaldos->fetchAll(PDO::FETCH_ASSOC);
+
+$saldoTotal = 0.0;
+foreach ($saldosPorEstoque as $linhaSaldo) {
+    $saldoTotal += (float)$linhaSaldo['saldo_atual'];
+}
+
 $ativo = (int)($produto['ativo'] ?? 0) === 1;
 ?>
 <!DOCTYPE html>
@@ -183,6 +209,11 @@ $ativo = (int)($produto['ativo'] ?? 0) === 1;
                             </div>
 
                             <div>
+                                <span class="font-medium text-slate-700">Saldo total disponível:</span>
+                                <span class="text-slate-600"><?= number_format($saldoTotal, 2, ',', '.') ?></span>
+                            </div>
+
+                            <div>
                                 <span class="font-medium text-slate-700">Criado em:</span>
                                 <span class="text-slate-600"><?= esc($produto['criado_em']) ?></span>
                             </div>
@@ -200,6 +231,39 @@ $ativo = (int)($produto['ativo'] ?? 0) === 1;
                     <div class="text-sm leading-6 text-slate-600">
                         <?= nl2br(esc($produto['descricao'] ?: 'Sem descrição cadastrada.')) ?>
                     </div>
+                </div>
+
+                <div class="mt-6 rounded-xl border border-slate-200 bg-white p-4">
+                    <div class="mb-3 text-sm font-semibold text-slate-800">Disponibilidade por local de estoque</div>
+
+                    <?php if (!$saldosPorEstoque): ?>
+                        <div class="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                            Não há saldo disponível para este produto nos estoques ativos.
+                        </div>
+                    <?php else: ?>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-slate-200">
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Local de estoque</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Endereço interno</th>
+                                        <th class="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Quantidade disponível</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($saldosPorEstoque as $saldo): ?>
+                                        <tr class="border-b border-slate-100 last:border-b-0">
+                                            <td class="px-3 py-3 text-sm text-slate-800"><?= esc($saldo['nome']) ?></td>
+                                            <td class="px-3 py-3 text-sm text-slate-600"><?= esc($saldo['localizacao'] ?: '—') ?></td>
+                                            <td class="px-3 py-3 text-right text-sm font-medium text-slate-800">
+                                                <?= number_format((float)$saldo['saldo_atual'], 2, ',', '.') ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
