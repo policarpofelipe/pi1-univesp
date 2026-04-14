@@ -229,31 +229,30 @@ function montarFiltrosBase(array $entrada): array
     return [$where, $params];
 }
 
-function montarFiltroBusca(string $termoBusca, array &$params, array &$where, bool $incluirDescricao = false): void
+function mapearCampoBusca(string $campo): string
 {
-    $termos = preg_split('/\s+/', $termoBusca) ?: [];
-    $i = 0;
-    foreach ($termos as $termo) {
-        $termo = trim($termo);
-        if ($termo === '') {
-            continue;
-        }
-        $i++;
-        $param = ':termo_' . $i;
-        $campos = [
-            "p.nome_comercial LIKE {$param}",
-            "p.sku_interno LIKE {$param}",
-            "p.codigo_fabricante LIKE {$param}",
-            "p.codigo_barras LIKE {$param}",
-            "tp.nome LIKE {$param}",
-            "mp.nome LIKE {$param}",
-        ];
-        if ($incluirDescricao) {
-            $campos[] = "p.descricao LIKE {$param}";
-        }
-        $where[] = '(' . implode(' OR ', $campos) . ')';
-        $params[$param] = ['%' . $termo . '%', PDO::PARAM_STR];
+    $mapa = [
+        'produto' => 'p.nome_comercial',
+        'sku' => 'p.sku_interno',
+        'codigo_fabricante' => 'p.codigo_fabricante',
+        'codigo_barras' => 'p.codigo_barras',
+        'tipo_peca' => 'tp.nome',
+        'marca_produto' => 'mp.nome',
+    ];
+    return $mapa[$campo] ?? $mapa['produto'];
+}
+
+function montarFiltroBusca(string $termoBusca, string $campoBusca, array &$params, array &$where): void
+{
+    $termoBusca = trim($termoBusca);
+    if ($termoBusca === '') {
+        return;
     }
+
+    $campoSql = mapearCampoBusca($campoBusca);
+    $param = ':termo_busca';
+    $where[] = "{$campoSql} LIKE {$param}";
+    $params[$param] = ['%' . $termoBusca . '%', PDO::PARAM_STR];
 }
 
 function montarFiltroVeicular(array $entrada, array &$params, array &$where, bool $schemaVeicularOk): void
@@ -356,6 +355,7 @@ function buscarListaProdutos(PDO $pdo, string $whereSql, array $params, int $lim
 
 $estado = [
     'q' => trim((string)($_GET['q'] ?? '')),
+    'campo_busca' => trim((string)($_GET['campo_busca'] ?? 'produto')),
     'marca_veiculo_id' => max(0, (int)($_GET['marca_veiculo_id'] ?? 0)),
     'modelo_veiculo_id' => max(0, (int)($_GET['modelo_veiculo_id'] ?? 0)),
     'veiculo_configuracao_id' => max(0, (int)($_GET['veiculo_configuracao_id'] ?? 0)),
@@ -375,10 +375,8 @@ $filtros = carregarOpcoesFiltros($pdo, $estado);
 $opcoes = $filtros['opcoes'];
 $avisos = array_merge($avisos, $filtros['avisos']);
 $schemaVeicularOk = (bool)$filtros['schema_veicular_ok'];
-$colunaDescricaoExiste = colunaExiste($pdo, 'produtos', 'descricao');
-
 [$where, $params] = montarFiltrosBase($estado);
-montarFiltroBusca($estado['q'], $params, $where, $colunaDescricaoExiste);
+montarFiltroBusca($estado['q'], $estado['campo_busca'], $params, $where);
 montarFiltroVeicular($estado, $params, $where, $schemaVeicularOk);
 $whereSql = implode(' AND ', $where);
 
@@ -404,6 +402,7 @@ if ($erro === '') {
 
 $baseParams = [
     'q' => $estado['q'],
+    'campo_busca' => $estado['campo_busca'],
     'marca_veiculo_id' => $estado['marca_veiculo_id'] > 0 ? (string)$estado['marca_veiculo_id'] : '',
     'modelo_veiculo_id' => $estado['modelo_veiculo_id'] > 0 ? (string)$estado['modelo_veiculo_id'] : '',
     'veiculo_configuracao_id' => $estado['veiculo_configuracao_id'] > 0 ? (string)$estado['veiculo_configuracao_id'] : '',
@@ -453,10 +452,20 @@ $baseParams = [
                 <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div class="md:col-span-3">
                         <label for="q" class="<?= classe_label() ?>">Buscar</label>
-                        <?= input_texto('q', $estado['q'], [
-                            'id' => 'q',
-                            'placeholder' => 'Ex.: mola corsa, pastilha, amortecedor, SKF...'
-                        ]) ?>
+                        <div class="flex gap-2">
+                            <?= select_padrao('campo_busca', [
+                                'produto' => 'Produto',
+                                'sku' => 'SKU',
+                                'codigo_fabricante' => 'Código fabricante',
+                                'codigo_barras' => 'Código de barras',
+                                'tipo_peca' => 'Tipo de peça',
+                                'marca_produto' => 'Marca do produto',
+                            ], $estado['campo_busca'], ['id' => 'campo_busca']) ?>
+                            <?= input_texto('q', $estado['q'], [
+                                'id' => 'q',
+                                'placeholder' => 'Digite o termo...'
+                            ]) ?>
+                        </div>
                     </div>
 
                     <div>
