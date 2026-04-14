@@ -151,8 +151,8 @@ function botao_excluir(string $url, string $mensagem = 'Tem certeza?', string $t
     <a href="' . seguro($url) . '"
        onclick="return confirm(\'' . addslashes($mensagem) . '\')"
        title="' . seguro($titulo) . '"
-       class="' . seguro(classe_botao('perigo', true)) . '">
-        ' . icone_lixeira() . '
+       class="' . seguro(classe_botao('perigo')) . '">
+        ' . seguro($titulo) . '
     </a>';
 }
 
