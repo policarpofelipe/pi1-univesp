@@ -36,7 +36,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  */
 function opcoes_lista_nome(PDO $pdo, string $tabela): array
 {
-    $permitidas = ['categorias_peca', 'tipos_peca', 'marcas_produto'];
+    $permitidas = ['categorias_peca', 'tipos_peca', 'marcas_produto', 'marcas_veiculo'];
     if (!in_array($tabela, $permitidas, true)) {
         return [];
     }
@@ -52,6 +52,27 @@ function opcoes_lista_nome(PDO $pdo, string $tabela): array
 }
 
 /**
+ * @return array<int, string>
+ */
+function opcoes_modelos_compostos(PDO $pdo): array
+{
+    $stmt = $pdo->query("
+        SELECT mv.nome AS marca_nome, mo.nome AS modelo_nome
+        FROM modelos_veiculo mo
+        INNER JOIN marcas_veiculo mv ON mv.id = mo.marca_veiculo_id
+        ORDER BY mv.nome ASC, mo.nome ASC
+    ");
+    $itens = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $valor = trim((string)$row['marca_nome']) . ' / ' . trim((string)$row['modelo_nome']);
+        if (trim($valor) !== '/') {
+            $itens[] = $valor;
+        }
+    }
+    return array_values(array_unique($itens));
+}
+
+/**
  * @return array<string, array<int, string>>
  */
 function opcoes_modelo_importacao(PDO $pdo, string $tipo): array
@@ -64,6 +85,12 @@ function opcoes_modelo_importacao(PDO $pdo, string $tipo): array
             'tipo_peca_nome' => opcoes_lista_nome($pdo, 'tipos_peca'),
             'marca_produto_nome' => opcoes_lista_nome($pdo, 'marcas_produto'),
         ];
+    }
+    if ($tipo === 'modelos_veiculo') {
+        return ['marca_nome' => opcoes_lista_nome($pdo, 'marcas_veiculo')];
+    }
+    if ($tipo === 'veiculos_configuracao') {
+        return ['modelo_veiculo_nome' => opcoes_modelos_compostos($pdo)];
     }
     return [];
 }
