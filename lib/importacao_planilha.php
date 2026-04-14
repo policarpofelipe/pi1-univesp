@@ -103,7 +103,7 @@ function importacao_planilha_cabecalho_confere(array $cabecalhoArquivo, array $c
  *
  * @return array{erro?: string, cabecalho?: array<int, string>, linhas?: array<int, array<string, string>>}
  */
-function importacao_planilha_ler_arquivo(string $caminho, string $tipo): array
+function importacao_planilha_ler_arquivo(string $caminho, string $tipo, ?string $nomeOriginal = null): array
 {
     importacao_planilha_autoload();
 
@@ -112,7 +112,8 @@ function importacao_planilha_ler_arquivo(string $caminho, string $tipo): array
         return ['erro' => 'Tipo de importação inválido.'];
     }
 
-    $ext = strtolower(pathinfo($caminho, PATHINFO_EXTENSION));
+    $nomeParaValidacao = $nomeOriginal !== null && $nomeOriginal !== '' ? $nomeOriginal : $caminho;
+    $ext = strtolower(pathinfo($nomeParaValidacao, PATHINFO_EXTENSION));
     if (!in_array($ext, ['xls', 'xlsx'], true)) {
         return ['erro' => 'Envie um arquivo .xls ou .xlsx.'];
     }

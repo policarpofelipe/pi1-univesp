@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $erroFlash = 'Formato inválido. Use .xls ou .xlsx.';
                 } else {
                     try {
-                        $lido = importacao_planilha_ler_arquivo($tmp, $tipo);
+                        $lido = importacao_planilha_ler_arquivo($tmp, $tipo, (string)($arquivo['name'] ?? ''));
                         if (isset($lido['erro'])) {
                             $erroFlash = $lido['erro'];
                         } else {
