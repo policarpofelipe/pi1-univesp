@@ -463,7 +463,11 @@ $baseParams = [
                         <label for="marca_veiculo_id" class="<?= classe_label() ?>">Marca do veículo</label>
                         <?= select_padrao('marca_veiculo_id', $opcoes['marcasVeiculo'], $baseParams['marca_veiculo_id'], [
                             'id' => 'marca_veiculo_id',
-                            'onchange' => 'this.form.submit()'
+                            'onchange' => "
+                                this.form.modelo_veiculo_id.value = '';
+                                this.form.veiculo_configuracao_id.value = '';
+                                this.form.submit();
+                            "
                         ]) ?>
                     </div>
 
@@ -471,7 +475,10 @@ $baseParams = [
                         <label for="modelo_veiculo_id" class="<?= classe_label() ?>">Modelo do veículo</label>
                         <?= select_padrao('modelo_veiculo_id', $opcoes['modelosVeiculo'], $baseParams['modelo_veiculo_id'], [
                             'id' => 'modelo_veiculo_id',
-                            'onchange' => 'this.form.submit()'
+                            'onchange' => "
+                                this.form.veiculo_configuracao_id.value = '';
+                                this.form.submit();
+                            "
                         ]) ?>
                     </div>
 
