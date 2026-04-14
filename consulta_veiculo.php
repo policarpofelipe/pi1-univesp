@@ -237,8 +237,88 @@ try {
     $stmtLista->execute();
     $resultados = $stmtLista->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
-    $erro = 'Erro ao processar a consulta. Tente novamente em instantes.';
     error_log('consulta_veiculo.php: ' . $e->getMessage());
+
+    try {
+        $aviso = 'Consulta simplificada aplicada devido a limitacao temporaria no servidor.';
+
+        $whereFallback = ["p.ativo = 1"];
+        $paramsFallback = [];
+
+        if ($tipoPecaId > 0) {
+            $whereFallback[] = "p.tipo_peca_id = :tipo_peca_id";
+            $paramsFallback[':tipo_peca_id'] = [$tipoPecaId, PDO::PARAM_INT];
+        }
+        if ($marcaProdutoId > 0) {
+            $whereFallback[] = "p.marca_produto_id = :marca_produto_id";
+            $paramsFallback[':marca_produto_id'] = [$marcaProdutoId, PDO::PARAM_INT];
+        }
+
+        $termosFallback = preg_split('/\s+/', $termoBusca) ?: [];
+        $idxFallback = 0;
+        foreach ($termosFallback as $termo) {
+            $termo = trim($termo);
+            if ($termo === '') {
+                continue;
+            }
+            $idxFallback++;
+            $param = ':f_termo_' . $idxFallback;
+            $whereFallback[] = "(
+                p.nome_comercial LIKE {$param}
+                OR p.sku_interno LIKE {$param}
+                OR p.codigo_fabricante LIKE {$param}
+                OR p.codigo_barras LIKE {$param}
+            )";
+            $paramsFallback[$param] = ['%' . $termo . '%', PDO::PARAM_STR];
+        }
+
+        $whereSqlFallback = implode(' AND ', $whereFallback);
+
+        $stmtTotalFallback = $pdo->prepare("
+            SELECT COUNT(*) AS total
+            FROM produtos p
+            WHERE {$whereSqlFallback}
+        ");
+        foreach ($paramsFallback as $chave => [$valor, $tipo]) {
+            $stmtTotalFallback->bindValue($chave, $valor, $tipo);
+        }
+        $stmtTotalFallback->execute();
+        $totalItens = (int)$stmtTotalFallback->fetchColumn();
+
+        $totalPaginas = max(1, (int)ceil($totalItens / $porPagina));
+        if ($paginaAtual > $totalPaginas) {
+            $paginaAtual = $totalPaginas;
+        }
+        $offset = ($paginaAtual - 1) * $porPagina;
+
+        $stmtListaFallback = $pdo->prepare("
+            SELECT
+                p.id,
+                p.nome_comercial,
+                p.sku_interno,
+                p.codigo_fabricante,
+                p.codigo_barras,
+                p.preco,
+                tp.nome AS tipo_peca_nome,
+                mp.nome AS marca_produto_nome
+            FROM produtos p
+            INNER JOIN tipos_peca tp ON tp.id = p.tipo_peca_id
+            INNER JOIN marcas_produto mp ON mp.id = p.marca_produto_id
+            WHERE {$whereSqlFallback}
+            ORDER BY p.nome_comercial ASC
+            LIMIT :limite OFFSET :offset
+        ");
+        foreach ($paramsFallback as $chave => [$valor, $tipo]) {
+            $stmtListaFallback->bindValue($chave, $valor, $tipo);
+        }
+        $stmtListaFallback->bindValue(':limite', $porPagina, PDO::PARAM_INT);
+        $stmtListaFallback->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmtListaFallback->execute();
+        $resultados = $stmtListaFallback->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e2) {
+        error_log('consulta_veiculo.php fallback: ' . $e2->getMessage());
+        $erro = 'Erro ao processar a consulta. Tente novamente em instantes.';
+    }
 }
 
 $baseParams = [
