@@ -33,6 +33,14 @@ function montar_label_configuracao(array $config): string
     return implode(' / ', $partes);
 }
 
+function tamanho_texto(string $texto): int
+{
+    if (function_exists('mb_strlen')) {
+        return mb_strlen($texto);
+    }
+    return strlen($texto);
+}
+
 $termoBusca = trim((string)($_GET['q'] ?? ''));
 $marcaVeiculoId = (int)($_GET['marca_veiculo_id'] ?? 0);
 $modeloVeiculoId = (int)($_GET['modelo_veiculo_id'] ?? 0);
@@ -152,7 +160,7 @@ if (($_GET['ajax'] ?? '') === 'sugestoes') {
     header('Content-Type: application/json; charset=utf-8');
 
     $q = trim((string)($_GET['q'] ?? ''));
-    if (mb_strlen($q) < 2) {
+    if (tamanho_texto($q) < 2) {
         echo json_encode(['items' => []], JSON_UNESCAPED_UNICODE);
         exit;
     }
