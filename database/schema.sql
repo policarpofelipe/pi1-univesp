@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Tempo de geração: 10/03/2026 às 10:35
--- Versão do servidor: 8.0.45
--- Versão do PHP: 8.3.30
+-- Tempo de geração: 05/05/2026 às 16:58
+-- Versão do servidor: 8.0.46
+-- Versão do PHP: 8.4.20
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -59,19 +59,19 @@ CREATE TABLE `categorias_peca` (
 
 CREATE TABLE `config_empresa` (
   `id` int UNSIGNED NOT NULL,
-  `razao_social` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `nome_fantasia` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `cnpj` varchar(18) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `inscricao_estadual` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `telefone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `cep` varchar(9) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `logradouro` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `numero` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `complemento` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `bairro` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `cidade` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `uf` varchar(2) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `razao_social` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nome_fantasia` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cnpj` varchar(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `inscricao_estadual` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `telefone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cep` varchar(9) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `logradouro` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `numero` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `complemento` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bairro` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cidade` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `uf` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -174,6 +174,29 @@ CREATE TABLE `produtos` (
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `produto_imagens`
+--
+
+CREATE TABLE `produto_imagens` (
+  `id` int UNSIGNED NOT NULL,
+  `produto_id` int UNSIGNED NOT NULL,
+  `caminho_arquivo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nome_arquivo` varchar(180) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nome_original` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `mime_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tamanho_bytes` int UNSIGNED NOT NULL,
+  `largura` int UNSIGNED DEFAULT NULL,
+  `altura` int UNSIGNED DEFAULT NULL,
+  `ordem` smallint UNSIGNED NOT NULL DEFAULT '0',
+  `principal` tinyint(1) NOT NULL DEFAULT '0',
+  `alt_text` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ;
 
 -- --------------------------------------------------------
 
@@ -316,6 +339,16 @@ ALTER TABLE `produtos`
   ADD KEY `idx_produtos_codigo_fabricante` (`codigo_fabricante`);
 
 --
+-- Índices de tabela `produto_imagens`
+--
+ALTER TABLE `produto_imagens`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_produto_imagens_caminho_arquivo` (`caminho_arquivo`),
+  ADD KEY `idx_produto_imagens_produto` (`produto_id`),
+  ADD KEY `idx_produto_imagens_produto_ordem` (`produto_id`,`ordem`),
+  ADD KEY `idx_produto_imagens_produto_principal` (`produto_id`,`principal`);
+
+--
 -- Índices de tabela `tipos_peca`
 --
 ALTER TABLE `tipos_peca`
@@ -407,6 +440,12 @@ ALTER TABLE `produtos`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de tabela `produto_imagens`
+--
+ALTER TABLE `produto_imagens`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de tabela `tipos_peca`
 --
 ALTER TABLE `tipos_peca`
@@ -455,6 +494,12 @@ ALTER TABLE `movimentacoes_estoque`
 ALTER TABLE `produtos`
   ADD CONSTRAINT `fk_produtos_marca_produto` FOREIGN KEY (`marca_produto_id`) REFERENCES `marcas_produto` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_produtos_tipo_peca` FOREIGN KEY (`tipo_peca_id`) REFERENCES `tipos_peca` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Restrições para tabelas `produto_imagens`
+--
+ALTER TABLE `produto_imagens`
+  ADD CONSTRAINT `fk_produto_imagens_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restrições para tabelas `tipos_peca`
