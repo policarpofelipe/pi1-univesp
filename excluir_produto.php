@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/conexao.php';
+require __DIR__ . '/lib/produto_imagens.php';
 
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -81,6 +82,8 @@ try {
     | Se não houver vínculo, exclui fisicamente
     |--------------------------------------------------------------------------
     */
+    $imagensProduto = listarImagensProduto($pdo, $id);
+
     $sqlExcluir = "
         DELETE FROM produtos
         WHERE id = :id
@@ -90,6 +93,17 @@ try {
     $stmtExcluir = $pdo->prepare($sqlExcluir);
     $stmtExcluir->bindValue(':id', $id, PDO::PARAM_INT);
     $stmtExcluir->execute();
+
+    foreach ($imagensProduto as $imagem) {
+        $caminhoRelativo = (string)($imagem['caminho_arquivo'] ?? '');
+        if ($caminhoRelativo === '') {
+            continue;
+        }
+        $caminhoAbs = __DIR__ . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $caminhoRelativo);
+        if (is_file($caminhoAbs)) {
+            @unlink($caminhoAbs);
+        }
+    }
 
     header('Location: listar_produtos.php?sucesso=excluido');
     exit;

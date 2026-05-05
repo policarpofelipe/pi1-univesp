@@ -92,12 +92,16 @@ $sql = "
         p.criado_em,
         p.atualizado_em,
         tp.nome AS tipo_peca_nome,
-        mp.nome AS marca_produto_nome
+        mp.nome AS marca_produto_nome,
+        pi.caminho_arquivo AS imagem_principal
     FROM produtos p
     INNER JOIN tipos_peca tp
         ON tp.id = p.tipo_peca_id
     INNER JOIN marcas_produto mp
         ON mp.id = p.marca_produto_id
+    LEFT JOIN produto_imagens pi
+        ON pi.produto_id = p.id
+       AND pi.principal = 1
     WHERE 1 = 1
 ";
 
@@ -225,6 +229,7 @@ $totalProdutos = count($produtos);
                             <thead>
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ID</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Imagem</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Produto</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Marca</th>
@@ -242,6 +247,19 @@ $totalProdutos = count($produtos);
                                     <tr class="overflow-hidden rounded-xl bg-slate-50 shadow-sm">
                                         <td class="rounded-l-xl px-4 py-4 text-sm text-slate-600">
                                             <?= (int)$produto['id'] ?>
+                                        </td>
+
+                                        <td class="px-4 py-4">
+                                            <?php if (!empty($produto['imagem_principal'])): ?>
+                                                <img
+                                                    src="<?= esc($produto['imagem_principal']) ?>"
+                                                    alt="<?= esc($produto['nome_comercial']) ?>"
+                                                    class="h-12 w-12 rounded-md object-cover"
+                                                    loading="lazy"
+                                                >
+                                            <?php else: ?>
+                                                <span class="text-xs text-slate-500">Sem imagem</span>
+                                            <?php endif; ?>
                                         </td>
 
                                         <td class="px-4 py-4">

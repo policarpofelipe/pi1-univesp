@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/auth.php';
 require __DIR__ . '/conexao.php';
 require __DIR__ . '/componentes.php';
+require __DIR__ . '/lib/produto_imagens.php';
 
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -82,6 +83,17 @@ foreach ($saldosPorEstoque as $linhaSaldo) {
 }
 
 $ativo = (int)($produto['ativo'] ?? 0) === 1;
+$imagensProduto = listarImagensProduto($pdo, (int)$produto['id']);
+$imagemPrincipal = null;
+foreach ($imagensProduto as $img) {
+    if ((int)$img['principal'] === 1) {
+        $imagemPrincipal = $img;
+        break;
+    }
+}
+if ($imagemPrincipal === null && $imagensProduto !== []) {
+    $imagemPrincipal = $imagensProduto[0];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -231,6 +243,40 @@ $ativo = (int)($produto['ativo'] ?? 0) === 1;
                     <div class="text-sm leading-6 text-slate-600">
                         <?= nl2br(esc($produto['descricao'] ?: 'Sem descrição cadastrada.')) ?>
                     </div>
+                </div>
+
+                <div class="mt-6 rounded-xl border border-slate-200 bg-white p-4">
+                    <div class="mb-3 text-sm font-semibold text-slate-800">Galeria de imagens</div>
+                    <?php if (!$imagensProduto): ?>
+                        <div class="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                            Este produto ainda não possui imagens cadastradas.
+                        </div>
+                    <?php else: ?>
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div class="md:col-span-2">
+                                <div class="aspect-video overflow-hidden rounded-xl bg-slate-100">
+                                    <img
+                                        src="<?= esc((string)$imagemPrincipal['caminho_arquivo']) ?>"
+                                        alt="<?= esc((string)($imagemPrincipal['alt_text'] ?: $imagemPrincipal['nome_original'] ?: $imagemPrincipal['nome_arquivo'])) ?>"
+                                        class="h-full w-full object-cover"
+                                        loading="lazy"
+                                    >
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 md:grid-cols-2">
+                                <?php foreach ($imagensProduto as $img): ?>
+                                    <div class="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                                        <img
+                                            src="<?= esc($img['caminho_arquivo']) ?>"
+                                            alt="<?= esc($img['alt_text'] ?: $img['nome_original'] ?: $img['nome_arquivo']) ?>"
+                                            class="h-24 w-full object-cover"
+                                            loading="lazy"
+                                        >
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="mt-6 rounded-xl border border-slate-200 bg-white p-4">
