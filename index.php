@@ -12,7 +12,7 @@ session_start();
 */
 
 if (isset($_SESSION['usuario_id']) && $_SESSION['usuario_id'] > 0) {
-    header("Location: painel.php");
+    header("Location: consulta_veiculo.php");
     exit;
 }
 

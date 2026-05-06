@@ -8,7 +8,7 @@ require __DIR__ . '/conexao.php';
 date_default_timezone_set('America/Sao_Paulo');
 
 if (isset($_SESSION['usuario_id']) && (int)$_SESSION['usuario_id'] > 0) {
-    header('Location: painel.php');
+    header('Location: consulta_veiculo.php');
     exit;
 }
 
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['usuario_nome'] = $nome;
                 $_SESSION['usuario_email'] = $email;
 
-                header('Location: painel.php');
+                header('Location: consulta_veiculo.php');
                 exit;
             } else {
                 $erro = 'Não foi possível concluir o cadastro.';
