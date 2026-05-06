@@ -26,25 +26,25 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
             ],
             'excluido' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Produto excluído com sucesso.',
+                'texto'  => 'Produto excluÃ­do com sucesso.',
             ],
             'inativado' => [
                 'classe' => 'border-yellow-200 bg-yellow-50 text-yellow-700',
-                'texto'  => 'O produto possui vínculos e foi apenas inativado.',
+                'texto'  => 'O produto possui vÃ­nculos e foi apenas inativado.',
             ],
         ],
         'erro' => [
             'metodo_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Método de requisição inválido.',
+                'texto'  => 'MÃ©todo de requisiÃ§Ã£o invÃ¡lido.',
             ],
             'id_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'ID inválido para a operação solicitada.',
+                'texto'  => 'ID invÃ¡lido para a operaÃ§Ã£o solicitada.',
             ],
             'registro_nao_encontrado' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Registro não encontrado.',
+                'texto'  => 'Registro nÃ£o encontrado.',
             ],
             'erro_ao_excluir' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
@@ -69,7 +69,7 @@ $retorno = null;
 if ($sucesso === 'importacao' && $nImportacao > 0) {
     $retorno = [
         'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        'texto'  => 'Importação concluída: ' . $nImportacao . ' registro(s) gravado(s).',
+        'texto'  => 'ImportaÃ§Ã£o concluÃ­da: ' . $nImportacao . ' registro(s) gravado(s).',
     ];
 } elseif ($sucesso !== '') {
     $retorno = mensagemRetorno('sucesso', $sucesso);
@@ -154,18 +154,21 @@ $totalProdutos = count($produtos);
     <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6">
         <div class="mx-auto max-w-7xl">
 
-            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Produtos</h1>
-                    <p class="mt-1 text-sm text-slate-600">
-                        Gerencie os produtos comerciais do catálogo de autopeças.
-                    </p>
-                </div>
+            <div class="mb-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg">
+                <div class="p-5 md:p-6">
+                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Produtos</h1>
+                            <p class="mt-2 text-sm text-slate-300">Gerencie os produtos comerciais do catalogo de autopecas.</p>
+                        </div>
 
-                <div class="flex flex-wrap gap-2">
-                    <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
+                        <div class="flex flex-wrap gap-2">
+                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('importar_planilha.php?tipo=produtos', 'Importar planilha', 'busca') ?>
                     <?= botao_link('form_produto.php', 'Novo produto', 'salvar') ?>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -181,7 +184,7 @@ $totalProdutos = count($produtos);
                         <label for="busca" class="<?= classe_label() ?>">Buscar produto</label>
                         <?= input_texto('busca', $busca, [
                             'id' => 'busca',
-                            'placeholder' => 'Digite nome, SKU, código do fabricante, código de barras, tipo ou marca'
+                            'placeholder' => 'Digite nome, SKU, cÃ³digo do fabricante, cÃ³digo de barras, tipo ou marca'
                         ]) ?>
                     </div>
 
@@ -201,9 +204,9 @@ $totalProdutos = count($produtos);
                 </div>
 
                 <div class="<?= classe_box() ?>">
-                    <div class="text-sm text-slate-500">Usuário logado</div>
+                    <div class="text-sm text-slate-500">UsuÃ¡rio logado</div>
                     <div class="mt-2 text-base font-semibold text-slate-900">
-                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
+                        <?= esc($_SESSION['usuario_nome'] ?? 'UsuÃ¡rio') ?>
                     </div>
                 </div>
             </div>
@@ -252,7 +255,7 @@ $totalProdutos = count($produtos);
                                             <?= esc($produto['nome_comercial']) ?>
                                         </div>
                                         <div class="mt-1 text-xs text-slate-500">
-                                            <?= esc($produto['descricao'] ?: 'Sem descrição') ?>
+                                            <?= esc($produto['descricao'] ?: 'Sem descriÃ§Ã£o') ?>
                                         </div>
                                     </div>
 
@@ -260,8 +263,8 @@ $totalProdutos = count($produtos);
                                         <div><span class="font-medium">Tipo:</span> <?= esc($produto['tipo_peca_nome']) ?></div>
                                         <div><span class="font-medium">Marca:</span> <?= esc($produto['marca_produto_nome']) ?></div>
                                         <div><span class="font-medium">SKU:</span> <?= esc($produto['sku_interno']) ?></div>
-                                        <div><span class="font-medium">Cód. fabricante:</span> <?= esc($produto['codigo_fabricante']) ?></div>
-                                        <div><span class="font-medium">Cód. barras:</span> <?= esc($produto['codigo_barras'] ?: '—') ?></div>
+                                        <div><span class="font-medium">CÃ³d. fabricante:</span> <?= esc($produto['codigo_fabricante']) ?></div>
+                                        <div><span class="font-medium">CÃ³d. barras:</span> <?= esc($produto['codigo_barras'] ?: 'â€”') ?></div>
                                     </div>
 
                                     <div class="flex items-center justify-between border-t border-slate-200 pt-3">

@@ -18,37 +18,37 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
         'sucesso' => [
             'cadastrado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Usuário cadastrado com sucesso.',
+                'texto'  => 'UsuÃ¡rio cadastrado com sucesso.',
             ],
             'editado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Usuário atualizado com sucesso.',
+                'texto'  => 'UsuÃ¡rio atualizado com sucesso.',
             ],
             'excluido' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Usuário excluído com sucesso.',
+                'texto'  => 'UsuÃ¡rio excluÃ­do com sucesso.',
             ],
             'inativado' => [
                 'classe' => 'border-yellow-200 bg-yellow-50 text-yellow-700',
-                'texto'  => 'O usuário possui vínculos e foi apenas inativado.',
+                'texto'  => 'O usuÃ¡rio possui vÃ­nculos e foi apenas inativado.',
             ],
         ],
         'erro' => [
             'metodo_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Método de requisição inválido.',
+                'texto'  => 'MÃ©todo de requisiÃ§Ã£o invÃ¡lido.',
             ],
             'id_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'ID inválido para a operação solicitada.',
+                'texto'  => 'ID invÃ¡lido para a operaÃ§Ã£o solicitada.',
             ],
             'registro_nao_encontrado' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Registro não encontrado.',
+                'texto'  => 'Registro nÃ£o encontrado.',
             ],
             'erro_ao_excluir' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Ocorreu um erro ao excluir o usuário.',
+                'texto'  => 'Ocorreu um erro ao excluir o usuÃ¡rio.',
             ],
         ],
     ];
@@ -106,7 +106,7 @@ $totalUsuarios = count($usuarios);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Usuários</title>
+    <title>UsuÃ¡rios</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -128,17 +128,20 @@ $totalUsuarios = count($usuarios);
     <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6">
         <div class="mx-auto max-w-7xl">
 
-            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Usuários</h1>
-                    <p class="mt-1 text-sm text-slate-600">
-                        Gerencie os usuários com acesso ao sistema.
-                    </p>
-                </div>
+            <div class="mb-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg">
+                <div class="p-5 md:p-6">
+                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Usuarios</h1>
+                            <p class="mt-2 text-sm text-slate-300">Gerencie os acessos de usuarios ao sistema.</p>
+                        </div>
 
-                <div class="flex flex-wrap gap-2">
-                    <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
-                    <?= botao_link('form_usuario.php', 'Novo usuário', 'salvar') ?>
+                        <div class="flex flex-wrap gap-2">
+                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
+                    <?= botao_link('form_usuario.php', 'Novo usuario', 'salvar') ?>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -151,7 +154,7 @@ $totalUsuarios = count($usuarios);
             <div class="<?= classe_box() ?> mb-6">
                 <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
                     <div class="md:col-span-9">
-                        <label for="busca" class="<?= classe_label() ?>">Buscar usuário</label>
+                        <label for="busca" class="<?= classe_label() ?>">Buscar usuÃ¡rio</label>
                         <?= input_texto('busca', $busca, [
                             'id' => 'busca',
                             'placeholder' => 'Digite nome ou e-mail'
@@ -174,26 +177,26 @@ $totalUsuarios = count($usuarios);
                 </div>
 
                 <div class="<?= classe_box() ?>">
-                    <div class="text-sm text-slate-500">Usuário logado</div>
+                    <div class="text-sm text-slate-500">UsuÃ¡rio logado</div>
                     <div class="mt-2 text-base font-semibold text-slate-900">
-                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
+                        <?= esc($_SESSION['usuario_nome'] ?? 'UsuÃ¡rio') ?>
                     </div>
                 </div>
             </div>
 
             <div class="<?= classe_box() ?>">
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">Lista de usuários</h2>
+                    <h2 class="text-lg font-semibold text-slate-900">Lista de usuÃ¡rios</h2>
                 </div>
 
                 <?php if (!$usuarios): ?>
                     <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
                         <p class="text-sm text-slate-600">
-                            Nenhum usuário encontrado.
+                            Nenhum usuÃ¡rio encontrado.
                         </p>
 
                         <div class="mt-4">
-                            <?= botao_link('form_usuario.php', 'Cadastrar primeiro usuário', 'salvar') ?>
+                            <?= botao_link('form_usuario.php', 'Cadastrar primeiro usuÃ¡rio', 'salvar') ?>
                         </div>
                     </div>
                 <?php else: ?>
@@ -206,7 +209,7 @@ $totalUsuarios = count($usuarios);
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">E-mail</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Atualizado em</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">AÃ§Ãµes</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -240,7 +243,7 @@ $totalUsuarios = count($usuarios);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($usuario['atualizado_em'] ?: $usuario['criado_em'] ?: '—') ?>
+                                            <?= esc($usuario['atualizado_em'] ?: $usuario['criado_em'] ?: 'â€”') ?>
                                         </td>
 
                                         <td class="rounded-r-xl px-4 py-4">
@@ -253,7 +256,7 @@ $totalUsuarios = count($usuarios);
 
                                                 <?= botao_excluir(
                                                     'excluir_usuario.php?id=' . (int)$usuario['id'],
-                                                    'Tem certeza que deseja excluir este usuário?',
+                                                    'Tem certeza que deseja excluir este usuÃ¡rio?',
                                                     'Excluir'
                                                 ) ?>
                                             </div>

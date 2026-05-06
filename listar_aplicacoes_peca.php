@@ -18,33 +18,33 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
         'sucesso' => [
             'cadastrado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Aplicação de peça cadastrada com sucesso.',
+                'texto'  => 'AplicaÃ§Ã£o de peÃ§a cadastrada com sucesso.',
             ],
             'editado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Aplicação de peça atualizada com sucesso.',
+                'texto'  => 'AplicaÃ§Ã£o de peÃ§a atualizada com sucesso.',
             ],
             'excluido' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Aplicação de peça excluída com sucesso.',
+                'texto'  => 'AplicaÃ§Ã£o de peÃ§a excluÃ­da com sucesso.',
             ],
         ],
         'erro' => [
             'metodo_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Método de requisição inválido.',
+                'texto'  => 'MÃ©todo de requisiÃ§Ã£o invÃ¡lido.',
             ],
             'id_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'ID inválido para a operação solicitada.',
+                'texto'  => 'ID invÃ¡lido para a operaÃ§Ã£o solicitada.',
             ],
             'registro_nao_encontrado' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Registro não encontrado.',
+                'texto'  => 'Registro nÃ£o encontrado.',
             ],
             'erro_ao_excluir' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Ocorreu um erro ao excluir a aplicação.',
+                'texto'  => 'Ocorreu um erro ao excluir a aplicaÃ§Ã£o.',
             ],
         ],
     ];
@@ -125,7 +125,7 @@ $totalAplicacoes = count($aplicacoes);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplicações de Peça</title>
+    <title>AplicaÃ§Ãµes de PeÃ§a</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -147,17 +147,20 @@ $totalAplicacoes = count($aplicacoes);
     <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6">
         <div class="mx-auto max-w-7xl">
 
-            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Aplicações de Peça</h1>
-                    <p class="mt-1 text-sm text-slate-600">
-                        Gerencie a compatibilidade entre tipos de peça e configurações veiculares.
-                    </p>
-                </div>
+            <div class="mb-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg">
+                <div class="p-5 md:p-6">
+                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Aplicacoes de Peca</h1>
+                            <p class="mt-2 text-sm text-slate-300">Gerencie os vinculos de compatibilidade entre tipo de peca e configuracao veicular.</p>
+                        </div>
 
-                <div class="flex flex-wrap gap-2">
-                    <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
-                    <?= botao_link('form_aplicacao_peca.php', 'Nova aplicação', 'salvar') ?>
+                        <div class="flex flex-wrap gap-2">
+                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
+                    <?= botao_link('form_aplicacao_peca.php', 'Nova aplicacao', 'salvar') ?>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -170,10 +173,10 @@ $totalAplicacoes = count($aplicacoes);
             <div class="<?= classe_box() ?> mb-6">
                 <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
                     <div class="md:col-span-9">
-                        <label for="busca" class="<?= classe_label() ?>">Buscar aplicação</label>
+                        <label for="busca" class="<?= classe_label() ?>">Buscar aplicaÃ§Ã£o</label>
                         <?= input_texto('busca', $busca, [
                             'id' => 'busca',
-                            'placeholder' => 'Digite tipo de peça, marca, modelo, versão, motorização, combustível ou observação'
+                            'placeholder' => 'Digite tipo de peÃ§a, marca, modelo, versÃ£o, motorizaÃ§Ã£o, combustÃ­vel ou observaÃ§Ã£o'
                         ]) ?>
                     </div>
 
@@ -193,26 +196,26 @@ $totalAplicacoes = count($aplicacoes);
                 </div>
 
                 <div class="<?= classe_box() ?>">
-                    <div class="text-sm text-slate-500">Usuário logado</div>
+                    <div class="text-sm text-slate-500">UsuÃ¡rio logado</div>
                     <div class="mt-2 text-base font-semibold text-slate-900">
-                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
+                        <?= esc($_SESSION['usuario_nome'] ?? 'UsuÃ¡rio') ?>
                     </div>
                 </div>
             </div>
 
             <div class="<?= classe_box() ?>">
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">Lista de aplicações</h2>
+                    <h2 class="text-lg font-semibold text-slate-900">Lista de aplicaÃ§Ãµes</h2>
                 </div>
 
                 <?php if (!$aplicacoes): ?>
                     <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
                         <p class="text-sm text-slate-600">
-                            Nenhuma aplicação de peça encontrada.
+                            Nenhuma aplicaÃ§Ã£o de peÃ§a encontrada.
                         </p>
 
                         <div class="mt-4">
-                            <?= botao_link('form_aplicacao_peca.php', 'Cadastrar primeira aplicação', 'salvar') ?>
+                            <?= botao_link('form_aplicacao_peca.php', 'Cadastrar primeira aplicaÃ§Ã£o', 'salvar') ?>
                         </div>
                     </div>
                 <?php else: ?>
@@ -221,14 +224,14 @@ $totalAplicacoes = count($aplicacoes);
                             <thead>
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ID</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de peça</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Veículo</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de peÃ§a</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">VeÃ­culo</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Ano</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Motor</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Combustível</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Versão</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Observação</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">CombustÃ­vel</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">VersÃ£o</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ObservaÃ§Ã£o</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">AÃ§Ãµes</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -259,19 +262,19 @@ $totalAplicacoes = count($aplicacoes);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-700">
-                                            <?= esc($aplicacao['motorizacao'] ?: '—') ?>
+                                            <?= esc($aplicacao['motorizacao'] ?: 'â€”') ?>
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-700">
-                                            <?= esc($aplicacao['combustivel'] ?: '—') ?>
+                                            <?= esc($aplicacao['combustivel'] ?: 'â€”') ?>
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-700">
-                                            <?= esc($aplicacao['versao'] ?: '—') ?>
+                                            <?= esc($aplicacao['versao'] ?: 'â€”') ?>
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($aplicacao['observacao'] ?: '—') ?>
+                                            <?= esc($aplicacao['observacao'] ?: 'â€”') ?>
                                         </td>
 
                                         <td class="rounded-r-xl px-4 py-4">
@@ -284,7 +287,7 @@ $totalAplicacoes = count($aplicacoes);
 
                                                 <?= botao_excluir(
                                                     'excluir_aplicacao_peca.php?id=' . (int)$aplicacao['id'],
-                                                    'Tem certeza que deseja excluir esta aplicação?',
+                                                    'Tem certeza que deseja excluir esta aplicaÃ§Ã£o?',
                                                     'Excluir'
                                                 ) ?>
                                             </div>
