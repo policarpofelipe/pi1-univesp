@@ -39,7 +39,7 @@ if ($id > 0) {
     $paginaRetorno = 'form_movimentacao_estoque.php';
 }
 
-$redirecionarForm = function (string $erro) use ($id, $paginaRetorno, $produtoId, $estoqueId, $quantidadeInformada): void {
+$redirecionarForm = function (string $erro) use ($id, $paginaRetorno, $produtoId, $estoqueId, $quantidadeInformada, $observacao): void {
     $params = ['erro=' . urlencode($erro)];
 
     if ($id > 0) {
@@ -54,6 +54,9 @@ $redirecionarForm = function (string $erro) use ($id, $paginaRetorno, $produtoId
         }
         if ($quantidadeInformada !== '') {
             $params[] = 'quantidade=' . urlencode($quantidadeInformada);
+        }
+        if ($observacao !== '') {
+            $params[] = 'observacao=' . urlencode($observacao);
         }
     }
 
@@ -153,34 +156,7 @@ try {
         $redirecionarForm('estoque_obrigatorio');
     }
 
-    if ($tipoMovimentacao === 'saida') {
-        $stmtTipoColuna = $pdo->query("
-            SELECT COLUMN_TYPE
-            FROM information_schema.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'movimentacoes_estoque'
-              AND COLUMN_NAME = 'quantidade'
-            LIMIT 1
-        ");
-        $columnTypeQuantidade = strtolower((string)$stmtTipoColuna->fetchColumn());
-        if ($columnTypeQuantidade !== '' && strpos($columnTypeQuantidade, 'unsigned') !== false) {
-            $redirecionarForm('schema_quantidade_invalido');
-        }
-
-        $stmtSaldo = $pdo->prepare("
-            SELECT COALESCE(SUM(quantidade), 0)
-            FROM movimentacoes_estoque
-            WHERE produto_id = :produto_id
-              AND estoque_id = :estoque_id
-        ");
-        $stmtSaldo->bindValue(':produto_id', $produtoId, PDO::PARAM_INT);
-        $stmtSaldo->bindValue(':estoque_id', $estoqueId, PDO::PARAM_INT);
-        $stmtSaldo->execute();
-        $saldoAtual = (float)$stmtSaldo->fetchColumn();
-        if (abs($quantidadeBase) > $saldoAtual) {
-            $redirecionarForm('saldo_insuficiente');
-        }
-    }
+    // Saída usa a mesma lógica da entrada, alterando apenas o sinal da quantidade.
 
     /*
     |--------------------------------------------------------------------------

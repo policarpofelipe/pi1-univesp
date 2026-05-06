@@ -29,6 +29,8 @@ if ($erroCodigo !== '' && isset($mapaErros[$erroCodigo])) {
 
 $produtoSelecionado = trim((string)($_GET['produto_id'] ?? ''));
 $estoqueSelecionado = trim((string)($_GET['estoque_id'] ?? ''));
+$quantidadeInformada = trim((string)($_GET['quantidade'] ?? ''));
+$observacaoInformada = trim((string)($_GET['observacao'] ?? ''));
 
 /*
 |--------------------------------------------------------------------------
@@ -67,6 +69,47 @@ $estoques = $stmtEstoques->fetchAll(PDO::FETCH_ASSOC);
 $opcoesEstoques = ['' => 'Selecione um local de estoque'];
 foreach ($estoques as $estoque) {
     $opcoesEstoques[(string)$estoque['id']] = (string)$estoque['nome'];
+}
+
+$sqlImagens = "
+    SELECT p.id AS produto_id, pi.caminho_arquivo
+    FROM produtos p
+    LEFT JOIN produto_imagens pi
+        ON pi.produto_id = p.id
+       AND pi.principal = 1
+    WHERE p.ativo = 1
+";
+$stmtImagens = $pdo->query($sqlImagens);
+$imagemPorProduto = [];
+foreach ($stmtImagens->fetchAll(PDO::FETCH_ASSOC) as $img) {
+    $imagemPorProduto[(string)$img['produto_id']] = (string)($img['caminho_arquivo'] ?? '');
+}
+
+$sqlSaldos = "
+    SELECT
+        me.produto_id,
+        e.nome AS estoque_nome,
+        e.localizacao,
+        COALESCE(SUM(me.quantidade), 0) AS saldo
+    FROM movimentacoes_estoque me
+    INNER JOIN estoques e ON e.id = me.estoque_id
+    GROUP BY me.produto_id, me.estoque_id, e.nome, e.localizacao
+    HAVING COALESCE(SUM(me.quantidade), 0) <> 0
+    ORDER BY e.nome ASC
+";
+$stmtSaldos = $pdo->query($sqlSaldos);
+$saldosPorProduto = [];
+foreach ($stmtSaldos->fetchAll(PDO::FETCH_ASSOC) as $linha) {
+    $produtoId = (string)$linha['produto_id'];
+    if (!isset($saldosPorProduto[$produtoId])) {
+        $saldosPorProduto[$produtoId] = [];
+    }
+    $local = trim((string)($linha['localizacao'] ?? ''));
+    $labelEstoque = (string)$linha['estoque_nome'] . ($local !== '' ? ' (' . $local . ')' : '');
+    $saldosPorProduto[$produtoId][] = [
+        'estoque' => $labelEstoque,
+        'saldo' => number_format((float)$linha['saldo'], 2, ',', '.'),
+    ];
 }
 ?>
 <!DOCTYPE html>
@@ -148,7 +191,7 @@ foreach ($estoques as $estoque) {
 
                         <div>
                             <label for="quantidade" class="<?= classe_label() ?>">Quantidade de entrada</label>
-                            <?= input_numero('quantidade', '', [
+                            <?= input_numero('quantidade', $quantidadeInformada, [
                                 'id' => 'quantidade',
                                 'step' => '0.01',
                                 'min' => '0.01',
@@ -159,11 +202,27 @@ foreach ($estoques as $estoque) {
 
                         <div class="md:col-span-2">
                             <label for="observacao" class="<?= classe_label() ?>">Observação</label>
-                            <?= textarea_padrao('observacao', '', [
+                            <?= textarea_padrao('observacao', $observacaoInformada, [
                                 'id' => 'observacao',
                                 'rows' => '4',
                                 'placeholder' => 'Ex.: compra de fornecedor, devolução recebida, reposição interna.'
                             ]) ?>
+                        </div>
+
+                        <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <h3 class="text-sm font-semibold text-slate-900">Produto selecionado</h3>
+                            <div class="mt-3 flex flex-col gap-4 md:flex-row">
+                                <div class="h-24 w-24 overflow-hidden rounded border border-slate-200 bg-white">
+                                    <img id="preview_produto_img" src="" alt="Imagem do produto" class="h-full w-full object-cover" style="display:none;">
+                                    <div id="preview_produto_placeholder" class="flex h-full w-full items-center justify-center text-xs text-slate-400">Sem imagem</div>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Locais e saldos atuais</p>
+                                    <ul id="lista_saldos_produto" class="mt-2 space-y-1 text-sm text-slate-700">
+                                        <li class="text-slate-500">Selecione um produto para visualizar os saldos.</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -181,6 +240,51 @@ foreach ($estoques as $estoque) {
         </div>
     </main>
 </div>
+
+<script>
+(() => {
+    const imagens = <?= json_encode($imagemPorProduto, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    const saldos = <?= json_encode($saldosPorProduto, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    const produtoSelect = document.getElementById('produto_id');
+    const previewImg = document.getElementById('preview_produto_img');
+    const placeholder = document.getElementById('preview_produto_placeholder');
+    const lista = document.getElementById('lista_saldos_produto');
+
+    const renderProduto = () => {
+        const produtoId = produtoSelect?.value || '';
+        const imagem = imagens[produtoId] || '';
+        if (imagem) {
+            previewImg.src = imagem;
+            previewImg.style.display = '';
+            placeholder.style.display = 'none';
+        } else {
+            previewImg.src = '';
+            previewImg.style.display = 'none';
+            placeholder.style.display = 'flex';
+        }
+
+        lista.innerHTML = '';
+        const itens = saldos[produtoId] || [];
+        if (!itens.length) {
+            const li = document.createElement('li');
+            li.className = 'text-slate-500';
+            li.textContent = 'Sem saldo registrado para este produto.';
+            lista.appendChild(li);
+            return;
+        }
+        itens.forEach((item) => {
+            const li = document.createElement('li');
+            li.textContent = `${item.estoque}: ${item.saldo}`;
+            lista.appendChild(li);
+        });
+    };
+
+    if (produtoSelect) {
+        produtoSelect.addEventListener('change', renderProduto);
+        renderProduto();
+    }
+})();
+</script>
 
 </body>
 </html>
