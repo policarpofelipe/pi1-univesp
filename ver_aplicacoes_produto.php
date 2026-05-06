@@ -35,10 +35,13 @@ $sqlProduto = "
         p.ativo,
         tp.id AS tipo_peca_id,
         tp.nome AS tipo_peca_nome,
+        cp.nome AS categoria_peca_nome,
         mp.nome AS marca_produto_nome
     FROM produtos p
     INNER JOIN tipos_peca tp
         ON tp.id = p.tipo_peca_id
+    INNER JOIN categorias_peca cp
+        ON cp.id = tp.categoria_peca_id
     INNER JOIN marcas_produto mp
         ON mp.id = p.marca_produto_id
     WHERE p.id = :id
@@ -148,6 +151,9 @@ $ativo = (int)($produto['ativo'] ?? 0) === 1;
 
                             <span class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
                                 <?= esc($produto['tipo_peca_nome']) ?>
+                            </span>
+                            <span class="inline-flex rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700">
+                                <?= esc($produto['categoria_peca_nome']) ?>
                             </span>
 
                             <?php if ($ativo): ?>
