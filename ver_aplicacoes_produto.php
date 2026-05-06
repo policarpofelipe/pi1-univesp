@@ -122,10 +122,10 @@ $ativo = (int)($produto['ativo'] ?? 0) === 1;
     <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6">
         <div class="mx-auto max-w-7xl">
 
-            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="mb-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 p-5 md:p-6 shadow-lg flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Aplicações do Produto</h1>
-                    <p class="mt-1 text-sm text-slate-600">
+                    <h1 class="text-2xl font-bold text-white">Aplicações do Produto</h1>
+                    <p class="mt-1 text-sm text-slate-300">
                         Veículos compatíveis vinculados diretamente a este produto.
                     </p>
                 </div>

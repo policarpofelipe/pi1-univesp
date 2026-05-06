@@ -159,10 +159,10 @@ $combustiveis = [
     <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6">
         <div class="mx-auto max-w-5xl">
 
-            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="mb-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 p-5 md:p-6 shadow-lg flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-900"><?= esc($tituloPagina) ?></h1>
-                    <p class="mt-1 text-sm text-slate-600">
+                    <h1 class="text-2xl font-bold text-white"><?= esc($tituloPagina) ?></h1>
+                    <p class="mt-1 text-sm text-slate-300">
                         <?= $modoEdicao
                             ? 'Atualize os dados técnicos e comerciais da configuração veicular.'
                             : 'Cadastre uma configuração específica de veículo com ano, motor, combustível e versão.' ?>
