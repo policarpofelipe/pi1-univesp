@@ -56,7 +56,8 @@ if (
     $acao === 'definir_imagem_principal' ||
     $acao === 'salvar_etapa_4' ||
     $acao === 'pular_etapa_4' ||
-    $acao === 'voltar_etapa_3'
+    $acao === 'voltar_etapa_3' ||
+    $acao === 'ir_para_etapa'
 ) {
     $produtoIdAtual = (int)($assistente['produto_id'] ?? 0);
     if ($produtoIdAtual <= 0) {
@@ -606,6 +607,28 @@ if (
             $up->execute();
 
             header('Location: assistente_cadastro_produto.php?id=' . $assistenteId);
+            exit;
+        }
+
+        if ($acao === 'ir_para_etapa') {
+            $etapaDestino = (int)($_POST['etapa_destino'] ?? 0);
+            if ($etapaDestino < 1 || $etapaDestino > 5) {
+                $redirecionarErro('etapa_invalida');
+            }
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = :etapa_atual,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':etapa_atual', $etapaDestino, PDO::PARAM_INT);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=ir_para_etapa');
             exit;
         }
     } catch (Throwable $e) {

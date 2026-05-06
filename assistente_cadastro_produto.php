@@ -16,6 +16,28 @@ function esc(?string $valor): string
 function assistente_obter_ou_criar(PDO $pdo, int $usuarioId, int $assistenteId = 0): array
 {
     if ($assistenteId > 0) {
+        $sqlQualquer = "
+            SELECT *
+            FROM assistente_cadastro_produto
+            WHERE id = :id
+              AND usuario_id = :usuario_id
+            LIMIT 1
+        ";
+        $stmtQualquer = $pdo->prepare($sqlQualquer);
+        $stmtQualquer->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+        $stmtQualquer->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+        $stmtQualquer->execute();
+        $registroQualquer = $stmtQualquer->fetch(PDO::FETCH_ASSOC);
+        if ($registroQualquer) {
+            if ((string)$registroQualquer['status'] === 'rascunho') {
+                $up = $pdo->prepare("UPDATE assistente_cadastro_produto SET status = 'em_andamento', atualizado_em = NOW() WHERE id = :id");
+                $up->bindValue(':id', (int)$registroQualquer['id'], PDO::PARAM_INT);
+                $up->execute();
+                $registroQualquer['status'] = 'em_andamento';
+            }
+            return $registroQualquer;
+        }
+
         $sql = "
             SELECT *
             FROM assistente_cadastro_produto
@@ -101,6 +123,18 @@ if (!$assistente) {
     exit('Não foi possível inicializar o assistente.');
 }
 
+if ((string)($assistente['status'] ?? '') === 'concluido') {
+    $produtoConcluidoId = (int)($assistente['produto_id'] ?? 0);
+    if ($produtoConcluidoId > 0) {
+        header('Location: form_produto.php?id=' . $produtoConcluidoId . '&sucesso=cadastro_concluido_assistente');
+    } else {
+        header('Location: painel.php');
+    }
+    exit;
+}
+
+$assistenteSomenteLeitura = (string)($assistente['status'] ?? '') === 'cancelado';
+
 $assistenteIdAtual = (int)$assistente['id'];
 $produtoIdAtual = (int)($assistente['produto_id'] ?? 0);
 $etapaAtual = max(1, min(5, (int)($assistente['etapa_atual'] ?? 1)));
@@ -143,6 +177,8 @@ if ($sucesso === 'etapa1_salva') {
     $mensagemSucesso = 'Etapa 4 salva com sucesso. Fluxo avançado para a etapa 5.';
 } elseif ($sucesso === 'etapa4_pulada') {
     $mensagemSucesso = 'Etapa 4 foi pulada e a pendência de imagens foi registrada.';
+} elseif ($sucesso === 'ir_para_etapa') {
+    $mensagemSucesso = 'Navegação para etapa de edição atualizada.';
 }
 if ($erro !== '') {
     $mapaErros = [
@@ -167,17 +203,30 @@ if ($erro !== '') {
         'upload_invalido' => 'Falha ao processar upload da imagem.',
         'imagem_invalida' => 'Imagem inválida para este produto/assistente.',
         'imagem_principal_invalida' => 'Não foi possível definir a imagem principal.',
+        'assistente_cancelado' => 'Este assistente foi cancelado e não pode mais ser alterado.',
+        'etapa_invalida' => 'Etapa de navegação inválida.',
+        'produto_base_invalido' => 'Não foi possível concluir: o produto base está incompleto ou inativo.',
         'erro_interno' => 'Ocorreu um erro interno ao salvar a etapa.',
     ];
     $mensagemErro = $mapaErros[$erro] ?? 'Não foi possível processar a etapa.';
+}
+if ($assistenteSomenteLeitura) {
+    $mensagemErro = 'Este assistente foi cancelado e está disponível somente para consulta.';
 }
 
 $produto = null;
 if ($produtoIdAtual > 0) {
     $sqlProduto = "
-        SELECT p.*, tp.categoria_peca_id
+        SELECT
+            p.*,
+            cp.nome AS categoria_nome,
+            tp.nome AS tipo_nome,
+            mp.nome AS marca_nome,
+            tp.categoria_peca_id
         FROM produtos p
         INNER JOIN tipos_peca tp ON tp.id = p.tipo_peca_id
+        INNER JOIN categorias_peca cp ON cp.id = tp.categoria_peca_id
+        INNER JOIN marcas_produto mp ON mp.id = p.marca_produto_id
         WHERE p.id = :id
         LIMIT 1
     ";
@@ -385,6 +434,28 @@ if ($produtoIdAtual > 0) {
 $totalImagens = count($imagensProduto);
 $temPendenciaImagem = !empty($dadosJson['pendencias']['produto_sem_imagem']) || $totalImagens === 0;
 
+$totalMovimentacoesProduto = 0;
+if ($produtoIdAtual > 0) {
+    $stmtTotalMov = $pdo->prepare("SELECT COUNT(*) FROM movimentacoes_estoque WHERE produto_id = :produto_id");
+    $stmtTotalMov->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+    $stmtTotalMov->execute();
+    $totalMovimentacoesProduto = (int)$stmtTotalMov->fetchColumn();
+}
+
+$pendenciasRevisao = [
+    'produto_sem_aplicabilidade' => $totalAplicacoes <= 0,
+    'produto_sem_estoque_inicial' => $totalMovimentacoesProduto <= 0,
+    'produto_sem_imagem' => $totalImagens <= 0,
+];
+
+$produtoBaseValido = $produto
+    && (int)($produto['ativo'] ?? 0) === 1
+    && (int)($produto['tipo_peca_id'] ?? 0) > 0
+    && (int)($produto['marca_produto_id'] ?? 0) > 0
+    && trim((string)($produto['sku_interno'] ?? '')) !== ''
+    && trim((string)($produto['codigo_fabricante'] ?? '')) !== ''
+    && trim((string)($produto['nome_comercial'] ?? '')) !== '';
+
 $tituloEtapa = 'Etapa 1 de 5 — Identificação da peça';
 $descricaoEtapa = 'Defina os dados estruturantes do produto para habilitar as próximas etapas.';
 $progresso = 20;
@@ -401,8 +472,8 @@ if ($etapaAtual === 2) {
     $descricaoEtapa = 'Adicione imagens para facilitar a identificação visual da peça. As imagens serão vinculadas ao produto cadastrado.';
     $progresso = 80;
 } elseif ($etapaAtual >= 5) {
-    $tituloEtapa = 'Etapa 5 de 5 — Em preparação';
-    $descricaoEtapa = 'A etapa de revisão e conclusão será disponibilizada na próxima fase.';
+    $tituloEtapa = 'Etapa 5 de 5 — Revisão e conclusão';
+    $descricaoEtapa = 'Revise o cadastro completo e conclua o assistente com ou sem pendências recomendadas.';
     $progresso = 100;
 }
 ?>
@@ -455,7 +526,17 @@ if ($etapaAtual === 2) {
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div class="lg:col-span-2">
                     <div class="<?= classe_box() ?>">
-                        <?php if ($etapaAtual === 2): ?>
+                        <?php if ($assistenteSomenteLeitura): ?>
+                            <div class="rounded-xl border border-slate-200 p-4">
+                                <h2 class="text-base font-semibold text-slate-900">Assistente cancelado</h2>
+                                <p class="mt-2 text-sm text-slate-600">
+                                    Este fluxo foi cancelado e não aceita novas alterações.
+                                </p>
+                                <div class="mt-4">
+                                    <?= botao_link('assistente_cadastro_produto.php', 'Iniciar novo assistente', 'salvar') ?>
+                                </div>
+                            </div>
+                        <?php elseif ($etapaAtual === 2): ?>
                             <div class="rounded-xl border border-slate-200 p-4 mb-6">
                                 <h2 class="text-base font-semibold text-slate-900">Etapa 2 de 5 — Aplicabilidade veicular</h2>
                                 <p class="mt-2 text-sm text-slate-600">
@@ -893,18 +974,139 @@ if ($etapaAtual === 2) {
                             </form>
                         <?php else: ?>
                             <div class="rounded-xl border border-slate-200 p-4">
-                                <h2 class="text-base font-semibold text-slate-900">Etapa 5 em preparação</h2>
+                                <h2 class="text-base font-semibold text-slate-900">Etapa 5 de 5 — Revisão e conclusão</h2>
                                 <p class="mt-2 text-sm text-slate-600">
-                                    A etapa de revisão e conclusão será implementada na próxima fase. Você pode voltar para revisar os dados anteriores.
+                                    Revise os dados do produto e conclua o cadastro. Pendências recomendadas não bloqueiam a conclusão.
                                 </p>
-                                <div class="mt-4">
+                                <?php if (!$produtoBaseValido): ?>
+                                    <div class="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                                        O produto base está inválido/incompleto e precisa ser corrigido antes de concluir.
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="rounded-xl border border-slate-200 p-4 mb-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-base font-semibold text-slate-900">A) Produto</h3>
                                     <form action="assistente_cadastro_produto_salvar.php" method="POST">
                                         <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
-                                        <input type="hidden" name="acao" value="voltar_etapa_3">
-                                        <?= botao_submit('Voltar para etapa 3', 'cancelar') ?>
+                                        <input type="hidden" name="acao" value="ir_para_etapa">
+                                        <input type="hidden" name="etapa_destino" value="1">
+                                        <?= botao_submit('Editar', 'atalho') ?>
                                     </form>
                                 </div>
+                                <?php if (!$produto): ?>
+                                    <p class="mt-3 text-sm text-slate-600">Produto não localizado.</p>
+                                <?php else: ?>
+                                    <div class="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-700 md:grid-cols-2">
+                                        <div><strong>SKU:</strong> <?= esc((string)$produto['sku_interno']) ?></div>
+                                        <div><strong>Cód. fabricante:</strong> <?= esc((string)$produto['codigo_fabricante']) ?></div>
+                                        <div class="md:col-span-2"><strong>Nome:</strong> <?= esc((string)$produto['nome_comercial']) ?></div>
+                                        <div><strong>Categoria:</strong> <?= esc((string)($produto['categoria_nome'] ?? '')) ?></div>
+                                        <div><strong>Tipo:</strong> <?= esc((string)($produto['tipo_nome'] ?? '')) ?></div>
+                                        <div><strong>Marca:</strong> <?= esc((string)($produto['marca_nome'] ?? '')) ?></div>
+                                        <div><strong>Cód. barras:</strong> <?= esc((string)($produto['codigo_barras'] ?? '')) ?></div>
+                                        <div><strong>Estoque mínimo:</strong> <?= esc((string)($produto['estoque_minimo'] ?? '0')) ?></div>
+                                        <div><strong>Custo:</strong> <?= number_format((float)($produto['custo'] ?? 0), 2, ',', '.') ?></div>
+                                        <div><strong>Preço:</strong> <?= number_format((float)($produto['preco'] ?? 0), 2, ',', '.') ?></div>
+                                        <div class="md:col-span-2"><strong>Descrição:</strong> <?= esc((string)($produto['descricao'] ?? '')) ?></div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
+
+                            <div class="rounded-xl border border-slate-200 p-4 mb-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-base font-semibold text-slate-900">B) Aplicabilidade veicular</h3>
+                                    <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                        <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                        <input type="hidden" name="acao" value="ir_para_etapa">
+                                        <input type="hidden" name="etapa_destino" value="2">
+                                        <?= botao_submit('Editar', 'atalho') ?>
+                                    </form>
+                                </div>
+                                <p class="mt-2 text-sm text-slate-700"><strong>Aplicações:</strong> <?= $totalAplicacoes ?></p>
+                                <?php if ($totalAplicacoes <= 0): ?>
+                                    <div class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                                        Este produto ainda não possui aplicabilidade veicular cadastrada.
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="rounded-xl border border-slate-200 p-4 mb-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-base font-semibold text-slate-900">C) Estoque/localização</h3>
+                                    <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                        <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                        <input type="hidden" name="acao" value="ir_para_etapa">
+                                        <input type="hidden" name="etapa_destino" value="3">
+                                        <?= botao_submit('Editar', 'atalho') ?>
+                                    </form>
+                                </div>
+                                <?php if ($totalMovimentacoesProduto <= 0): ?>
+                                    <div class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                                        Este produto ainda não possui estoque/localização inicial cadastrada.
+                                    </div>
+                                <?php else: ?>
+                                    <p class="mt-2 text-sm text-slate-700"><strong>Movimentações:</strong> <?= $totalMovimentacoesProduto ?></p>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="rounded-xl border border-slate-200 p-4 mb-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-base font-semibold text-slate-900">D) Imagens</h3>
+                                    <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                        <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                        <input type="hidden" name="acao" value="ir_para_etapa">
+                                        <input type="hidden" name="etapa_destino" value="4">
+                                        <?= botao_submit('Editar', 'atalho') ?>
+                                    </form>
+                                </div>
+                                <p class="mt-2 text-sm text-slate-700"><strong>Imagens:</strong> <?= $totalImagens ?></p>
+                                <?php if ($totalImagens <= 0): ?>
+                                    <div class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                                        Este produto ainda não possui imagens cadastradas.
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="rounded-xl border border-slate-200 p-4 mb-4">
+                                <h3 class="text-base font-semibold text-slate-900">E) Pendências</h3>
+                                <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                                    <li><?= $pendenciasRevisao['produto_sem_aplicabilidade'] ? '⚠' : '✓' ?> Aplicabilidade veicular</li>
+                                    <li><?= $pendenciasRevisao['produto_sem_estoque_inicial'] ? '⚠' : '✓' ?> Estoque/localização inicial</li>
+                                    <li><?= $pendenciasRevisao['produto_sem_imagem'] ? '⚠' : '✓' ?> Imagens do produto</li>
+                                </ul>
+                            </div>
+
+                            <div class="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:flex-wrap">
+                                <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <input type="hidden" name="acao" value="ir_para_etapa">
+                                    <input type="hidden" name="etapa_destino" value="4">
+                                    <?= botao_submit('Voltar', 'cancelar') ?>
+                                </form>
+                                <form action="assistente_cadastro_produto_concluir.php" method="POST">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <?= botao_submit('Concluir cadastro', 'salvar') ?>
+                                </form>
+                                <?= botao_link('assistente_cadastro_produto_cancelar.php?id=' . $assistenteIdAtual, 'Cancelar assistente', 'cancelar') ?>
+                            </div>
+                        </div>
+                        <?php if ($totalImagens > 0): ?>
+                            <div class="rounded-xl border border-slate-200 p-4 mt-4">
+                                <h3 class="text-base font-semibold text-slate-900">Miniaturas de imagens</h3>
+                                <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                    <?php foreach ($imagensProduto as $img): ?>
+                                        <div class="rounded border border-slate-200 p-2 bg-slate-50">
+                                            <img src="<?= esc((string)$img['caminho_arquivo']) ?>" alt="<?= esc((string)($img['nome_original'] ?? 'Imagem')) ?>" class="h-24 w-full object-cover rounded">
+                                            <?php if ((int)($img['principal'] ?? 0) === 1): ?>
+                                                <div class="mt-1 text-xs font-semibold text-emerald-700">Principal</div>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>
