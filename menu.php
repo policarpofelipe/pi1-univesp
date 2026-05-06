@@ -145,8 +145,7 @@ function render_item_menu(array $item, string $paginaAtual, bool $sub = false): 
     ?>
     <a
         href="<?= htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8') ?>"
-        class="group flex w-full items-center rounded-lg px-4 <?= $paddingY ?> transition-all duration-200 <?= $classeFundo ?>"
-        :class="open ? 'justify-start' : 'justify-center'"
+        class="menu-link group flex w-full items-center justify-start rounded-lg px-4 <?= $paddingY ?> transition-all duration-200 <?= $classeFundo ?>"
     >
         <svg xmlns="http://www.w3.org/2000/svg"
              class="<?= $iconSize ?> flex-shrink-0 <?= $classeIcone ?> transition-colors group-hover:text-white"
@@ -155,9 +154,7 @@ function render_item_menu(array $item, string $paginaAtual, bool $sub = false): 
                   d="<?= htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8') ?>" />
         </svg>
 
-        <span x-show="open"
-              x-cloak
-              class="<?= $marginLeft ?> whitespace-nowrap text-left <?= $classeTexto ?> <?= $textSize ?> transition-colors group-hover:text-white">
+        <span class="menu-label <?= $marginLeft ?> whitespace-nowrap text-left <?= $classeTexto ?> <?= $textSize ?> transition-colors group-hover:text-white">
             <?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>
         </span>
     </a>
@@ -175,8 +172,7 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
     $classeTexto = $isAtivo ? 'text-white font-semibold' : 'text-slate-200';
     ?>
     <div class="w-full">
-        <div class="group flex w-full items-center rounded-lg px-4 py-3 transition-all duration-200 <?= $classeFundo ?>"
-             :class="open ? 'justify-start' : 'justify-center'">
+        <div class="menu-link group flex w-full items-center justify-start rounded-lg px-4 py-3 transition-all duration-200 <?= $classeFundo ?>">
             <svg xmlns="http://www.w3.org/2000/svg"
                  class="h-5 w-5 flex-shrink-0 <?= $classeIcone ?> transition-colors group-hover:text-white"
                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -184,14 +180,12 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
                       d="<?= htmlspecialchars($icone, ENT_QUOTES, 'UTF-8') ?>" />
             </svg>
 
-            <span x-show="open"
-                  x-cloak
-                  class="ml-4 whitespace-nowrap text-left <?= $classeTexto ?> transition-colors group-hover:text-white">
+            <span class="menu-label ml-4 whitespace-nowrap text-left <?= $classeTexto ?> transition-colors group-hover:text-white">
                 <?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?>
             </span>
         </div>
 
-        <div x-show="open" x-cloak class="mt-1 space-y-1 overflow-hidden pl-6">
+        <div class="submenu-items mt-1 space-y-1 overflow-hidden pl-6">
             <?php foreach ($itens as $item): ?>
                 <?php render_item_menu($item, $paginaAtual, true); ?>
             <?php endforeach; ?>
@@ -201,15 +195,35 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
 }
 ?>
 
+<style>
+    #desktop-menu.menu-collapsed {
+        width: 5rem;
+    }
+    #desktop-menu.menu-expanded {
+        width: 18rem;
+    }
+    #desktop-menu.menu-collapsed .menu-label,
+    #desktop-menu.menu-collapsed .submenu-items,
+    #desktop-menu.menu-collapsed .menu-footer-open {
+        display: none;
+    }
+    #desktop-menu.menu-expanded .menu-footer-closed {
+        display: none;
+    }
+    #desktop-menu.menu-collapsed .menu-link {
+        justify-content: center;
+    }
+</style>
+
 <aside
-    x-data="{ open: true, toggleMenu() { this.open = !this.open; } }"
-    class="relative m-3 hidden h-[calc(100vh-1.5rem)] flex-col rounded-2xl border border-slate-700/50 bg-gradient-to-b from-slate-900 to-slate-800 text-white shadow-xl transition-all duration-300 md:flex overflow-x-hidden"
-    :class="open ? 'w-72' : 'w-20'"
+    id="desktop-menu"
+    data-open="true"
+    class="menu-expanded relative m-3 hidden h-[calc(100vh-1.5rem)] flex-col rounded-2xl border border-slate-700/50 bg-gradient-to-b from-slate-900 to-slate-800 text-white shadow-xl transition-all duration-300 md:flex overflow-x-hidden"
 >
     <div class="flex items-center justify-between border-b border-slate-700/60 px-4 py-4">
         <button
             type="button"
-            @click.prevent="toggleMenu()"
+            onclick="toggleDesktopMenu()"
             class="rounded-lg p-2 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-sky-400"
             title="Alternar menu"
         >
@@ -225,7 +239,7 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
             </svg>
         </button>
         
-        <span x-show="open" x-cloak class="text-lg font-semibold text-white">PI.1 Grupo 21</span>
+        <span class="menu-label text-lg font-semibold text-white">PI.1 Grupo 21</span>
     </div>
 
     <nav class="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3 py-3
@@ -280,10 +294,21 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
     </nav>
 
     <div class="border-t border-slate-700/60 px-4 py-4 text-center text-sm text-slate-300">
-        <span x-show="open" x-cloak>Projeto Integrador UNIVESP • Grupo 21</span>
-        <span x-show="!open" x-cloak class="text-slate-200">PI</span>
+        <span class="menu-footer-open">Projeto Integrador UNIVESP • Grupo 21</span>
+        <span class="menu-footer-closed text-slate-200">PI</span>
     </div>
 </aside>
+
+<script>
+    function toggleDesktopMenu() {
+        const menu = document.getElementById('desktop-menu');
+        if (!menu) return;
+        const isOpen = menu.dataset.open === 'true';
+        menu.dataset.open = isOpen ? 'false' : 'true';
+        menu.classList.toggle('menu-expanded', !isOpen);
+        menu.classList.toggle('menu-collapsed', isOpen);
+    }
+</script>
 
 <div
     x-data="{ mobilePanel: null }"
