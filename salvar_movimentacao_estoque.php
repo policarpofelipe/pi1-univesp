@@ -163,8 +163,8 @@ try {
             LIMIT 1
         ");
         $columnTypeQuantidade = strtolower((string)$stmtTipoColuna->fetchColumn());
-        if ($columnTypeQuantidade !== '' && str_contains($columnTypeQuantidade, 'unsigned')) {
-            $pdo->exec("ALTER TABLE movimentacoes_estoque MODIFY COLUMN quantidade DECIMAL(10,2) NOT NULL");
+        if ($columnTypeQuantidade !== '' && strpos($columnTypeQuantidade, 'unsigned') !== false) {
+            $redirecionarForm('schema_quantidade_invalido');
         }
 
         $stmtSaldo = $pdo->prepare("

@@ -21,6 +21,7 @@ $mapaErros = [
     'quantidade_obrigatoria' => 'Informe a quantidade.',
     'quantidade_invalida'    => 'Informe uma quantidade válida e maior que zero.',
     'saldo_insuficiente'     => 'Saldo insuficiente no estoque selecionado para registrar esta saída.',
+    'schema_quantidade_invalido' => 'A coluna quantidade da tabela movimentacoes_estoque está como UNSIGNED. Ajuste para DECIMAL(10,2) sem UNSIGNED.',
     'erro_interno'           => 'Ocorreu um erro interno ao processar a operação.',
 ];
 $quantidadeInformada = trim((string)($_GET['quantidade'] ?? ''));
