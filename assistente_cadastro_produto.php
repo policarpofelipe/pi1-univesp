@@ -289,6 +289,23 @@ if ($categoriaSelecionada > 0) {
         $opcoesTipos[(string)$tipo['id']] = (string)$tipo['nome'];
     }
 }
+$tiposPorCategoria = [];
+$stmtTiposTodos = $pdo->query("
+    SELECT id, nome, categoria_peca_id
+    FROM tipos_peca
+    WHERE ativo = 1
+    ORDER BY nome ASC
+");
+foreach ($stmtTiposTodos->fetchAll(PDO::FETCH_ASSOC) as $tipo) {
+    $catId = (int)$tipo['categoria_peca_id'];
+    if (!isset($tiposPorCategoria[$catId])) {
+        $tiposPorCategoria[$catId] = [];
+    }
+    $tiposPorCategoria[$catId][] = [
+        'id' => (int)$tipo['id'],
+        'nome' => (string)$tipo['nome'],
+    ];
+}
 
 $stmtMarcas = $pdo->query("SELECT id, nome FROM marcas_produto WHERE ativo = 1 ORDER BY nome ASC");
 $marcas = $stmtMarcas->fetchAll(PDO::FETCH_ASSOC);
@@ -333,6 +350,23 @@ if ($marcaVeiculoId > 0) {
         $opcoesModelosVeiculo[(string)$modelo['id']] = (string)$modelo['nome'];
     }
 }
+$modelosPorMarca = [];
+$stmtModelosTodos = $pdo->query("
+    SELECT id, nome, marca_veiculo_id
+    FROM modelos_veiculo
+    WHERE ativo = 1
+    ORDER BY nome ASC
+");
+foreach ($stmtModelosTodos->fetchAll(PDO::FETCH_ASSOC) as $modelo) {
+    $marcaId = (int)$modelo['marca_veiculo_id'];
+    if (!isset($modelosPorMarca[$marcaId])) {
+        $modelosPorMarca[$marcaId] = [];
+    }
+    $modelosPorMarca[$marcaId][] = [
+        'id' => (int)$modelo['id'],
+        'nome' => (string)$modelo['nome'],
+    ];
+}
 
 $opcoesConfiguracoesVeiculo = ['' => 'Selecione uma configuração'];
 if ($modeloVeiculoId > 0) {
@@ -361,6 +395,36 @@ if ($modeloVeiculoId > 0) {
         }
         $opcoesConfiguracoesVeiculo[(string)$vc['id']] = implode(' / ', $partes);
     }
+}
+$configuracoesPorModelo = [];
+$stmtConfigsTodas = $pdo->query("
+    SELECT id, modelo_veiculo_id, ano_inicio, ano_fim, versao, motorizacao, combustivel
+    FROM veiculos_configuracao
+    WHERE ativo = 1
+    ORDER BY ano_inicio ASC, versao ASC
+");
+foreach ($stmtConfigsTodas->fetchAll(PDO::FETCH_ASSOC) as $vc) {
+    $modeloId = (int)$vc['modelo_veiculo_id'];
+    if (!isset($configuracoesPorModelo[$modeloId])) {
+        $configuracoesPorModelo[$modeloId] = [];
+    }
+    $ano = ((int)$vc['ano_inicio'] === (int)$vc['ano_fim'])
+        ? (string)$vc['ano_inicio']
+        : $vc['ano_inicio'] . ' a ' . $vc['ano_fim'];
+    $partes = [$ano];
+    if (!empty($vc['versao'])) {
+        $partes[] = (string)$vc['versao'];
+    }
+    if (!empty($vc['motorizacao'])) {
+        $partes[] = (string)$vc['motorizacao'];
+    }
+    if (!empty($vc['combustivel'])) {
+        $partes[] = (string)$vc['combustivel'];
+    }
+    $configuracoesPorModelo[$modeloId][] = [
+        'id' => (int)$vc['id'],
+        'nome' => implode(' / ', $partes),
+    ];
 }
 
 $aplicacoesProduto = [];
@@ -1211,6 +1275,10 @@ if ($etapaAtual === 2) {
 </div>
 <script>
 (() => {
+    const tiposPorCategoria = <?= json_encode($tiposPorCategoria, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    const modelosPorMarca = <?= json_encode($modelosPorMarca, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    const configuracoesPorModelo = <?= json_encode($configuracoesPorModelo, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+
     const toggles = [
         { name: 'modo_categoria', existing: 'campo-existente-categoria', novo: 'campo-novo-categoria', novoValue: 'nova' },
         { name: 'modo_tipo', existing: 'campo-existente-tipo', novo: 'campo-novo-tipo', novoValue: 'novo' },
@@ -1238,6 +1306,82 @@ if ($etapaAtual === 2) {
         });
         update(cfg);
     });
+
+    const fillSelect = (selectEl, options, placeholder, keepValue = '') => {
+        if (!selectEl) return;
+        selectEl.innerHTML = '';
+        const base = document.createElement('option');
+        base.value = '';
+        base.textContent = placeholder;
+        selectEl.appendChild(base);
+        (options || []).forEach((opt) => {
+            const el = document.createElement('option');
+            el.value = String(opt.id);
+            el.textContent = String(opt.nome);
+            selectEl.appendChild(el);
+        });
+        if (keepValue && selectEl.querySelector(`option[value="${keepValue}"]`)) {
+            selectEl.value = keepValue;
+        } else {
+            selectEl.value = '';
+        }
+    };
+
+    // Etapa 1: categoria -> tipo
+    const categoriaSelect = document.getElementById('categoria_peca_id');
+    const tipoSelect = document.getElementById('tipo_peca_id');
+    if (categoriaSelect && tipoSelect) {
+        const refreshTipos = (clearChild = false) => {
+            const categoriaId = categoriaSelect.value || '';
+            const selectedTipo = clearChild ? '' : (tipoSelect.value || '');
+            fillSelect(tipoSelect, tiposPorCategoria[categoriaId] || [], 'Selecione um tipo', selectedTipo);
+        };
+        categoriaSelect.addEventListener('change', () => refreshTipos(true));
+        refreshTipos(false);
+    }
+
+    // Etapa 2: marca -> modelo -> configuração
+    const marcaVeiculoSelect = document.getElementById('marca_veiculo_id_post');
+    const modeloVeiculoSelect = document.getElementById('modelo_veiculo_id_post');
+    const configVeiculoSelect = document.getElementById('veiculo_configuracao_id');
+    if (marcaVeiculoSelect && modeloVeiculoSelect && configVeiculoSelect) {
+        const refreshModelos = (clearChild = false) => {
+            const marcaId = marcaVeiculoSelect.value || '';
+            const selectedModelo = clearChild ? '' : (modeloVeiculoSelect.value || '');
+            fillSelect(modeloVeiculoSelect, modelosPorMarca[marcaId] || [], 'Selecione um modelo', selectedModelo);
+            refreshConfigs(clearChild);
+        };
+        const refreshConfigs = (clearChild = false) => {
+            const modeloId = modeloVeiculoSelect.value || '';
+            const selectedConfig = clearChild ? '' : (configVeiculoSelect.value || '');
+            fillSelect(configVeiculoSelect, configuracoesPorModelo[modeloId] || [], 'Selecione uma configuração', selectedConfig);
+        };
+
+        marcaVeiculoSelect.addEventListener('change', () => refreshModelos(true));
+        modeloVeiculoSelect.addEventListener('change', () => refreshConfigs(true));
+
+        document.querySelectorAll('input[name="modo_marca_veiculo"]').forEach((el) => {
+            el.addEventListener('change', () => {
+                if (el.checked && el.value === 'nova') {
+                    fillSelect(modeloVeiculoSelect, [], 'Selecione um modelo', '');
+                    fillSelect(configVeiculoSelect, [], 'Selecione uma configuração', '');
+                } else if (el.checked && el.value === 'existente') {
+                    refreshModelos(true);
+                }
+            });
+        });
+        document.querySelectorAll('input[name="modo_modelo_veiculo"]').forEach((el) => {
+            el.addEventListener('change', () => {
+                if (el.checked && el.value === 'nova') {
+                    fillSelect(configVeiculoSelect, [], 'Selecione uma configuração', '');
+                } else if (el.checked && el.value === 'existente') {
+                    refreshConfigs(true);
+                }
+            });
+        });
+
+        refreshModelos(false);
+    }
 })();
 </script>
 </body>
