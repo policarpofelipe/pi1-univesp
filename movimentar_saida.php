@@ -13,6 +13,7 @@ function esc(?string $valor): string
 }
 
 $erroCodigo = trim((string)($_GET['erro'] ?? ''));
+$erroDetalhe = trim((string)($_GET['detalhe'] ?? ''));
 $erro = '';
 
 $mapaErros = [
@@ -29,6 +30,9 @@ $observacaoInformada = trim((string)($_GET['observacao'] ?? ''));
 
 if ($erroCodigo !== '' && isset($mapaErros[$erroCodigo])) {
     $erro = $mapaErros[$erroCodigo];
+}
+if ($erroCodigo === 'erro_detalhado_saida' && $erroDetalhe !== '') {
+    $erro = 'Falha ao registrar saída: ' . $erroDetalhe;
 }
 
 $produtoSelecionado = trim((string)($_GET['produto_id'] ?? ''));

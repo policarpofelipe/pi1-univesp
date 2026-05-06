@@ -250,5 +250,27 @@ try {
 
 } catch (Throwable $e) {
     error_log('salvar_movimentacao_estoque.php erro: ' . $e->getMessage());
+    if ($tipoMovimentacao === 'saida' && $id <= 0) {
+        $detalhe = $e->getMessage();
+        if ($detalhe === '') {
+            $detalhe = 'Erro sem mensagem retornada pelo banco.';
+        }
+        $detalhe = substr($detalhe, 0, 220);
+        $params = ['erro=erro_detalhado_saida', 'detalhe=' . urlencode($detalhe)];
+        if ($produtoId > 0) {
+            $params[] = 'produto_id=' . $produtoId;
+        }
+        if ($estoqueId > 0) {
+            $params[] = 'estoque_id=' . $estoqueId;
+        }
+        if ($quantidadeInformada !== '') {
+            $params[] = 'quantidade=' . urlencode($quantidadeInformada);
+        }
+        if ($observacao !== '') {
+            $params[] = 'observacao=' . urlencode($observacao);
+        }
+        header('Location: movimentar_saida.php?' . implode('&', $params));
+        exit;
+    }
     $redirecionarForm('erro_interno');
 }
