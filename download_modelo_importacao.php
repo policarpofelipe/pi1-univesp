@@ -16,8 +16,8 @@ if (!importacao_planilha_tipo_valido($tipo)) {
 
 $autoload = __DIR__ . '/vendor/autoload.php';
 if (!is_file($autoload)) {
-    http_response_code(500);
-    exit('Execute composer install na raiz do projeto.');
+    header('Location: importar_planilha.php?tipo=' . urlencode($tipo) . '&erro=dependencia_planilha');
+    exit;
 }
 require_once $autoload;
 

@@ -41,6 +41,10 @@ if (isset($_GET['cancelar']) && $_GET['cancelar'] === '1') {
 
 $erroFlash = '';
 $sucessoFlash = '';
+$erroCodigo = trim((string)($_GET['erro'] ?? ''));
+if ($erroCodigo === 'dependencia_planilha') {
+    $erroFlash = 'Não foi possível gerar o modelo de planilha: dependência ausente. Execute composer install na raiz do projeto.';
+}
 
 /*
 |--------------------------------------------------------------------------
