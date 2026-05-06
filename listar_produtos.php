@@ -224,110 +224,73 @@ $totalProdutos = count($produtos);
                         </div>
                     </div>
                 <?php else: ?>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full border-separate border-spacing-y-2">
-                            <thead>
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ID</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Imagem</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Produto</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Marca</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">SKU</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Cód. fabricante</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Cód. barras</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Preço</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($produtos as $produto): ?>
-                                    <?php $ativo = (int)($produto['ativo'] ?? 0) === 1; ?>
-                                    <tr class="overflow-hidden rounded-xl bg-slate-50 shadow-sm">
-                                        <td class="rounded-l-xl px-4 py-4 text-sm text-slate-600">
-                                            <?= (int)$produto['id'] ?>
-                                        </td>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                        <?php foreach ($produtos as $produto): ?>
+                            <?php $ativo = (int)($produto['ativo'] ?? 0) === 1; ?>
+                            <article class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
+                                <div class="h-44 bg-white">
+                                    <?php if (!empty($produto['imagem_principal'])): ?>
+                                        <img
+                                            src="<?= esc($produto['imagem_principal']) ?>"
+                                            alt="<?= esc($produto['nome_comercial']) ?>"
+                                            class="h-full w-full object-contain"
+                                            loading="lazy"
+                                        >
+                                    <?php else: ?>
+                                        <div class="flex h-full flex-col items-center justify-center text-slate-400">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 0 1 2-2h3l1.2 1.5h4.6L15 5h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zm4 0l10 10M10 13a3 3 0 1 1 4.2-4.2" />
+                                            </svg>
+                                            <span class="mt-2 text-sm font-medium">Foto em breve</span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
 
-                                        <td class="px-4 py-4">
-                                            <?php if (!empty($produto['imagem_principal'])): ?>
-                                                <img
-                                                    src="<?= esc($produto['imagem_principal']) ?>"
-                                                    alt="<?= esc($produto['nome_comercial']) ?>"
-                                                    class="h-12 w-12 rounded-md object-cover"
-                                                    loading="lazy"
-                                                >
-                                            <?php else: ?>
-                                                <span class="text-xs text-slate-500">Sem imagem</span>
-                                            <?php endif; ?>
-                                        </td>
+                                <div class="space-y-3 px-4 py-4">
+                                    <div>
+                                        <div class="text-base font-semibold leading-tight text-slate-900">
+                                            <?= esc($produto['nome_comercial']) ?>
+                                        </div>
+                                        <div class="mt-1 text-xs text-slate-500">
+                                            <?= esc($produto['descricao'] ?: 'Sem descrição') ?>
+                                        </div>
+                                    </div>
 
-                                        <td class="px-4 py-4">
-                                            <div class="font-semibold text-slate-900">
-                                                <?= esc($produto['nome_comercial']) ?>
-                                            </div>
-                                            <div class="mt-1 text-xs text-slate-500">
-                                                <?= esc($produto['descricao'] ?: '—') ?>
-                                            </div>
-                                        </td>
+                                    <div class="space-y-1 text-sm text-slate-700">
+                                        <div><span class="font-medium">Tipo:</span> <?= esc($produto['tipo_peca_nome']) ?></div>
+                                        <div><span class="font-medium">Marca:</span> <?= esc($produto['marca_produto_nome']) ?></div>
+                                        <div><span class="font-medium">SKU:</span> <?= esc($produto['sku_interno']) ?></div>
+                                        <div><span class="font-medium">Cód. fabricante:</span> <?= esc($produto['codigo_fabricante']) ?></div>
+                                        <div><span class="font-medium">Cód. barras:</span> <?= esc($produto['codigo_barras'] ?: '—') ?></div>
+                                    </div>
 
-                                        <td class="px-4 py-4 text-sm text-slate-700">
-                                            <?= esc($produto['tipo_peca_nome']) ?>
-                                        </td>
-
-                                        <td class="px-4 py-4 text-sm text-slate-700">
-                                            <span class="inline-flex rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
-                                                <?= esc($produto['marca_produto_nome']) ?>
-                                            </span>
-                                        </td>
-
-                                        <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($produto['sku_interno']) ?>
-                                        </td>
-
-                                        <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($produto['codigo_fabricante']) ?>
-                                        </td>
-
-                                        <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($produto['codigo_barras'] ?: '—') ?>
-                                        </td>
-
-                                        <td class="px-4 py-4 text-sm font-medium text-slate-700">
+                                    <div class="flex items-center justify-between border-t border-slate-200 pt-3">
+                                        <div class="text-lg font-bold text-blue-700">
                                             R$ <?= number_format((float)$produto['preco'], 2, ',', '.') ?>
-                                        </td>
+                                        </div>
+                                        <?php if ($ativo): ?>
+                                            <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">Ativo</span>
+                                        <?php else: ?>
+                                            <span class="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">Inativo</span>
+                                        <?php endif; ?>
+                                    </div>
 
-                                        <td class="px-4 py-4">
-                                            <?php if ($ativo): ?>
-                                                <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
-                                                    Ativo
-                                                </span>
-                                            <?php else: ?>
-                                                <span class="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
-                                                    Inativo
-                                                </span>
-                                            <?php endif; ?>
-                                        </td>
+                                    <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-3">
+                                        <?= botao_link(
+                                            'form_produto.php?id=' . (int)$produto['id'],
+                                            'Editar',
+                                            'editar'
+                                        ) ?>
 
-                                        <td class="rounded-r-xl px-4 py-4">
-                                            <div class="flex items-center justify-end gap-2">
-                                                <?= botao_link(
-                                                    'form_produto.php?id=' . (int)$produto['id'],
-                                                    'Editar',
-                                                    'editar'
-                                                ) ?>
-
-                                                <?= botao_excluir(
-                                                    'excluir_produto.php?id=' . (int)$produto['id'],
-                                                    'Tem certeza que deseja excluir este produto?',
-                                                    'Excluir'
-                                                ) ?>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                        <?= botao_excluir(
+                                            'excluir_produto.php?id=' . (int)$produto['id'],
+                                            'Tem certeza que deseja excluir este produto?',
+                                            'Excluir'
+                                        ) ?>
+                                    </div>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>

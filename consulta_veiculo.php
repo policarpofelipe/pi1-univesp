@@ -329,6 +329,7 @@ function buscarListaProdutos(PDO $pdo, string $whereSql, array $params, int $lim
             p.codigo_fabricante,
             p.codigo_barras,
             p.preco,
+            pi.caminho_arquivo AS imagem_principal,
             tp.nome AS tipo_peca_nome,
             mp.nome AS marca_produto_nome,
             app_agg.marcas_veiculo AS marcas_veiculo_nome,
@@ -336,6 +337,9 @@ function buscarListaProdutos(PDO $pdo, string $whereSql, array $params, int $lim
         FROM produtos p
         INNER JOIN tipos_peca tp ON tp.id = p.tipo_peca_id
         INNER JOIN marcas_produto mp ON mp.id = p.marca_produto_id
+        LEFT JOIN produto_imagens pi
+            ON pi.produto_id = p.id
+           AND pi.principal = 1
         LEFT JOIN (
             SELECT
                 ap.tipo_peca_id,
@@ -548,48 +552,55 @@ $baseParams = [
                         <p class="text-sm text-slate-600">Nenhum item encontrado.</p>
                     </div>
                 <?php else: ?>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full">
-                            <thead>
-                            <tr class="border-b border-slate-200">
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Produto</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de peça</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Marca</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Fabricante veículo</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Modelo veículo</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Códigos</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Preço</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <?php foreach ($resultados as $item): ?>
-                                <tr class="border-b border-slate-100 last:border-b-0">
-                                    <td class="px-4 py-4">
-                                        <div class="font-medium text-slate-900"><?= esc($item['nome_comercial']) ?></div>
-                                        <div class="text-xs text-slate-500">SKU: <?= esc($item['sku_interno']) ?></div>
-                                    </td>
-                                    <td class="px-4 py-4 text-sm text-slate-700"><?= esc($item['tipo_peca_nome']) ?></td>
-                                    <td class="px-4 py-4 text-sm text-slate-700"><?= esc($item['marca_produto_nome']) ?></td>
-                                    <td class="px-4 py-4 text-sm text-slate-700"><?= esc($item['marcas_veiculo_nome'] ?: '—') ?></td>
-                                    <td class="px-4 py-4 text-sm text-slate-700"><?= esc($item['modelos_veiculo_nome'] ?: '—') ?></td>
-                                    <td class="px-4 py-4 text-sm text-slate-600">
-                                        <div>Fab.: <?= esc($item['codigo_fabricante'] ?: '—') ?></div>
-                                        <div>Barras: <?= esc($item['codigo_barras'] ?: '—') ?></div>
-                                    </td>
-                                    <td class="px-4 py-4 text-sm font-medium text-slate-800">
-                                        R$ <?= number_format((float)$item['preco'], 2, ',', '.') ?>
-                                    </td>
-                                    <td class="px-4 py-4">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <?= botao_link('ver_produto.php?id=' . (int)$item['id'], 'Ver', 'atalho') ?>
-                                            <?= botao_link('ver_aplicacoes_produto.php?id=' . (int)$item['id'], 'Aplicações', 'busca') ?>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                        <?php foreach ($resultados as $item): ?>
+                            <article class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
+                                <div class="h-44 bg-white">
+                                    <?php if (!empty($item['imagem_principal'])): ?>
+                                        <img
+                                            src="<?= esc($item['imagem_principal']) ?>"
+                                            alt="<?= esc($item['nome_comercial']) ?>"
+                                            class="h-full w-full object-contain"
+                                            loading="lazy"
+                                        >
+                                    <?php else: ?>
+                                        <div class="flex h-full flex-col items-center justify-center text-slate-400">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 0 1 2-2h3l1.2 1.5h4.6L15 5h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zm4 0l10 10M10 13a3 3 0 1 1 4.2-4.2" />
+                                            </svg>
+                                            <span class="mt-2 text-sm font-medium">Foto em breve</span>
                                         </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="space-y-3 px-4 py-4">
+                                    <div>
+                                        <div class="text-base font-semibold leading-tight text-slate-900"><?= esc($item['nome_comercial']) ?></div>
+                                        <div class="mt-1 text-xs text-slate-500">SKU: <?= esc($item['sku_interno']) ?></div>
+                                    </div>
+
+                                    <div class="space-y-1 text-sm text-slate-700">
+                                        <div><span class="font-medium">Tipo:</span> <?= esc($item['tipo_peca_nome']) ?></div>
+                                        <div><span class="font-medium">Marca:</span> <?= esc($item['marca_produto_nome']) ?></div>
+                                        <div><span class="font-medium">Fab. veículo:</span> <?= esc($item['marcas_veiculo_nome'] ?: '—') ?></div>
+                                        <div><span class="font-medium">Modelo veículo:</span> <?= esc($item['modelos_veiculo_nome'] ?: '—') ?></div>
+                                        <div><span class="font-medium">Cód. fabricante:</span> <?= esc($item['codigo_fabricante'] ?: '—') ?></div>
+                                        <div><span class="font-medium">Cód. barras:</span> <?= esc($item['codigo_barras'] ?: '—') ?></div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between border-t border-slate-200 pt-3">
+                                        <div class="text-lg font-bold text-blue-700">
+                                            R$ <?= number_format((float)$item['preco'], 2, ',', '.') ?>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-3">
+                                        <?= botao_link('ver_produto.php?id=' . (int)$item['id'], 'Ver', 'atalho') ?>
+                                        <?= botao_link('ver_aplicacoes_produto.php?id=' . (int)$item['id'], 'Aplicações', 'busca') ?>
+                                    </div>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
 
