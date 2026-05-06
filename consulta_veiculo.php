@@ -618,7 +618,6 @@ $baseParams = [
 
                                     <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-3">
                                         <?= botao_link('ver_produto.php?id=' . (int)$item['id'], 'Ver', 'atalho') ?>
-                                        <?= botao_link('ver_aplicacoes_produto.php?id=' . (int)$item['id'], 'Aplicações', 'busca') ?>
                                     </div>
                                 </div>
                             </article>

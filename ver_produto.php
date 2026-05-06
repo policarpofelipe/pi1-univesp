@@ -89,6 +89,30 @@ $stmtSaldos->bindValue(':produto_id', (int)$produto['id'], PDO::PARAM_INT);
 $stmtSaldos->execute();
 $saldosPorEstoque = $stmtSaldos->fetchAll(PDO::FETCH_ASSOC);
 
+$sqlAplicacoes = "
+    SELECT
+        ap.id,
+        ap.observacao,
+        mv.nome AS marca_veiculo,
+        mo.nome AS modelo_veiculo,
+        vc.ano_inicio,
+        vc.ano_fim,
+        vc.versao,
+        vc.motorizacao,
+        vc.combustivel
+    FROM aplicacoes_produto ap
+    INNER JOIN veiculos_configuracao vc ON vc.id = ap.veiculo_configuracao_id
+    INNER JOIN modelos_veiculo mo ON mo.id = vc.modelo_veiculo_id
+    INNER JOIN marcas_veiculo mv ON mv.id = mo.marca_veiculo_id
+    WHERE ap.produto_id = :produto_id
+      AND ap.ativo = 1
+    ORDER BY mv.nome ASC, mo.nome ASC, vc.ano_inicio ASC, vc.versao ASC
+";
+$stmtAplicacoes = $pdo->prepare($sqlAplicacoes);
+$stmtAplicacoes->bindValue(':produto_id', (int)$produto['id'], PDO::PARAM_INT);
+$stmtAplicacoes->execute();
+$aplicacoesProduto = $stmtAplicacoes->fetchAll(PDO::FETCH_ASSOC);
+
 $saldoTotal = 0.0;
 foreach ($saldosPorEstoque as $linhaSaldo) {
     $saldoTotal += (float)$linhaSaldo['saldo_atual'];
@@ -256,6 +280,45 @@ if ($imagemPrincipal === null && $imagensProduto !== []) {
                     <div class="text-sm leading-6 text-slate-600">
                         <?= nl2br(esc($produto['descricao'] ?: 'Sem descrição cadastrada.')) ?>
                     </div>
+                </div>
+
+                <div class="mt-6 rounded-xl border border-slate-200 bg-white p-4">
+                    <div class="mb-3 text-sm font-semibold text-slate-800">Aplicações do produto</div>
+                    <?php if (!$aplicacoesProduto): ?>
+                        <div class="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                            Este produto ainda não possui aplicações veiculares cadastradas.
+                        </div>
+                    <?php else: ?>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-slate-200">
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Marca</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Modelo</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Ano</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Versão</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Motorização</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Combustível</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Observação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($aplicacoesProduto as $ap): ?>
+                                        <?php $anoTexto = ((int)$ap['ano_inicio'] === (int)$ap['ano_fim']) ? (string)$ap['ano_inicio'] : $ap['ano_inicio'] . ' a ' . $ap['ano_fim']; ?>
+                                        <tr class="border-b border-slate-100 last:border-b-0">
+                                            <td class="px-3 py-3 text-sm text-slate-800"><?= esc((string)$ap['marca_veiculo']) ?></td>
+                                            <td class="px-3 py-3 text-sm text-slate-800"><?= esc((string)$ap['modelo_veiculo']) ?></td>
+                                            <td class="px-3 py-3 text-sm text-slate-600"><?= esc($anoTexto) ?></td>
+                                            <td class="px-3 py-3 text-sm text-slate-600"><?= esc((string)$ap['versao']) ?></td>
+                                            <td class="px-3 py-3 text-sm text-slate-600"><?= esc((string)$ap['motorizacao']) ?></td>
+                                            <td class="px-3 py-3 text-sm text-slate-600"><?= esc((string)$ap['combustivel']) ?></td>
+                                            <td class="px-3 py-3 text-sm text-slate-600"><?= esc((string)$ap['observacao']) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="mt-6 rounded-xl border border-slate-200 bg-white p-4">
