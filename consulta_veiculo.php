@@ -438,6 +438,11 @@ $baseParams = [
     'tipo_peca_id' => $estado['tipo_peca_id'] > 0 ? (string)$estado['tipo_peca_id'] : '',
     'marca_produto_id' => $estado['marca_produto_id'] > 0 ? (string)$estado['marca_produto_id'] : '',
 ];
+$filtrosAvancadosAtivos = $baseParams['marca_veiculo_id'] !== ''
+    || $baseParams['modelo_veiculo_id'] !== ''
+    || $baseParams['veiculo_configuracao_id'] !== ''
+    || $baseParams['tipo_peca_id'] !== ''
+    || $baseParams['marca_produto_id'] !== '';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -483,10 +488,10 @@ $baseParams = [
             <?php endforeach; ?>
 
             <div class="<?= classe_box() ?> mb-6">
-                <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div class="md:col-span-3">
+                <form method="GET" class="space-y-4">
+                    <div>
                         <label for="q" class="<?= classe_label() ?>">Buscar</label>
-                        <div class="flex gap-2">
+                        <div class="flex flex-col gap-2 md:flex-row">
                             <?= select_padrao('campo_busca', [
                                 'produto' => 'Produto',
                                 'sku' => 'SKU',
@@ -494,13 +499,31 @@ $baseParams = [
                                 'codigo_barras' => 'Código de barras',
                                 'tipo_peca' => 'Tipo de peça',
                                 'marca_produto' => 'Marca do produto',
-                            ], $estado['campo_busca'], ['id' => 'campo_busca']) ?>
+                            ], $estado['campo_busca'], ['id' => 'campo_busca', 'class' => 'md:w-56']) ?>
                             <?= input_texto('q', $estado['q'], [
                                 'id' => 'q',
-                                'placeholder' => 'Digite o termo...'
+                                'placeholder' => 'Digite o termo...',
+                                'class' => 'md:flex-1'
                             ]) ?>
+                            <div class="flex gap-2 md:w-auto">
+                                <?= botao_submit('Buscar', 'busca') ?>
+                                <?= botao_link('consulta_veiculo.php', 'Limpar', 'cancelar') ?>
+                            </div>
                         </div>
                     </div>
+
+                    <div class="flex items-center justify-between border-t border-slate-200 pt-3">
+                        <p class="text-xs text-slate-500">Filtros avançados</p>
+                        <button
+                            type="button"
+                            id="btn-toggle-filtros"
+                            class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                            Filtros
+                        </button>
+                    </div>
+
+                    <div id="bloco-filtros-avancados" class="grid grid-cols-1 gap-4 md:grid-cols-3 <?= $filtrosAvancadosAtivos ? '' : 'hidden' ?>">
 
                     <div>
                         <label for="marca_veiculo_id" class="<?= classe_label() ?>">Marca do veículo</label>
@@ -549,10 +572,6 @@ $baseParams = [
                         ]) ?>
                     </div>
 
-                    <div class="md:col-span-3 flex flex-col gap-2 sm:flex-row">
-                        <?= botao_submit('Buscar', 'busca') ?>
-                        <?= botao_link('consulta_veiculo.php', 'Limpar', 'cancelar') ?>
-                    </div>
                 </form>
             </div>
 
@@ -650,5 +669,15 @@ $baseParams = [
         </div>
     </main>
 </div>
+<script>
+(() => {
+    const botao = document.getElementById('btn-toggle-filtros');
+    const bloco = document.getElementById('bloco-filtros-avancados');
+    if (!botao || !bloco) return;
+    botao.addEventListener('click', () => {
+        bloco.classList.toggle('hidden');
+    });
+})();
+</script>
 </body>
 </html>
