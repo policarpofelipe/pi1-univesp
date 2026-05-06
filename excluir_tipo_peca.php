@@ -56,29 +56,10 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | Verificar vínculos em aplicações
-    |--------------------------------------------------------------------------
-    */
-    $sqlAplicacoes = "
-        SELECT COUNT(*)
-        FROM aplicacoes_peca
-        WHERE tipo_peca_id = :id
-    ";
-
-    $stmtAplicacoes = $pdo->prepare($sqlAplicacoes);
-    $stmtAplicacoes->bindValue(':id', $id, PDO::PARAM_INT);
-    $stmtAplicacoes->execute();
-
-    $totalAplicacoes = (int)$stmtAplicacoes->fetchColumn();
-
-    $totalVinculos = $totalProdutos + $totalAplicacoes;
-
-    /*
-    |--------------------------------------------------------------------------
     | Se houver vínculo, apenas inativa
     |--------------------------------------------------------------------------
     */
-    if ($totalVinculos > 0) {
+    if ($totalProdutos > 0) {
         $sqlInativar = "
             UPDATE tipos_peca
             SET ativo = 0,

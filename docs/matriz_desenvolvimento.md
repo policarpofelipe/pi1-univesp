@@ -47,12 +47,12 @@ Antes de compatibilidade, o veículo precisa existir como estrutura.
 ✅salvar_veiculo_configuracao.php
 ✅excluir_veiculo_configuracao.php
 
-5. Compatibilidade entre peça e veículo
+5. Compatibilidade entre produto/peça e veículo
 Aqui o sistema começa a adquirir inteligência de autopeças.
-✅listar_aplicacoes_peca.php
-✅form_aplicacao_peca.php
-✅salvar_aplicacao_peca.php
-✅excluir_aplicacao_peca.php
+✅listar_aplicacoes_produto.php
+✅form_aplicacao_produto.php
+✅salvar_aplicacao_produto.php
+✅excluir_aplicacao_produto.php
 ✅ver_aplicacoes_produto.php
 
 6. Estrutura de estoque

@@ -30,7 +30,7 @@ $totais = [
     'marcas_veiculo'  => contar($pdo, 'marcas_veiculo'),
     'modelos'         => contar($pdo, 'modelos_veiculo'),
     'veiculos'        => contar($pdo, 'veiculos_configuracao'),
-    'aplicacoes'      => contar($pdo, 'aplicacoes_peca'),
+    'aplicacoes'      => contar($pdo, 'aplicacoes_produto'),
     'estoques'        => contar($pdo, 'estoques'),
     'usuarios'        => contar($pdo, 'usuarios')
 ];
@@ -43,7 +43,7 @@ $cards = [
     ['titulo' => 'Marcas de Veículo', 'valor' => $totais['marcas_veiculo'], 'link' => 'listar_marcas_veiculo.php'],
     ['titulo' => 'Modelos de Veículo', 'valor' => $totais['modelos'], 'link' => 'listar_modelos_veiculo.php'],
     ['titulo' => 'Configurações Veiculares', 'valor' => $totais['veiculos'], 'link' => 'listar_veiculos_configuracao.php'],
-    ['titulo' => 'Aplicações de Peça', 'valor' => $totais['aplicacoes'], 'link' => 'listar_aplicacoes_peca.php'],
+    ['titulo' => 'Aplicações do Produto', 'valor' => $totais['aplicacoes'], 'link' => 'listar_aplicacoes_produto.php'],
     ['titulo' => 'Locais de Estoque', 'valor' => $totais['estoques'], 'link' => 'listar_estoques.php'],
     ['titulo' => 'Usuários', 'valor' => $totais['usuarios'], 'link' => 'listar_usuarios.php'],
 ];

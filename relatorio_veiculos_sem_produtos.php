@@ -37,10 +37,11 @@ $sql = "
         ON mo.id = vc.modelo_veiculo_id
     INNER JOIN marcas_veiculo mv
         ON mv.id = mo.marca_veiculo_id
-    LEFT JOIN aplicacoes_peca ap
+    LEFT JOIN aplicacoes_produto ap
         ON ap.veiculo_configuracao_id = vc.id
+       AND ap.ativo = 1
     LEFT JOIN produtos p
-        ON p.tipo_peca_id = ap.tipo_peca_id
+        ON p.id = ap.produto_id
        AND p.ativo = 1
     WHERE 1 = 1
 ";
@@ -265,7 +266,7 @@ foreach ($veiculos as $veiculo) {
                                                 ) ?>
 
                                                 <?= botao_link(
-                                                    'form_aplicacao_peca.php',
+                                                    'form_aplicacao_produto.php',
                                                     'Cadastrar aplicação',
                                                     'salvar'
                                                 ) ?>

@@ -155,7 +155,6 @@ if ($veiculoConfiguracaoId > 0) {
     */
     $sqlProdutos = "
         SELECT
-            tp.id AS tipo_peca_id,
             tp.nome AS tipo_peca_nome,
 
             p.id AS produto_id,
@@ -169,14 +168,15 @@ if ($veiculoConfiguracaoId > 0) {
 
             ap.observacao AS aplicacao_observacao
 
-        FROM aplicacoes_peca ap
-        INNER JOIN tipos_peca tp
-            ON tp.id = ap.tipo_peca_id
+        FROM aplicacoes_produto ap
         INNER JOIN produtos p
-            ON p.tipo_peca_id = tp.id
+            ON p.id = ap.produto_id
         INNER JOIN marcas_produto mp
             ON mp.id = p.marca_produto_id
+        INNER JOIN tipos_peca tp
+            ON tp.id = p.tipo_peca_id
         WHERE ap.veiculo_configuracao_id = :veiculo_configuracao_id
+          AND ap.ativo = 1
           AND p.ativo = 1
         ORDER BY tp.nome ASC, mp.nome ASC, p.nome_comercial ASC
     ";
@@ -188,7 +188,7 @@ if ($veiculoConfiguracaoId > 0) {
     $linhas = $stmtProdutos->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($linhas as $linha) {
-        $tipoId = (int)$linha['tipo_peca_id'];
+        $tipoId = (string)$linha['tipo_peca_nome'];
 
         if (!isset($agrupado[$tipoId])) {
             $agrupado[$tipoId] = [

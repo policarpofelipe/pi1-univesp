@@ -34,8 +34,9 @@ $sql = "
         ON tp.id = p.tipo_peca_id
     INNER JOIN marcas_produto mp
         ON mp.id = p.marca_produto_id
-    LEFT JOIN aplicacoes_peca ap
-        ON ap.tipo_peca_id = p.tipo_peca_id
+    LEFT JOIN aplicacoes_produto ap
+        ON ap.produto_id = p.id
+       AND ap.ativo = 1
     WHERE ap.id IS NULL
 ";
 
@@ -108,13 +109,13 @@ foreach ($produtos as $produto) {
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900">Relatório de Produtos sem Aplicação</h1>
                     <p class="mt-1 text-sm text-slate-600">
-                        Produtos cadastrados cujo tipo de peça ainda não possui compatibilidade veicular registrada.
+                        Produtos cadastrados sem compatibilidade veicular específica registrada.
                     </p>
                 </div>
 
                 <div class="flex flex-wrap gap-2">
                     <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
-                    <?= botao_link('listar_aplicacoes_peca.php', 'Ver aplicações', 'atalho') ?>
+                    <?= botao_link('listar_aplicacoes_produto.php', 'Ver aplicações', 'atalho') ?>
                     <button type="button" onclick="imprimirRelatorio()" class="<?= esc($btn_busca ?? 'px-3 py-2 rounded-lg bg-blue-600 text-white') ?>">
                         Imprimir
                     </button>
@@ -243,7 +244,7 @@ foreach ($produtos as $produto) {
                                                 ) ?>
 
                                                 <?= botao_link(
-                                                    'form_aplicacao_peca.php',
+                                                    'form_aplicacao_produto.php',
                                                     'Cadastrar aplicação',
                                                     'salvar'
                                                 ) ?>

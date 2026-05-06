@@ -56,8 +56,8 @@ $menuCatalogoVeicular = [
         'icon'  => 'M8 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M7 6l4 5h1a2 2 0 0 1 2 2v4h-2M8 17h-5M3 11h8M5 11v-5M7 6h-4M14 8v-2M19 12h2M17.5 15.5l1.5 1.5M17.5 8.5l1.5 -1.5',
     ],
     [
-        'url'   => 'listar_aplicacoes_peca.php',
-        'label' => 'Aplicações / Compatibilidade',
+        'url'   => 'listar_aplicacoes_produto.php',
+        'label' => 'Aplicações do Produto',
         'icon'  => 'M4 7h3a1 1 0 0 0 1 -1v-1a2 2 0 0 1 4 0v1a1 1 0 0 0 1 1h3a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h1a2 2 0 0 1 0 4h-1a1 1 0 0 0 -1 1v3a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-1a2 2 0 0 0 -4 0v1a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h1a2 2 0 0 0 0 -4h-1a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1',
     ],
 ];

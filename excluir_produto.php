@@ -40,7 +40,7 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | Verificar vínculos em movimentações de estoque
+    | Verificar vínculos em movimentações de estoque e aplicações
     |--------------------------------------------------------------------------
     */
     $sqlMovimentacoes = "
@@ -55,12 +55,22 @@ try {
 
     $totalMovimentacoes = (int)$stmtMovimentacoes->fetchColumn();
 
+    $sqlAplicacoes = "
+        SELECT COUNT(*)
+        FROM aplicacoes_produto
+        WHERE produto_id = :id
+    ";
+    $stmtAplicacoes = $pdo->prepare($sqlAplicacoes);
+    $stmtAplicacoes->bindValue(':id', $id, PDO::PARAM_INT);
+    $stmtAplicacoes->execute();
+    $totalAplicacoes = (int)$stmtAplicacoes->fetchColumn();
+
     /*
     |--------------------------------------------------------------------------
     | Se houver vínculo, apenas inativa
     |--------------------------------------------------------------------------
     */
-    if ($totalMovimentacoes > 0) {
+    if ($totalMovimentacoes > 0 || $totalAplicacoes > 0) {
         $sqlInativar = "
             UPDATE produtos
             SET ativo = 0,

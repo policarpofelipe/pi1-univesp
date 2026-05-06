@@ -86,7 +86,7 @@ function colunaExiste(PDO $pdo, string $tabela, string $coluna): bool
 
 function schemaVeicularDisponivel(PDO $pdo): bool
 {
-    $tabelas = ['aplicacoes_peca', 'veiculos_configuracao', 'modelos_veiculo', 'marcas_veiculo'];
+    $tabelas = ['aplicacoes_produto', 'veiculos_configuracao', 'modelos_veiculo', 'marcas_veiculo'];
     foreach ($tabelas as $tabela) {
         if (!tabelaExiste($pdo, $tabela)) {
             return false;
@@ -94,8 +94,8 @@ function schemaVeicularDisponivel(PDO $pdo): bool
     }
 
     $colunas = [
-        ['aplicacoes_peca', 'tipo_peca_id'],
-        ['aplicacoes_peca', 'veiculo_configuracao_id'],
+        ['aplicacoes_produto', 'produto_id'],
+        ['aplicacoes_produto', 'veiculo_configuracao_id'],
         ['veiculos_configuracao', 'modelo_veiculo_id'],
         ['modelos_veiculo', 'marca_veiculo_id'],
     ];
@@ -278,17 +278,13 @@ function montarFiltroVeicular(array $entrada, array &$params, array &$where, boo
         $params[':filtro_configuracao_id'] = [$entrada['veiculo_configuracao_id'], PDO::PARAM_INT];
     }
 
-    /*
-     * Pelo schema atual, aplicacoes_peca referencia tipo_peca_id (nao produto_id).
-     * Portanto o filtro veicular necessariamente ocorre por tipo de peça.
-     */
     $where[] = "EXISTS (
         SELECT 1
-        FROM aplicacoes_peca ap
+        FROM aplicacoes_produto ap
         INNER JOIN veiculos_configuracao vc ON vc.id = ap.veiculo_configuracao_id
         INNER JOIN modelos_veiculo mo ON mo.id = vc.modelo_veiculo_id
         INNER JOIN marcas_veiculo mv ON mv.id = mo.marca_veiculo_id
-        WHERE ap.tipo_peca_id = p.tipo_peca_id
+        WHERE ap.produto_id = p.id
           AND " . implode(' AND ', $filtroVeiculo) . "
     )";
 }
@@ -342,15 +338,16 @@ function buscarListaProdutos(PDO $pdo, string $whereSql, array $params, int $lim
            AND pi.principal = 1
         LEFT JOIN (
             SELECT
-                ap.tipo_peca_id,
+                ap.produto_id,
                 GROUP_CONCAT(DISTINCT mv.nome ORDER BY mv.nome SEPARATOR ', ') AS marcas_veiculo,
                 GROUP_CONCAT(DISTINCT mo.nome ORDER BY mo.nome SEPARATOR ', ') AS modelos_veiculo
-            FROM aplicacoes_peca ap
+            FROM aplicacoes_produto ap
             INNER JOIN veiculos_configuracao vc ON vc.id = ap.veiculo_configuracao_id
             INNER JOIN modelos_veiculo mo ON mo.id = vc.modelo_veiculo_id
             INNER JOIN marcas_veiculo mv ON mv.id = mo.marca_veiculo_id
-            GROUP BY ap.tipo_peca_id
-        ) app_agg ON app_agg.tipo_peca_id = p.tipo_peca_id
+            WHERE ap.ativo = 1
+            GROUP BY ap.produto_id
+        ) app_agg ON app_agg.produto_id = p.id
         WHERE {$whereSql}
         ORDER BY p.nome_comercial ASC
         LIMIT {$limite} OFFSET {$offset}

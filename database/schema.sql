@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Tempo de geração: 05/05/2026 às 16:58
+-- Tempo de geração: 06/05/2026 às 10:07
 -- Versão do servidor: 8.0.46
 -- Versão do PHP: 8.4.20
 
@@ -24,14 +24,15 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `aplicacoes_peca`
+-- Estrutura para tabela `aplicacoes_produto`
 --
 
-CREATE TABLE `aplicacoes_peca` (
+CREATE TABLE `aplicacoes_produto` (
   `id` int UNSIGNED NOT NULL,
-  `tipo_peca_id` int UNSIGNED NOT NULL,
+  `produto_id` int UNSIGNED NOT NULL,
   `veiculo_configuracao_id` int UNSIGNED NOT NULL,
-  `observacao` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `observacao` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ativo` tinyint(1) NOT NULL DEFAULT '1',
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -255,13 +256,14 @@ CREATE TABLE `veiculos_configuracao` (
 --
 
 --
--- Índices de tabela `aplicacoes_peca`
+-- Índices de tabela `aplicacoes_produto`
 --
-ALTER TABLE `aplicacoes_peca`
+ALTER TABLE `aplicacoes_produto`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_aplicacoes_peca_tipo_veiculo` (`tipo_peca_id`,`veiculo_configuracao_id`),
-  ADD KEY `idx_aplicacoes_peca_tipo` (`tipo_peca_id`),
-  ADD KEY `idx_aplicacoes_peca_veiculo` (`veiculo_configuracao_id`);
+  ADD UNIQUE KEY `uq_aplicacoes_produto_produto_veiculo` (`produto_id`,`veiculo_configuracao_id`),
+  ADD KEY `idx_aplicacoes_produto_produto` (`produto_id`),
+  ADD KEY `idx_aplicacoes_produto_veiculo` (`veiculo_configuracao_id`),
+  ADD KEY `idx_aplicacoes_produto_ativo` (`ativo`);
 
 --
 -- Índices de tabela `categorias_peca`
@@ -386,9 +388,9 @@ ALTER TABLE `veiculos_configuracao`
 --
 
 --
--- AUTO_INCREMENT de tabela `aplicacoes_peca`
+-- AUTO_INCREMENT de tabela `aplicacoes_produto`
 --
-ALTER TABLE `aplicacoes_peca`
+ALTER TABLE `aplicacoes_produto`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -468,11 +470,11 @@ ALTER TABLE `veiculos_configuracao`
 --
 
 --
--- Restrições para tabelas `aplicacoes_peca`
+-- Restrições para tabelas `aplicacoes_produto`
 --
-ALTER TABLE `aplicacoes_peca`
-  ADD CONSTRAINT `fk_aplicacoes_peca_tipo` FOREIGN KEY (`tipo_peca_id`) REFERENCES `tipos_peca` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_aplicacoes_peca_veiculo` FOREIGN KEY (`veiculo_configuracao_id`) REFERENCES `veiculos_configuracao` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `aplicacoes_produto`
+  ADD CONSTRAINT `fk_aplicacoes_produto_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_aplicacoes_produto_veiculo` FOREIGN KEY (`veiculo_configuracao_id`) REFERENCES `veiculos_configuracao` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Restrições para tabelas `modelos_veiculo`

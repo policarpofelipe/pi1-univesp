@@ -39,12 +39,12 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | Verificar vínculos em aplicações de peça
+    | Verificar vínculos em aplicações de produto
     |--------------------------------------------------------------------------
     */
     $sqlAplicacoes = "
         SELECT COUNT(*)
-        FROM aplicacoes_peca
+        FROM aplicacoes_produto
         WHERE veiculo_configuracao_id = :id
     ";
 
