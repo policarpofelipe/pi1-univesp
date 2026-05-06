@@ -567,8 +567,11 @@ $baseParams = [
                                         >
                                     <?php else: ?>
                                         <div class="flex h-full flex-col items-center justify-center text-slate-400">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 0 1 2-2h3l1.2 1.5h4.6L15 5h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zm4 0l10 10M10 13a3 3 0 1 1 4.2-4.2" />
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M8.297 4.289a.997 .997 0 0 1 .703 -.289h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v8m-1.187 2.828c-.249 .11 -.524 .172 -.813 .172h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h1c.298 0 .58 -.065 .834 -.181" />
+                                                <path d="M10.422 10.448a3 3 0 1 0 4.15 4.098" />
+                                                <path d="M3 3l18 18" />
                                             </svg>
                                             <span class="mt-2 text-sm font-medium">Foto em breve</span>
                                         </div>
