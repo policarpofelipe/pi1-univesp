@@ -102,7 +102,7 @@ if (!$assistente) {
 
 $assistenteIdAtual = (int)$assistente['id'];
 $produtoIdAtual = (int)($assistente['produto_id'] ?? 0);
-$etapaAtual = max(1, (int)($assistente['etapa_atual'] ?? 1));
+$etapaAtual = max(1, min(5, (int)($assistente['etapa_atual'] ?? 1)));
 
 $dadosJson = [];
 if (!empty($assistente['dados_json'])) {
@@ -117,11 +117,20 @@ $erro = trim((string)($_GET['erro'] ?? ''));
 $mensagemSucesso = '';
 $mensagemErro = '';
 if ($sucesso === 'etapa1_salva') {
-    $mensagemSucesso = 'Etapa 1 salva com sucesso. Você pode avançar para a próxima etapa quando ela for disponibilizada.';
+    $mensagemSucesso = 'Etapa 1 salva com sucesso.';
+} elseif ($sucesso === 'aplicacao_adicionada') {
+    $mensagemSucesso = 'Aplicação veicular adicionada com sucesso.';
+} elseif ($sucesso === 'aplicacao_removida') {
+    $mensagemSucesso = 'Aplicação veicular removida com sucesso.';
+} elseif ($sucesso === 'etapa2_salva') {
+    $mensagemSucesso = 'Etapa 2 salva com sucesso. Fluxo avançado para a etapa 3.';
+} elseif ($sucesso === 'etapa2_pulada') {
+    $mensagemSucesso = 'Etapa 2 foi pulada e a pendência de aplicabilidade foi registrada.';
 }
 if ($erro !== '') {
     $mapaErros = [
         'assistente_invalido' => 'Assistente inválido ou não encontrado.',
+        'produto_nao_disponivel' => 'O assistente ainda não possui produto vinculado. Conclua a etapa 1.',
         'categoria_obrigatoria' => 'Selecione uma categoria existente ou informe uma nova.',
         'tipo_obrigatorio' => 'Selecione um tipo existente ou informe um novo.',
         'marca_obrigatoria' => 'Selecione uma marca existente ou informe uma nova.',
@@ -131,6 +140,9 @@ if ($erro !== '') {
         'sku_duplicado' => 'Já existe um produto com este SKU.',
         'codigo_fabricante_duplicado' => 'Já existe produto com este código de fabricante para a marca selecionada.',
         'codigo_barras_duplicado' => 'Já existe produto com este código de barras.',
+        'veiculo_obrigatorio' => 'Selecione uma configuração veicular válida.',
+        'aplicacao_duplicada' => 'Esta configuração veicular já está vinculada a este produto.',
+        'aplicacao_invalida' => 'Aplicação inválida para este assistente/produto.',
         'erro_interno' => 'Ocorreu um erro interno ao salvar a etapa.',
     ];
     $mensagemErro = $mapaErros[$erro] ?? 'Não foi possível processar a etapa.';
@@ -201,6 +213,99 @@ $opcoesMarcas = ['' => 'Selecione uma marca'];
 foreach ($marcas as $marca) {
     $opcoesMarcas[(string)$marca['id']] = (string)$marca['nome'];
 }
+
+$marcaVeiculoId = (int)($_GET['marca_veiculo_id'] ?? ($dadosJson['etapa_2']['marca_veiculo_id'] ?? 0));
+$modeloVeiculoId = (int)($_GET['modelo_veiculo_id'] ?? ($dadosJson['etapa_2']['modelo_veiculo_id'] ?? 0));
+$veiculoConfiguracaoId = (int)($_GET['veiculo_configuracao_id'] ?? 0);
+$observacaoAplicacao = trim((string)($_GET['observacao'] ?? ''));
+
+$opcoesMarcasVeiculo = ['' => 'Selecione uma marca'];
+$stmtMarcasVeiculo = $pdo->query("SELECT id, nome FROM marcas_veiculo WHERE ativo = 1 ORDER BY nome ASC");
+foreach ($stmtMarcasVeiculo->fetchAll(PDO::FETCH_ASSOC) as $mv) {
+    $opcoesMarcasVeiculo[(string)$mv['id']] = (string)$mv['nome'];
+}
+
+$opcoesModelosVeiculo = ['' => 'Selecione um modelo'];
+if ($marcaVeiculoId > 0) {
+    $stmtModelos = $pdo->prepare("
+        SELECT id, nome
+        FROM modelos_veiculo
+        WHERE ativo = 1
+          AND marca_veiculo_id = :marca_veiculo_id
+        ORDER BY nome ASC
+    ");
+    $stmtModelos->bindValue(':marca_veiculo_id', $marcaVeiculoId, PDO::PARAM_INT);
+    $stmtModelos->execute();
+    foreach ($stmtModelos->fetchAll(PDO::FETCH_ASSOC) as $modelo) {
+        $opcoesModelosVeiculo[(string)$modelo['id']] = (string)$modelo['nome'];
+    }
+}
+
+$opcoesConfiguracoesVeiculo = ['' => 'Selecione uma configuração'];
+if ($modeloVeiculoId > 0) {
+    $stmtConfiguracoes = $pdo->prepare("
+        SELECT id, ano_inicio, ano_fim, versao, motorizacao, combustivel
+        FROM veiculos_configuracao
+        WHERE ativo = 1
+          AND modelo_veiculo_id = :modelo_veiculo_id
+        ORDER BY ano_inicio ASC, versao ASC
+    ");
+    $stmtConfiguracoes->bindValue(':modelo_veiculo_id', $modeloVeiculoId, PDO::PARAM_INT);
+    $stmtConfiguracoes->execute();
+    foreach ($stmtConfiguracoes->fetchAll(PDO::FETCH_ASSOC) as $vc) {
+        $ano = ((int)$vc['ano_inicio'] === (int)$vc['ano_fim'])
+            ? (string)$vc['ano_inicio']
+            : $vc['ano_inicio'] . ' a ' . $vc['ano_fim'];
+        $partes = [$ano];
+        if (!empty($vc['versao'])) {
+            $partes[] = (string)$vc['versao'];
+        }
+        if (!empty($vc['motorizacao'])) {
+            $partes[] = (string)$vc['motorizacao'];
+        }
+        if (!empty($vc['combustivel'])) {
+            $partes[] = (string)$vc['combustivel'];
+        }
+        $opcoesConfiguracoesVeiculo[(string)$vc['id']] = implode(' / ', $partes);
+    }
+}
+
+$aplicacoesProduto = [];
+if ($produtoIdAtual > 0) {
+    $stmtAplicacoes = $pdo->prepare("
+        SELECT
+            ap.id,
+            ap.observacao,
+            mv.nome AS marca_veiculo,
+            mo.nome AS modelo_veiculo,
+            vc.ano_inicio,
+            vc.ano_fim,
+            vc.versao,
+            vc.motorizacao,
+            vc.combustivel
+        FROM aplicacoes_produto ap
+        INNER JOIN veiculos_configuracao vc ON vc.id = ap.veiculo_configuracao_id
+        INNER JOIN modelos_veiculo mo ON mo.id = vc.modelo_veiculo_id
+        INNER JOIN marcas_veiculo mv ON mv.id = mo.marca_veiculo_id
+        WHERE ap.produto_id = :produto_id
+          AND ap.ativo = 1
+        ORDER BY mv.nome ASC, mo.nome ASC, vc.ano_inicio ASC, vc.versao ASC
+    ");
+    $stmtAplicacoes->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+    $stmtAplicacoes->execute();
+    $aplicacoesProduto = $stmtAplicacoes->fetchAll(PDO::FETCH_ASSOC);
+}
+$totalAplicacoes = count($aplicacoesProduto);
+$temPendenciaAplicabilidade = !empty($dadosJson['pendencias']['produto_sem_aplicabilidade']) || $totalAplicacoes === 0;
+
+$tituloEtapa = 'Etapa 1 de 5 — Identificação da peça';
+$descricaoEtapa = 'Defina os dados estruturantes do produto para habilitar as próximas etapas.';
+$progresso = 20;
+if ($etapaAtual === 2) {
+    $tituloEtapa = 'Etapa 2 de 5 — Aplicabilidade veicular';
+    $descricaoEtapa = 'Informe em quais veículos esta peça/produto se aplica. A compatibilidade é vinculada ao produto específico, não ao tipo de peça.';
+    $progresso = 40;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -221,7 +326,7 @@ foreach ($marcas as $marca) {
                         <div>
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
                             <h1 class="mt-2 text-2xl md:text-3xl font-bold">Assistente de Cadastro de Produto/Peça</h1>
-                            <p class="mt-2 text-sm text-slate-300">Etapa 1 de 5 — Identificação da peça</p>
+                            <p class="mt-2 text-sm text-slate-300"><?= esc($tituloEtapa) ?></p>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <?= botao_link('assistente_cadastro_produto_cancelar.php?id=' . $assistenteIdAtual, 'Cancelar assistente', 'cancelar') ?>
@@ -232,9 +337,9 @@ foreach ($marcas as $marca) {
 
             <div class="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div class="h-3 w-full overflow-hidden rounded-full bg-slate-200">
-                    <div class="h-full rounded-full bg-blue-600" style="width: 20%;"></div>
+                    <div class="h-full rounded-full bg-blue-600" style="width: <?= $progresso ?>%;"></div>
                 </div>
-                <div class="mt-2 text-sm text-slate-600">Progresso inicial salvo no rascunho #<?= (int)$assistenteIdAtual ?>.</div>
+                <div class="mt-2 text-sm text-slate-600"><?= esc($descricaoEtapa) ?> (Rascunho #<?= (int)$assistenteIdAtual ?>).</div>
             </div>
 
             <?php if ($mensagemSucesso !== ''): ?>
@@ -251,9 +356,127 @@ foreach ($marcas as $marca) {
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div class="lg:col-span-2">
                     <div class="<?= classe_box() ?>">
-                        <form action="assistente_cadastro_produto_salvar.php" method="POST" class="space-y-6">
-                            <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
-                            <input type="hidden" name="etapa" value="1">
+                        <?php if ($etapaAtual === 2): ?>
+                            <div class="rounded-xl border border-slate-200 p-4 mb-6">
+                                <h2 class="text-base font-semibold text-slate-900">Etapa 2 de 5 — Aplicabilidade veicular</h2>
+                                <p class="mt-2 text-sm text-slate-600">
+                                    Informe em quais veículos esta peça/produto se aplica. A compatibilidade é vinculada ao produto específico, não ao tipo de peça.
+                                </p>
+                                <?php if ($temPendenciaAplicabilidade): ?>
+                                    <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                                        Este produto ainda não possui veículos compatíveis cadastrados. Você pode continuar, mas esta pendência aparecerá na revisão final.
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <form method="GET" class="rounded-xl border border-slate-200 p-4 mb-4">
+                                <input type="hidden" name="id" value="<?= (int)$assistenteIdAtual ?>">
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                    <div>
+                                        <label for="marca_veiculo_id" class="<?= classe_label() ?>">Marca do veículo</label>
+                                        <?= select_padrao('marca_veiculo_id', $opcoesMarcasVeiculo, (string)$marcaVeiculoId, ['id' => 'marca_veiculo_id']) ?>
+                                    </div>
+                                    <div>
+                                        <label for="modelo_veiculo_id" class="<?= classe_label() ?>">Modelo do veículo</label>
+                                        <?= select_padrao('modelo_veiculo_id', $opcoesModelosVeiculo, (string)$modeloVeiculoId, ['id' => 'modelo_veiculo_id']) ?>
+                                    </div>
+                                    <div class="flex items-end">
+                                        <?= botao_submit('Filtrar configurações', 'busca') ?>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <form action="assistente_cadastro_produto_salvar.php" method="POST" class="space-y-4">
+                                <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                <input type="hidden" name="acao" value="adicionar_aplicacao">
+                                <div class="rounded-xl border border-slate-200 p-4">
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div class="md:col-span-2">
+                                            <label for="veiculo_configuracao_id" class="<?= classe_label() ?>">Configuração veicular *</label>
+                                            <?= select_padrao('veiculo_configuracao_id', $opcoesConfiguracoesVeiculo, (string)$veiculoConfiguracaoId, ['id' => 'veiculo_configuracao_id']) ?>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label for="observacao" class="<?= classe_label() ?>">Observação (opcional)</label>
+                                            <?= textarea_padrao('observacao', $observacaoAplicacao, ['id' => 'observacao', 'rows' => '2']) ?>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <?= botao_submit('Adicionar aplicação', 'salvar') ?>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div class="rounded-xl border border-slate-200 p-4 mb-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-base font-semibold text-slate-900">Aplicações já adicionadas</h3>
+                                    <span class="text-sm text-slate-600"><?= $totalAplicacoes ?> aplicação(ões)</span>
+                                </div>
+                                <?php if ($totalAplicacoes <= 0): ?>
+                                    <p class="mt-3 text-sm text-slate-600">Nenhuma aplicação vinculada até o momento.</p>
+                                <?php else: ?>
+                                    <div class="mt-3 overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                            <thead>
+                                            <tr class="text-left text-slate-600">
+                                                <th class="px-2 py-2">Marca</th>
+                                                <th class="px-2 py-2">Modelo</th>
+                                                <th class="px-2 py-2">Ano</th>
+                                                <th class="px-2 py-2">Versão</th>
+                                                <th class="px-2 py-2">Motorização</th>
+                                                <th class="px-2 py-2">Combustível</th>
+                                                <th class="px-2 py-2">Observação</th>
+                                                <th class="px-2 py-2">Ação</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100">
+                                            <?php foreach ($aplicacoesProduto as $ap): ?>
+                                                <?php $anoTexto = ((int)$ap['ano_inicio'] === (int)$ap['ano_fim']) ? (string)$ap['ano_inicio'] : $ap['ano_inicio'] . ' a ' . $ap['ano_fim']; ?>
+                                                <tr>
+                                                    <td class="px-2 py-2"><?= esc((string)$ap['marca_veiculo']) ?></td>
+                                                    <td class="px-2 py-2"><?= esc((string)$ap['modelo_veiculo']) ?></td>
+                                                    <td class="px-2 py-2"><?= esc($anoTexto) ?></td>
+                                                    <td class="px-2 py-2"><?= esc((string)$ap['versao']) ?></td>
+                                                    <td class="px-2 py-2"><?= esc((string)$ap['motorizacao']) ?></td>
+                                                    <td class="px-2 py-2"><?= esc((string)$ap['combustivel']) ?></td>
+                                                    <td class="px-2 py-2"><?= esc((string)$ap['observacao']) ?></td>
+                                                    <td class="px-2 py-2">
+                                                        <form action="assistente_cadastro_produto_salvar.php" method="POST" onsubmit="return confirm('Remover esta aplicação?');">
+                                                            <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                                            <input type="hidden" name="acao" value="remover_aplicacao">
+                                                            <input type="hidden" name="aplicacao_id" value="<?= (int)$ap['id'] ?>">
+                                                            <?= botao_submit('Remover', 'perigo') ?>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:flex-wrap">
+                                <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <input type="hidden" name="acao" value="voltar_etapa_1">
+                                    <?= botao_submit('Voltar', 'cancelar') ?>
+                                </form>
+                                <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <input type="hidden" name="acao" value="salvar_etapa_2">
+                                    <?= botao_submit('Salvar e continuar', 'salvar') ?>
+                                </form>
+                                <form action="assistente_cadastro_produto_salvar.php" method="POST" onsubmit="return confirm('Pular a etapa de aplicabilidade?');">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <input type="hidden" name="acao" value="pular_etapa_2">
+                                    <?= botao_submit('Pular etapa', 'busca') ?>
+                                </form>
+                                <?= botao_link('assistente_cadastro_produto_cancelar.php?id=' . $assistenteIdAtual, 'Cancelar assistente', 'cancelar') ?>
+                            </div>
+                        <?php else: ?>
+                            <form action="assistente_cadastro_produto_salvar.php" method="POST" class="space-y-6">
+                                <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                <input type="hidden" name="acao" value="salvar_etapa_1">
 
                             <div class="rounded-xl border border-slate-200 p-4">
                                 <h2 class="text-base font-semibold text-slate-900">Categoria da peça</h2>
@@ -359,11 +582,12 @@ foreach ($marcas as $marca) {
                                 </div>
                             </div>
 
-                            <div class="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row">
-                                <?= botao_submit('Salvar e continuar', 'salvar') ?>
-                                <?= botao_link('assistente_cadastro_produto_cancelar.php?id=' . $assistenteIdAtual, 'Cancelar assistente', 'cancelar') ?>
-                            </div>
-                        </form>
+                                <div class="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row">
+                                    <?= botao_submit('Salvar e continuar', 'salvar') ?>
+                                    <?= botao_link('assistente_cadastro_produto_cancelar.php?id=' . $assistenteIdAtual, 'Cancelar assistente', 'cancelar') ?>
+                                </div>
+                            </form>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -382,8 +606,8 @@ foreach ($marcas as $marca) {
                     <div class="<?= classe_box() ?>">
                         <h3 class="text-base font-semibold text-slate-900">Etapas do assistente</h3>
                         <ol class="mt-3 space-y-2 text-sm">
-                            <li class="font-semibold text-blue-700">1. Identificação da peça (atual)</li>
-                            <li class="text-slate-500">2. Aplicabilidade veicular (fase 2)</li>
+                            <li class="<?= $etapaAtual === 1 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">1. Identificação da peça</li>
+                            <li class="<?= $etapaAtual === 2 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">2. Aplicabilidade veicular</li>
                             <li class="text-slate-500">3. Estoque/localização (fase 3)</li>
                             <li class="text-slate-500">4. Imagens (fase 4)</li>
                             <li class="text-slate-500">5. Revisão e conclusão (fase 5)</li>

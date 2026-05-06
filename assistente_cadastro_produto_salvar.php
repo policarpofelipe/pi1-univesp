@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $usuarioId = (int)($_SESSION['usuario_id'] ?? 0);
 $assistenteId = (int)($_POST['assistente_id'] ?? 0);
+$acao = trim((string)($_POST['acao'] ?? 'salvar_etapa_1'));
 if ($usuarioId <= 0 || $assistenteId <= 0) {
     header('Location: assistente_cadastro_produto.php?erro=assistente_invalido');
     exit;
@@ -37,6 +38,218 @@ $stmtAssistente->execute();
 $assistente = $stmtAssistente->fetch(PDO::FETCH_ASSOC);
 if (!$assistente) {
     $redirecionarErro('assistente_invalido');
+}
+
+if ($acao === 'adicionar_aplicacao' || $acao === 'remover_aplicacao' || $acao === 'salvar_etapa_2' || $acao === 'pular_etapa_2' || $acao === 'voltar_etapa_1') {
+    $produtoIdAtual = (int)($assistente['produto_id'] ?? 0);
+    if ($produtoIdAtual <= 0) {
+        $redirecionarErro('produto_nao_disponivel');
+    }
+
+    $dadosJson = [];
+    if (!empty($assistente['dados_json'])) {
+        $dec = json_decode((string)$assistente['dados_json'], true);
+        if (is_array($dec)) {
+            $dadosJson = $dec;
+        }
+    }
+
+    try {
+        if ($acao === 'adicionar_aplicacao') {
+            $veiculoConfiguracaoId = (int)($_POST['veiculo_configuracao_id'] ?? 0);
+            $observacao = trim((string)($_POST['observacao'] ?? ''));
+            if ($veiculoConfiguracaoId <= 0) {
+                $redirecionarErro('veiculo_obrigatorio');
+            }
+
+            $stmtVc = $pdo->prepare("SELECT id FROM veiculos_configuracao WHERE id = :id AND ativo = 1 LIMIT 1");
+            $stmtVc->bindValue(':id', $veiculoConfiguracaoId, PDO::PARAM_INT);
+            $stmtVc->execute();
+            if (!$stmtVc->fetch()) {
+                $redirecionarErro('veiculo_obrigatorio');
+            }
+
+            $stmtDup = $pdo->prepare("
+                SELECT id
+                FROM aplicacoes_produto
+                WHERE produto_id = :produto_id
+                  AND veiculo_configuracao_id = :veiculo_configuracao_id
+                LIMIT 1
+            ");
+            $stmtDup->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+            $stmtDup->bindValue(':veiculo_configuracao_id', $veiculoConfiguracaoId, PDO::PARAM_INT);
+            $stmtDup->execute();
+            if ($stmtDup->fetch()) {
+                $redirecionarErro('aplicacao_duplicada');
+            }
+
+            $ins = $pdo->prepare("
+                INSERT INTO aplicacoes_produto (
+                    produto_id,
+                    veiculo_configuracao_id,
+                    observacao,
+                    ativo,
+                    criado_em,
+                    atualizado_em
+                ) VALUES (
+                    :produto_id,
+                    :veiculo_configuracao_id,
+                    :observacao,
+                    1,
+                    NOW(),
+                    NOW()
+                )
+            ");
+            $ins->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+            $ins->bindValue(':veiculo_configuracao_id', $veiculoConfiguracaoId, PDO::PARAM_INT);
+            $ins->bindValue(':observacao', $observacao !== '' ? $observacao : null, $observacao !== '' ? PDO::PARAM_STR : PDO::PARAM_NULL);
+            $ins->execute();
+
+            unset($dadosJson['pendencias']['produto_sem_aplicabilidade']);
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 2,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=aplicacao_adicionada');
+            exit;
+        }
+
+        if ($acao === 'remover_aplicacao') {
+            $aplicacaoId = (int)($_POST['aplicacao_id'] ?? 0);
+            if ($aplicacaoId <= 0) {
+                $redirecionarErro('aplicacao_invalida');
+            }
+
+            $stmtApp = $pdo->prepare("
+                SELECT id
+                FROM aplicacoes_produto
+                WHERE id = :id
+                  AND produto_id = :produto_id
+                LIMIT 1
+            ");
+            $stmtApp->bindValue(':id', $aplicacaoId, PDO::PARAM_INT);
+            $stmtApp->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+            $stmtApp->execute();
+            if (!$stmtApp->fetch()) {
+                $redirecionarErro('aplicacao_invalida');
+            }
+
+            $del = $pdo->prepare("DELETE FROM aplicacoes_produto WHERE id = :id AND produto_id = :produto_id LIMIT 1");
+            $del->bindValue(':id', $aplicacaoId, PDO::PARAM_INT);
+            $del->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+            $del->execute();
+
+            $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM aplicacoes_produto WHERE produto_id = :produto_id AND ativo = 1");
+            $stmtCount->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+            $stmtCount->execute();
+            $totalAplicacoes = (int)$stmtCount->fetchColumn();
+            if ($totalAplicacoes <= 0) {
+                $dadosJson['pendencias']['produto_sem_aplicabilidade'] = true;
+            }
+
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 2,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=aplicacao_removida');
+            exit;
+        }
+
+        if ($acao === 'salvar_etapa_2') {
+            $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM aplicacoes_produto WHERE produto_id = :produto_id AND ativo = 1");
+            $stmtCount->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+            $stmtCount->execute();
+            $totalAplicacoes = (int)$stmtCount->fetchColumn();
+            if ($totalAplicacoes <= 0) {
+                $dadosJson['pendencias']['produto_sem_aplicabilidade'] = true;
+            } else {
+                unset($dadosJson['pendencias']['produto_sem_aplicabilidade']);
+            }
+
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 3,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=etapa2_salva');
+            exit;
+        }
+
+        if ($acao === 'pular_etapa_2') {
+            $dadosJson['pendencias']['produto_sem_aplicabilidade'] = true;
+            $dadosJson['etapa_2_pulada'] = true;
+
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 3,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=etapa2_pulada');
+            exit;
+        }
+
+        if ($acao === 'voltar_etapa_1') {
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 1,
+                    status = 'em_andamento',
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId);
+            exit;
+        }
+    } catch (Throwable $e) {
+        $redirecionarErro('erro_interno');
+    }
 }
 
 $categoriaModo = (string)($_POST['categoria_modo'] ?? 'existente');
