@@ -14,11 +14,6 @@ $menuPrincipal = [
         'label' => 'Painel',
         'icon'  => 'M5 4h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1M5 16h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1M15 12h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1M15 4h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1',
     ],
-    [
-        'url'   => 'relatorio_estoque_baixo.php',
-        'label' => 'Estoque Baixo',
-        'icon'  => 'M4 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0M15 17h-9v-14h-2M6 5l14 1l-.854 5.976M16.5 13h-10.5M19 16v3M19 22v.01',
-    ],
 ];
 
 $menuCadastros = [
