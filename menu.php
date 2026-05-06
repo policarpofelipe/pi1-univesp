@@ -207,7 +207,7 @@ function render_bloco_submenu(string $titulo, string $icone, array $itens, strin
 ?>
 
 <aside
-    x-data="{ open: false }"
+    x-data="{ open: true }"
     class="relative hidden h-screen flex-col border-r border-gray-200 bg-white text-gray-900 shadow-lg transition-all duration-300 md:flex overflow-x-hidden"
     :class="open ? 'w-72' : 'w-20'"
 >
