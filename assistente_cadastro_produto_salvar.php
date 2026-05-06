@@ -21,9 +21,40 @@ if ($usuarioId <= 0 || $assistenteId <= 0) {
 }
 
 $redirecionarErro = function (string $erro) use ($assistenteId): void {
-    header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&erro=' . urlencode($erro));
+    $qs = ['id=' . $assistenteId, 'erro=' . urlencode($erro)];
+    $preservar = [
+        'categoria_modo','categoria_peca_id','nova_categoria_nome','tipo_modo','tipo_peca_id','novo_tipo_nome',
+        'marca_modo','marca_produto_id','nova_marca_nome','sku_interno','codigo_fabricante','nome_comercial',
+        'codigo_barras','descricao','custo','preco','estoque_minimo',
+        'marca_veiculo_modo','marca_veiculo_id','nova_marca_veiculo_nome','modelo_veiculo_modo','modelo_veiculo_id',
+        'novo_modelo_veiculo_nome','config_veiculo_modo','veiculo_configuracao_id','config_ano_inicio','config_ano_fim',
+        'config_motorizacao','config_combustivel','config_versao','observacao',
+        'estoque_modo','estoque_id','novo_estoque_nome','nova_localizacao_estoque','quantidade_inicial','observacao_estoque'
+    ];
+    foreach ($preservar as $campo) {
+        if (isset($_POST[$campo])) {
+            $qs[] = urlencode($campo) . '=' . urlencode((string)$_POST[$campo]);
+        }
+    }
+    header('Location: assistente_cadastro_produto.php?' . implode('&', $qs));
     exit;
 };
+
+function nomeExisteNormalizado(PDO $pdo, string $tabela, string $nomeColuna, string $valor, ?string $whereExtra = null, array $params = []): bool
+{
+    $sql = "SELECT id FROM {$tabela} WHERE LOWER(TRIM({$nomeColuna})) = LOWER(TRIM(:valor))";
+    if ($whereExtra) {
+        $sql .= ' AND ' . $whereExtra;
+    }
+    $sql .= ' LIMIT 1';
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':valor', trim($valor));
+    foreach ($params as $chave => $conteudo) {
+        $stmt->bindValue($chave, $conteudo, is_int($conteudo) ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $stmt->execute();
+    return (bool)$stmt->fetch(PDO::FETCH_ASSOC);
+}
 
 $stmtAssistente = $pdo->prepare("
     SELECT *
@@ -74,8 +105,86 @@ if (
 
     try {
         if ($acao === 'adicionar_aplicacao') {
+            $marcaVeiculoModo = (string)($_POST['marca_veiculo_modo'] ?? 'existente');
+            $modeloVeiculoModo = (string)($_POST['modelo_veiculo_modo'] ?? 'existente');
+            $configVeiculoModo = (string)($_POST['config_veiculo_modo'] ?? 'existente');
+            $marcaVeiculoId = (int)($_POST['marca_veiculo_id'] ?? 0);
+            $modeloVeiculoId = (int)($_POST['modelo_veiculo_id'] ?? 0);
             $veiculoConfiguracaoId = (int)($_POST['veiculo_configuracao_id'] ?? 0);
+            $novaMarcaVeiculoNome = trim((string)($_POST['nova_marca_veiculo_nome'] ?? ''));
+            $novoModeloVeiculoNome = trim((string)($_POST['novo_modelo_veiculo_nome'] ?? ''));
+            $configAnoInicio = (int)($_POST['config_ano_inicio'] ?? 0);
+            $configAnoFim = (int)($_POST['config_ano_fim'] ?? 0);
+            $configMotorizacao = trim((string)($_POST['config_motorizacao'] ?? ''));
+            $configCombustivel = trim((string)($_POST['config_combustivel'] ?? ''));
+            $configVersao = trim((string)($_POST['config_versao'] ?? ''));
             $observacao = trim((string)($_POST['observacao'] ?? ''));
+
+            if ($marcaVeiculoModo === 'nova') {
+                if ($novaMarcaVeiculoNome === '') {
+                    $redirecionarErro('veiculo_obrigatorio');
+                }
+                if (nomeExisteNormalizado($pdo, 'marcas_veiculo', 'nome', $novaMarcaVeiculoNome)) {
+                    $redirecionarErro('marca_veiculo_duplicada');
+                }
+                $insMV = $pdo->prepare("INSERT INTO marcas_veiculo (nome, ativo, criado_em, atualizado_em) VALUES (:nome,1,NOW(),NOW())");
+                $insMV->bindValue(':nome', $novaMarcaVeiculoNome);
+                $insMV->execute();
+                $marcaVeiculoId = (int)$pdo->lastInsertId();
+            }
+
+            if ($modeloVeiculoModo === 'nova') {
+                if ($marcaVeiculoId <= 0 || $novoModeloVeiculoNome === '') {
+                    $redirecionarErro('veiculo_obrigatorio');
+                }
+                if (nomeExisteNormalizado($pdo, 'modelos_veiculo', 'nome', $novoModeloVeiculoNome, 'marca_veiculo_id = :marca', [':marca' => $marcaVeiculoId])) {
+                    $redirecionarErro('modelo_veiculo_duplicado');
+                }
+                $insMO = $pdo->prepare("INSERT INTO modelos_veiculo (marca_veiculo_id,nome,ativo,criado_em,atualizado_em) VALUES (:marca,:nome,1,NOW(),NOW())");
+                $insMO->bindValue(':marca', $marcaVeiculoId, PDO::PARAM_INT);
+                $insMO->bindValue(':nome', $novoModeloVeiculoNome);
+                $insMO->execute();
+                $modeloVeiculoId = (int)$pdo->lastInsertId();
+            }
+
+            if ($configVeiculoModo === 'nova') {
+                if ($modeloVeiculoId <= 0 || $configAnoInicio <= 0 || $configAnoFim <= 0 || $configAnoFim < $configAnoInicio) {
+                    $redirecionarErro('veiculo_obrigatorio');
+                }
+                $dupCfg = $pdo->prepare("
+                    SELECT id FROM veiculos_configuracao
+                    WHERE modelo_veiculo_id = :modelo
+                      AND ano_inicio = :ano_inicio
+                      AND ano_fim = :ano_fim
+                      AND COALESCE(motorizacao,'') = :motorizacao
+                      AND COALESCE(combustivel,'') = :combustivel
+                      AND COALESCE(versao,'') = :versao
+                    LIMIT 1
+                ");
+                $dupCfg->bindValue(':modelo', $modeloVeiculoId, PDO::PARAM_INT);
+                $dupCfg->bindValue(':ano_inicio', $configAnoInicio, PDO::PARAM_INT);
+                $dupCfg->bindValue(':ano_fim', $configAnoFim, PDO::PARAM_INT);
+                $dupCfg->bindValue(':motorizacao', $configMotorizacao);
+                $dupCfg->bindValue(':combustivel', $configCombustivel);
+                $dupCfg->bindValue(':versao', $configVersao);
+                $dupCfg->execute();
+                if ($dupCfg->fetch()) {
+                    $redirecionarErro('config_veiculo_duplicada');
+                }
+                $insCfg = $pdo->prepare("
+                    INSERT INTO veiculos_configuracao (modelo_veiculo_id,ano_inicio,ano_fim,motorizacao,combustivel,versao,observacoes,ativo,criado_em,atualizado_em)
+                    VALUES (:modelo,:ano_inicio,:ano_fim,:motorizacao,:combustivel,:versao,NULL,1,NOW(),NOW())
+                ");
+                $insCfg->bindValue(':modelo', $modeloVeiculoId, PDO::PARAM_INT);
+                $insCfg->bindValue(':ano_inicio', $configAnoInicio, PDO::PARAM_INT);
+                $insCfg->bindValue(':ano_fim', $configAnoFim, PDO::PARAM_INT);
+                $insCfg->bindValue(':motorizacao', $configMotorizacao !== '' ? $configMotorizacao : null, $configMotorizacao !== '' ? PDO::PARAM_STR : PDO::PARAM_NULL);
+                $insCfg->bindValue(':combustivel', $configCombustivel !== '' ? $configCombustivel : null, $configCombustivel !== '' ? PDO::PARAM_STR : PDO::PARAM_NULL);
+                $insCfg->bindValue(':versao', $configVersao !== '' ? $configVersao : null, $configVersao !== '' ? PDO::PARAM_STR : PDO::PARAM_NULL);
+                $insCfg->execute();
+                $veiculoConfiguracaoId = (int)$pdo->lastInsertId();
+            }
+
             if ($veiculoConfiguracaoId <= 0) {
                 $redirecionarErro('veiculo_obrigatorio');
             }
@@ -124,6 +233,13 @@ if (
             $ins->execute();
 
             unset($dadosJson['pendencias']['produto_sem_aplicabilidade']);
+            $dadosJson['etapa_2'] = [
+                'marca_veiculo_modo' => $marcaVeiculoModo,
+                'modelo_veiculo_modo' => $modeloVeiculoModo,
+                'config_veiculo_modo' => $configVeiculoModo,
+                'marca_veiculo_id' => $marcaVeiculoId,
+                'modelo_veiculo_id' => $modeloVeiculoId,
+            ];
             $up = $pdo->prepare("
                 UPDATE assistente_cadastro_produto
                 SET etapa_atual = 2,
@@ -267,9 +383,29 @@ if (
         }
 
         if ($acao === 'salvar_estoque_inicial') {
+            $estoqueModo = (string)($_POST['estoque_modo'] ?? 'existente');
             $estoqueId = (int)($_POST['estoque_id'] ?? 0);
+            $novoEstoqueNome = trim((string)($_POST['novo_estoque_nome'] ?? ''));
+            $novaLocalizacaoEstoque = trim((string)($_POST['nova_localizacao_estoque'] ?? ''));
             $quantidadeInformada = trim((string)($_POST['quantidade_inicial'] ?? ''));
             $observacao = trim((string)($_POST['observacao_estoque'] ?? ''));
+
+            if ($estoqueModo === 'novo') {
+                if ($novoEstoqueNome === '') {
+                    $redirecionarErro('estoque_obrigatorio');
+                }
+                if (nomeExisteNormalizado($pdo, 'estoques', 'nome', $novoEstoqueNome)) {
+                    $redirecionarErro('estoque_duplicado');
+                }
+                $insEstoque = $pdo->prepare("
+                    INSERT INTO estoques (nome, localizacao, ativo, criado_em, atualizado_em)
+                    VALUES (:nome, :localizacao, 1, NOW(), NOW())
+                ");
+                $insEstoque->bindValue(':nome', $novoEstoqueNome);
+                $insEstoque->bindValue(':localizacao', $novaLocalizacaoEstoque !== '' ? $novaLocalizacaoEstoque : null, $novaLocalizacaoEstoque !== '' ? PDO::PARAM_STR : PDO::PARAM_NULL);
+                $insEstoque->execute();
+                $estoqueId = (int)$pdo->lastInsertId();
+            }
 
             if ($estoqueId <= 0) {
                 $redirecionarErro('estoque_obrigatorio');
@@ -357,6 +493,7 @@ if (
             unset($dadosJson['pendencias']['produto_sem_estoque_inicial']);
             unset($dadosJson['etapa_3_pulada']);
             $dadosJson['etapa_3'] = [
+                'estoque_modo' => $estoqueModo,
                 'estoque_id' => $estoqueId,
                 'quantidade_inicial' => number_format($quantidade, 2, '.', ''),
             ];
@@ -687,21 +824,16 @@ try {
         if ($novaCategoriaNome === '' || mb_strlen($novaCategoriaNome) > 100) {
             $redirecionarErro('categoria_obrigatoria');
         }
-        $stmtCat = $pdo->prepare("SELECT id FROM categorias_peca WHERE nome = :nome LIMIT 1");
-        $stmtCat->bindValue(':nome', $novaCategoriaNome);
-        $stmtCat->execute();
-        $catExistente = $stmtCat->fetch(PDO::FETCH_ASSOC);
-        if ($catExistente) {
-            $categoriaId = (int)$catExistente['id'];
-        } else {
-            $insCat = $pdo->prepare("
-                INSERT INTO categorias_peca (nome, descricao, ativo, criado_em, atualizado_em)
-                VALUES (:nome, NULL, 1, NOW(), NOW())
-            ");
-            $insCat->bindValue(':nome', $novaCategoriaNome);
-            $insCat->execute();
-            $categoriaId = (int)$pdo->lastInsertId();
+        if (nomeExisteNormalizado($pdo, 'categorias_peca', 'nome', $novaCategoriaNome)) {
+            $redirecionarErro('categoria_duplicada');
         }
+        $insCat = $pdo->prepare("
+            INSERT INTO categorias_peca (nome, descricao, ativo, criado_em, atualizado_em)
+            VALUES (:nome, NULL, 1, NOW(), NOW())
+        ");
+        $insCat->bindValue(':nome', $novaCategoriaNome);
+        $insCat->execute();
+        $categoriaId = (int)$pdo->lastInsertId();
     } else {
         if ($categoriaId <= 0) {
             $redirecionarErro('categoria_obrigatoria');
@@ -718,29 +850,17 @@ try {
         if ($novoTipoNome === '' || mb_strlen($novoTipoNome) > 150 || $categoriaId <= 0) {
             $redirecionarErro('tipo_obrigatorio');
         }
-        $stmtTipo = $pdo->prepare("
-            SELECT id
-            FROM tipos_peca
-            WHERE categoria_peca_id = :categoria_peca_id
-              AND nome = :nome
-            LIMIT 1
-        ");
-        $stmtTipo->bindValue(':categoria_peca_id', $categoriaId, PDO::PARAM_INT);
-        $stmtTipo->bindValue(':nome', $novoTipoNome);
-        $stmtTipo->execute();
-        $tipoExistente = $stmtTipo->fetch(PDO::FETCH_ASSOC);
-        if ($tipoExistente) {
-            $tipoId = (int)$tipoExistente['id'];
-        } else {
-            $insTipo = $pdo->prepare("
-                INSERT INTO tipos_peca (categoria_peca_id, nome, descricao, ativo, criado_em, atualizado_em)
-                VALUES (:categoria_peca_id, :nome, NULL, 1, NOW(), NOW())
-            ");
-            $insTipo->bindValue(':categoria_peca_id', $categoriaId, PDO::PARAM_INT);
-            $insTipo->bindValue(':nome', $novoTipoNome);
-            $insTipo->execute();
-            $tipoId = (int)$pdo->lastInsertId();
+        if (nomeExisteNormalizado($pdo, 'tipos_peca', 'nome', $novoTipoNome, 'categoria_peca_id = :categoria', [':categoria' => $categoriaId])) {
+            $redirecionarErro('tipo_duplicado');
         }
+        $insTipo = $pdo->prepare("
+            INSERT INTO tipos_peca (categoria_peca_id, nome, descricao, ativo, criado_em, atualizado_em)
+            VALUES (:categoria_peca_id, :nome, NULL, 1, NOW(), NOW())
+        ");
+        $insTipo->bindValue(':categoria_peca_id', $categoriaId, PDO::PARAM_INT);
+        $insTipo->bindValue(':nome', $novoTipoNome);
+        $insTipo->execute();
+        $tipoId = (int)$pdo->lastInsertId();
     } else {
         if ($tipoId <= 0) {
             $redirecionarErro('tipo_obrigatorio');
@@ -764,21 +884,16 @@ try {
         if ($novaMarcaNome === '' || mb_strlen($novaMarcaNome) > 100) {
             $redirecionarErro('marca_obrigatoria');
         }
-        $stmtMarca = $pdo->prepare("SELECT id FROM marcas_produto WHERE nome = :nome LIMIT 1");
-        $stmtMarca->bindValue(':nome', $novaMarcaNome);
-        $stmtMarca->execute();
-        $marcaExistente = $stmtMarca->fetch(PDO::FETCH_ASSOC);
-        if ($marcaExistente) {
-            $marcaId = (int)$marcaExistente['id'];
-        } else {
-            $insMarca = $pdo->prepare("
-                INSERT INTO marcas_produto (nome, ativo, criado_em, atualizado_em)
-                VALUES (:nome, 1, NOW(), NOW())
-            ");
-            $insMarca->bindValue(':nome', $novaMarcaNome);
-            $insMarca->execute();
-            $marcaId = (int)$pdo->lastInsertId();
+        if (nomeExisteNormalizado($pdo, 'marcas_produto', 'nome', $novaMarcaNome)) {
+            $redirecionarErro('marca_produto_duplicada');
         }
+        $insMarca = $pdo->prepare("
+            INSERT INTO marcas_produto (nome, ativo, criado_em, atualizado_em)
+            VALUES (:nome, 1, NOW(), NOW())
+        ");
+        $insMarca->bindValue(':nome', $novaMarcaNome);
+        $insMarca->execute();
+        $marcaId = (int)$pdo->lastInsertId();
     } else {
         if ($marcaId <= 0) {
             $redirecionarErro('marca_obrigatoria');

@@ -203,6 +203,13 @@ if ($erro !== '') {
         'upload_invalido' => 'Falha ao processar upload da imagem.',
         'imagem_invalida' => 'Imagem inválida para este produto/assistente.',
         'imagem_principal_invalida' => 'Não foi possível definir a imagem principal.',
+        'categoria_duplicada' => 'Categoria já cadastrada. Selecione a categoria existente.',
+        'tipo_duplicado' => 'Tipo de peça já cadastrado nesta categoria. Selecione o tipo existente.',
+        'marca_produto_duplicada' => 'Marca já cadastrada. Selecione a marca existente.',
+        'marca_veiculo_duplicada' => 'Marca de veículo já cadastrada. Selecione a marca existente.',
+        'modelo_veiculo_duplicado' => 'Modelo já cadastrado para esta marca. Selecione o modelo existente.',
+        'config_veiculo_duplicada' => 'Configuração veicular já cadastrada para este modelo. Selecione a configuração existente.',
+        'estoque_duplicado' => 'Estoque/local já cadastrado. Selecione o estoque existente.',
         'assistente_cancelado' => 'Este assistente foi cancelado e não pode mais ser alterado.',
         'etapa_invalida' => 'Etapa de navegação inválida.',
         'produto_base_invalido' => 'Não foi possível concluir: o produto base está incompleto ou inativo.',
@@ -238,23 +245,26 @@ if ($produtoIdAtual > 0) {
 
 $valores = [
     'categoria_modo' => (string)($dadosJson['categoria_modo'] ?? 'existente'),
-    'categoria_peca_id' => (string)($dadosJson['categoria_peca_id'] ?? ($produto['categoria_peca_id'] ?? '')),
-    'nova_categoria_nome' => (string)($dadosJson['nova_categoria_nome'] ?? ''),
+    'categoria_peca_id' => (string)($_GET['categoria_peca_id'] ?? $dadosJson['categoria_peca_id'] ?? ($produto['categoria_peca_id'] ?? '')),
+    'nova_categoria_nome' => (string)($_GET['nova_categoria_nome'] ?? $dadosJson['nova_categoria_nome'] ?? ''),
     'tipo_modo' => (string)($dadosJson['tipo_modo'] ?? 'existente'),
-    'tipo_peca_id' => (string)($dadosJson['tipo_peca_id'] ?? ($produto['tipo_peca_id'] ?? '')),
-    'novo_tipo_nome' => (string)($dadosJson['novo_tipo_nome'] ?? ''),
+    'tipo_peca_id' => (string)($_GET['tipo_peca_id'] ?? $dadosJson['tipo_peca_id'] ?? ($produto['tipo_peca_id'] ?? '')),
+    'novo_tipo_nome' => (string)($_GET['novo_tipo_nome'] ?? $dadosJson['novo_tipo_nome'] ?? ''),
     'marca_modo' => (string)($dadosJson['marca_modo'] ?? 'existente'),
-    'marca_produto_id' => (string)($dadosJson['marca_produto_id'] ?? ($produto['marca_produto_id'] ?? '')),
-    'nova_marca_nome' => (string)($dadosJson['nova_marca_nome'] ?? ''),
-    'sku_interno' => (string)($dadosJson['sku_interno'] ?? ($produto['sku_interno'] ?? '')),
-    'codigo_fabricante' => (string)($dadosJson['codigo_fabricante'] ?? ($produto['codigo_fabricante'] ?? '')),
-    'nome_comercial' => (string)($dadosJson['nome_comercial'] ?? ($produto['nome_comercial'] ?? '')),
-    'codigo_barras' => (string)($dadosJson['codigo_barras'] ?? ($produto['codigo_barras'] ?? '')),
-    'descricao' => (string)($dadosJson['descricao'] ?? ($produto['descricao'] ?? '')),
-    'custo' => (string)($dadosJson['custo'] ?? (isset($produto['custo']) ? number_format((float)$produto['custo'], 2, '.', '') : '0.00')),
-    'preco' => (string)($dadosJson['preco'] ?? (isset($produto['preco']) ? number_format((float)$produto['preco'], 2, '.', '') : '0.00')),
-    'estoque_minimo' => (string)($dadosJson['estoque_minimo'] ?? ($produto['estoque_minimo'] ?? '0')),
+    'marca_produto_id' => (string)($_GET['marca_produto_id'] ?? $dadosJson['marca_produto_id'] ?? ($produto['marca_produto_id'] ?? '')),
+    'nova_marca_nome' => (string)($_GET['nova_marca_nome'] ?? $dadosJson['nova_marca_nome'] ?? ''),
+    'sku_interno' => (string)($_GET['sku_interno'] ?? $dadosJson['sku_interno'] ?? ($produto['sku_interno'] ?? '')),
+    'codigo_fabricante' => (string)($_GET['codigo_fabricante'] ?? $dadosJson['codigo_fabricante'] ?? ($produto['codigo_fabricante'] ?? '')),
+    'nome_comercial' => (string)($_GET['nome_comercial'] ?? $dadosJson['nome_comercial'] ?? ($produto['nome_comercial'] ?? '')),
+    'codigo_barras' => (string)($_GET['codigo_barras'] ?? $dadosJson['codigo_barras'] ?? ($produto['codigo_barras'] ?? '')),
+    'descricao' => (string)($_GET['descricao'] ?? $dadosJson['descricao'] ?? ($produto['descricao'] ?? '')),
+    'custo' => (string)($_GET['custo'] ?? $dadosJson['custo'] ?? (isset($produto['custo']) ? number_format((float)$produto['custo'], 2, '.', '') : '0.00')),
+    'preco' => (string)($_GET['preco'] ?? $dadosJson['preco'] ?? (isset($produto['preco']) ? number_format((float)$produto['preco'], 2, '.', '') : '0.00')),
+    'estoque_minimo' => (string)($_GET['estoque_minimo'] ?? $dadosJson['estoque_minimo'] ?? ($produto['estoque_minimo'] ?? '0')),
 ];
+$valores['categoria_modo'] = (string)($_GET['categoria_modo'] ?? $valores['categoria_modo']);
+$valores['tipo_modo'] = (string)($_GET['tipo_modo'] ?? $valores['tipo_modo']);
+$valores['marca_modo'] = (string)($_GET['marca_modo'] ?? $valores['marca_modo']);
 
 $stmtCategorias = $pdo->query("SELECT id, nome FROM categorias_peca WHERE ativo = 1 ORDER BY nome ASC");
 $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
@@ -287,9 +297,19 @@ foreach ($marcas as $marca) {
     $opcoesMarcas[(string)$marca['id']] = (string)$marca['nome'];
 }
 
+$marcaVeiculoModo = (string)($_GET['marca_veiculo_modo'] ?? ($dadosJson['etapa_2']['marca_veiculo_modo'] ?? 'existente'));
+$modeloVeiculoModo = (string)($_GET['modelo_veiculo_modo'] ?? ($dadosJson['etapa_2']['modelo_veiculo_modo'] ?? 'existente'));
+$configVeiculoModo = (string)($_GET['config_veiculo_modo'] ?? ($dadosJson['etapa_2']['config_veiculo_modo'] ?? 'existente'));
 $marcaVeiculoId = (int)($_GET['marca_veiculo_id'] ?? ($dadosJson['etapa_2']['marca_veiculo_id'] ?? 0));
 $modeloVeiculoId = (int)($_GET['modelo_veiculo_id'] ?? ($dadosJson['etapa_2']['modelo_veiculo_id'] ?? 0));
 $veiculoConfiguracaoId = (int)($_GET['veiculo_configuracao_id'] ?? 0);
+$novaMarcaVeiculoNome = (string)($_GET['nova_marca_veiculo_nome'] ?? '');
+$novoModeloVeiculoNome = (string)($_GET['novo_modelo_veiculo_nome'] ?? '');
+$configAnoInicio = (string)($_GET['config_ano_inicio'] ?? '');
+$configAnoFim = (string)($_GET['config_ano_fim'] ?? '');
+$configMotorizacao = (string)($_GET['config_motorizacao'] ?? '');
+$configCombustivel = (string)($_GET['config_combustivel'] ?? '');
+$configVersao = (string)($_GET['config_versao'] ?? '');
 $observacaoAplicacao = trim((string)($_GET['observacao'] ?? ''));
 
 $opcoesMarcasVeiculo = ['' => 'Selecione uma marca'];
@@ -371,7 +391,10 @@ if ($produtoIdAtual > 0) {
 $totalAplicacoes = count($aplicacoesProduto);
 $temPendenciaAplicabilidade = !empty($dadosJson['pendencias']['produto_sem_aplicabilidade']) || $totalAplicacoes === 0;
 
+$estoqueModoEtapa3 = (string)($_GET['estoque_modo'] ?? ($dadosJson['etapa_3']['estoque_modo'] ?? 'existente'));
 $estoqueIdSelecionadoEtapa3 = (int)($_GET['estoque_id'] ?? ($dadosJson['etapa_3']['estoque_id'] ?? 0));
+$novoEstoqueNomeEtapa3 = (string)($_GET['novo_estoque_nome'] ?? '');
+$novaLocalizacaoEstoqueEtapa3 = (string)($_GET['nova_localizacao_estoque'] ?? '');
 $quantidadeEtapa3 = (string)($_GET['quantidade_inicial'] ?? ($dadosJson['etapa_3']['quantidade_inicial'] ?? ''));
 $observacaoEtapa3 = (string)($_GET['observacao_estoque'] ?? '');
 
@@ -570,10 +593,51 @@ if ($etapaAtual === 2) {
                                 <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
                                 <input type="hidden" name="acao" value="adicionar_aplicacao">
                                 <div class="rounded-xl border border-slate-200 p-4">
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 mb-3">
+                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="marca_veiculo_modo" value="existente" <?= $marcaVeiculoModo !== 'nova' ? 'checked' : '' ?>>Selecionar marca existente</label>
+                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="marca_veiculo_modo" value="nova" <?= $marcaVeiculoModo === 'nova' ? 'checked' : '' ?>>Cadastrar nova marca</label>
+                                    </div>
                                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div class="md:col-span-2">
+                                        <div class="md:col-span-2" style="<?= $marcaVeiculoModo === 'nova' ? 'display:none' : '' ?>">
+                                            <label for="marca_veiculo_id_post" class="<?= classe_label() ?>">Marca do veículo existente</label>
+                                            <?= select_padrao('marca_veiculo_id', $opcoesMarcasVeiculo, (string)$marcaVeiculoId, ['id' => 'marca_veiculo_id_post']) ?>
+                                        </div>
+                                        <div class="md:col-span-2" style="<?= $marcaVeiculoModo !== 'nova' ? 'display:none' : '' ?>">
+                                            <label for="nova_marca_veiculo_nome" class="<?= classe_label() ?>">Nova marca de veículo</label>
+                                            <?= input_texto('nova_marca_veiculo_nome', $novaMarcaVeiculoNome, ['id' => 'nova_marca_veiculo_nome', 'maxlength' => '100']) ?>
+                                        </div>
+
+                                        <div class="md:col-span-2 border-t pt-3">
+                                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modelo_veiculo_modo" value="existente" <?= $modeloVeiculoModo !== 'nova' ? 'checked' : '' ?>>Selecionar modelo existente</label>
+                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modelo_veiculo_modo" value="nova" <?= $modeloVeiculoModo === 'nova' ? 'checked' : '' ?>>Cadastrar novo modelo</label>
+                                            </div>
+                                        </div>
+                                        <div class="md:col-span-2" style="<?= $modeloVeiculoModo === 'nova' ? 'display:none' : '' ?>">
+                                            <label for="modelo_veiculo_id_post" class="<?= classe_label() ?>">Modelo existente</label>
+                                            <?= select_padrao('modelo_veiculo_id', $opcoesModelosVeiculo, (string)$modeloVeiculoId, ['id' => 'modelo_veiculo_id_post']) ?>
+                                        </div>
+                                        <div class="md:col-span-2" style="<?= $modeloVeiculoModo !== 'nova' ? 'display:none' : '' ?>">
+                                            <label for="novo_modelo_veiculo_nome" class="<?= classe_label() ?>">Novo modelo</label>
+                                            <?= input_texto('novo_modelo_veiculo_nome', $novoModeloVeiculoNome, ['id' => 'novo_modelo_veiculo_nome', 'maxlength' => '100']) ?>
+                                        </div>
+
+                                        <div class="md:col-span-2 border-t pt-3">
+                                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="config_veiculo_modo" value="existente" <?= $configVeiculoModo !== 'nova' ? 'checked' : '' ?>>Selecionar configuração existente</label>
+                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="config_veiculo_modo" value="nova" <?= $configVeiculoModo === 'nova' ? 'checked' : '' ?>>Cadastrar nova configuração</label>
+                                            </div>
+                                        </div>
+                                        <div class="md:col-span-2" style="<?= $configVeiculoModo === 'nova' ? 'display:none' : '' ?>">
                                             <label for="veiculo_configuracao_id" class="<?= classe_label() ?>">Configuração veicular *</label>
                                             <?= select_padrao('veiculo_configuracao_id', $opcoesConfiguracoesVeiculo, (string)$veiculoConfiguracaoId, ['id' => 'veiculo_configuracao_id']) ?>
+                                        </div>
+                                        <div class="md:col-span-2 grid grid-cols-1 gap-3 md:grid-cols-3" style="<?= $configVeiculoModo !== 'nova' ? 'display:none' : '' ?>">
+                                            <div><label class="<?= classe_label() ?>">Ano início</label><?= input_texto('config_ano_inicio', $configAnoInicio, ['type' => 'number']) ?></div>
+                                            <div><label class="<?= classe_label() ?>">Ano fim</label><?= input_texto('config_ano_fim', $configAnoFim, ['type' => 'number']) ?></div>
+                                            <div><label class="<?= classe_label() ?>">Versão</label><?= input_texto('config_versao', $configVersao) ?></div>
+                                            <div><label class="<?= classe_label() ?>">Motorização</label><?= input_texto('config_motorizacao', $configMotorizacao) ?></div>
+                                            <div><label class="<?= classe_label() ?>">Combustível</label><?= input_texto('config_combustivel', $configCombustivel) ?></div>
                                         </div>
                                         <div class="md:col-span-2">
                                             <label for="observacao" class="<?= classe_label() ?>">Observação (opcional)</label>
@@ -670,10 +734,22 @@ if ($etapaAtual === 2) {
                                 <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
                                 <input type="hidden" name="acao" value="salvar_estoque_inicial">
                                 <div class="rounded-xl border border-slate-200 p-4">
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 mb-3">
+                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="estoque_modo" value="existente" <?= $estoqueModoEtapa3 !== 'novo' ? 'checked' : '' ?>>Selecionar estoque existente</label>
+                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="estoque_modo" value="novo" <?= $estoqueModoEtapa3 === 'novo' ? 'checked' : '' ?>>Cadastrar novo estoque/local</label>
+                                    </div>
                                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div>
+                                        <div style="<?= $estoqueModoEtapa3 === 'novo' ? 'display:none' : '' ?>">
                                             <label for="estoque_id" class="<?= classe_label() ?>">Estoque/local *</label>
                                             <?= select_padrao('estoque_id', $opcoesEstoques, (string)$estoqueIdSelecionadoEtapa3, ['id' => 'estoque_id']) ?>
+                                        </div>
+                                        <div style="<?= $estoqueModoEtapa3 !== 'novo' ? 'display:none' : '' ?>">
+                                            <label class="<?= classe_label() ?>">Nome do novo estoque *</label>
+                                            <?= input_texto('novo_estoque_nome', $novoEstoqueNomeEtapa3, ['maxlength' => '100']) ?>
+                                        </div>
+                                        <div style="<?= $estoqueModoEtapa3 !== 'novo' ? 'display:none' : '' ?>">
+                                            <label class="<?= classe_label() ?>">Localização</label>
+                                            <?= input_texto('nova_localizacao_estoque', $novaLocalizacaoEstoqueEtapa3, ['maxlength' => '150']) ?>
                                         </div>
                                         <div>
                                             <label for="quantidade_inicial" class="<?= classe_label() ?>">Quantidade inicial *</label>
@@ -877,11 +953,15 @@ if ($etapaAtual === 2) {
                                 </div>
                                 <div class="mt-3">
                                     <label for="categoria_peca_id" class="<?= classe_label() ?>">Categoria existente</label>
-                                    <?= select_padrao('categoria_peca_id', $opcoesCategorias, $valores['categoria_peca_id'], ['id' => 'categoria_peca_id']) ?>
+                                    <div style="<?= $valores['categoria_modo'] === 'nova' ? 'display:none' : '' ?>">
+                                        <?= select_padrao('categoria_peca_id', $opcoesCategorias, $valores['categoria_peca_id'], ['id' => 'categoria_peca_id']) ?>
+                                    </div>
                                 </div>
                                 <div class="mt-3">
                                     <label for="nova_categoria_nome" class="<?= classe_label() ?>">Nova categoria</label>
-                                    <?= input_texto('nova_categoria_nome', $valores['nova_categoria_nome'], ['id' => 'nova_categoria_nome', 'maxlength' => '100', 'placeholder' => 'Ex.: Freios']) ?>
+                                    <div style="<?= $valores['categoria_modo'] !== 'nova' ? 'display:none' : '' ?>">
+                                        <?= input_texto('nova_categoria_nome', $valores['nova_categoria_nome'], ['id' => 'nova_categoria_nome', 'maxlength' => '100', 'placeholder' => 'Ex.: Freios']) ?>
+                                    </div>
                                 </div>
                             </div>
 
@@ -899,11 +979,15 @@ if ($etapaAtual === 2) {
                                 </div>
                                 <div class="mt-3">
                                     <label for="tipo_peca_id" class="<?= classe_label() ?>">Tipo existente (filtrado por categoria)</label>
-                                    <?= select_padrao('tipo_peca_id', $opcoesTipos, $valores['tipo_peca_id'], ['id' => 'tipo_peca_id']) ?>
+                                    <div style="<?= $valores['tipo_modo'] === 'novo' ? 'display:none' : '' ?>">
+                                        <?= select_padrao('tipo_peca_id', $opcoesTipos, $valores['tipo_peca_id'], ['id' => 'tipo_peca_id']) ?>
+                                    </div>
                                 </div>
                                 <div class="mt-3">
                                     <label for="novo_tipo_nome" class="<?= classe_label() ?>">Novo tipo</label>
-                                    <?= input_texto('novo_tipo_nome', $valores['novo_tipo_nome'], ['id' => 'novo_tipo_nome', 'maxlength' => '150', 'placeholder' => 'Ex.: Pastilha dianteira']) ?>
+                                    <div style="<?= $valores['tipo_modo'] !== 'novo' ? 'display:none' : '' ?>">
+                                        <?= input_texto('novo_tipo_nome', $valores['novo_tipo_nome'], ['id' => 'novo_tipo_nome', 'maxlength' => '150', 'placeholder' => 'Ex.: Pastilha dianteira']) ?>
+                                    </div>
                                 </div>
                             </div>
 
@@ -921,11 +1005,15 @@ if ($etapaAtual === 2) {
                                 </div>
                                 <div class="mt-3">
                                     <label for="marca_produto_id" class="<?= classe_label() ?>">Marca existente</label>
-                                    <?= select_padrao('marca_produto_id', $opcoesMarcas, $valores['marca_produto_id'], ['id' => 'marca_produto_id']) ?>
+                                    <div style="<?= $valores['marca_modo'] === 'nova' ? 'display:none' : '' ?>">
+                                        <?= select_padrao('marca_produto_id', $opcoesMarcas, $valores['marca_produto_id'], ['id' => 'marca_produto_id']) ?>
+                                    </div>
                                 </div>
                                 <div class="mt-3">
                                     <label for="nova_marca_nome" class="<?= classe_label() ?>">Nova marca</label>
-                                    <?= input_texto('nova_marca_nome', $valores['nova_marca_nome'], ['id' => 'nova_marca_nome', 'maxlength' => '100', 'placeholder' => 'Ex.: Bosch']) ?>
+                                    <div style="<?= $valores['marca_modo'] !== 'nova' ? 'display:none' : '' ?>">
+                                        <?= input_texto('nova_marca_nome', $valores['nova_marca_nome'], ['id' => 'nova_marca_nome', 'maxlength' => '100', 'placeholder' => 'Ex.: Bosch']) ?>
+                                    </div>
                                 </div>
                             </div>
 

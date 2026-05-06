@@ -41,6 +41,7 @@ $mapaSucesso = [
     'imagem_cadastrada_com_alerta'  => 'Algumas imagens foram salvas, porém houve arquivo(s) inválido(s).',
     'imagem_principal_definida'     => 'Imagem principal definida com sucesso.',
     'imagem_excluida'               => 'Imagem excluída com sucesso.',
+    'cadastro_concluido_assistente' => 'Cadastro concluído pelo assistente com sucesso.',
 ];
 
 if ($erroCodigo !== '' && isset($mapaErros[$erroCodigo])) {
