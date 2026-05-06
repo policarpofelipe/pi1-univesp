@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/conexao.php';
+require __DIR__ . '/lib/produto_imagens.php';
 
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -49,7 +50,13 @@ if (
     $acao === 'salvar_estoque_inicial' ||
     $acao === 'salvar_etapa_3' ||
     $acao === 'pular_etapa_3' ||
-    $acao === 'voltar_etapa_2'
+    $acao === 'voltar_etapa_2' ||
+    $acao === 'enviar_imagem' ||
+    $acao === 'remover_imagem' ||
+    $acao === 'definir_imagem_principal' ||
+    $acao === 'salvar_etapa_4' ||
+    $acao === 'pular_etapa_4' ||
+    $acao === 'voltar_etapa_3'
 ) {
     $produtoIdAtual = (int)($assistente['produto_id'] ?? 0);
     if ($produtoIdAtual <= 0) {
@@ -433,6 +440,161 @@ if (
             $up = $pdo->prepare("
                 UPDATE assistente_cadastro_produto
                 SET etapa_atual = 2,
+                    status = 'em_andamento',
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId);
+            exit;
+        }
+
+        if ($acao === 'enviar_imagem') {
+            if (!produtoExiste($pdo, $produtoIdAtual)) {
+                $redirecionarErro('produto_nao_disponivel');
+            }
+            if (!isset($_FILES['imagens'])) {
+                $redirecionarErro('imagem_obrigatoria');
+            }
+
+            $resultadoUpload = salvarImagensProduto($pdo, $produtoIdAtual, $_FILES['imagens']);
+            if (($resultadoUpload['sucesso'] ?? 0) <= 0) {
+                $mensagem = (string)($resultadoUpload['erros'][0] ?? '');
+                if (stripos($mensagem, 'formato inválido') !== false || stripos($mensagem, 'mime inválido') !== false) {
+                    $redirecionarErro('upload_invalido');
+                }
+                $redirecionarErro('imagem_obrigatoria');
+            }
+
+            unset($dadosJson['pendencias']['produto_sem_imagem']);
+            unset($dadosJson['etapa_4_pulada']);
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 4,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=imagem_enviada');
+            exit;
+        }
+
+        if ($acao === 'remover_imagem') {
+            $imagemId = (int)($_POST['imagem_id'] ?? 0);
+            if ($imagemId <= 0) {
+                $redirecionarErro('imagem_invalida');
+            }
+            if (!obterImagemProduto($pdo, $produtoIdAtual, $imagemId)) {
+                $redirecionarErro('imagem_invalida');
+            }
+            if (!excluirImagemProduto($pdo, $produtoIdAtual, $imagemId)) {
+                $redirecionarErro('erro_interno');
+            }
+
+            $qtdImagens = count(listarImagensProduto($pdo, $produtoIdAtual));
+            if ($qtdImagens <= 0) {
+                $dadosJson['pendencias']['produto_sem_imagem'] = true;
+            }
+
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 4,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=imagem_removida');
+            exit;
+        }
+
+        if ($acao === 'definir_imagem_principal') {
+            $imagemId = (int)($_POST['imagem_id'] ?? 0);
+            if ($imagemId <= 0 || !obterImagemProduto($pdo, $produtoIdAtual, $imagemId)) {
+                $redirecionarErro('imagem_principal_invalida');
+            }
+            if (!definirImagemPrincipal($pdo, $produtoIdAtual, $imagemId)) {
+                $redirecionarErro('imagem_principal_invalida');
+            }
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=imagem_principal_definida');
+            exit;
+        }
+
+        if ($acao === 'salvar_etapa_4') {
+            $qtdImagens = count(listarImagensProduto($pdo, $produtoIdAtual));
+            if ($qtdImagens <= 0) {
+                $dadosJson['pendencias']['produto_sem_imagem'] = true;
+            } else {
+                unset($dadosJson['pendencias']['produto_sem_imagem']);
+            }
+
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 5,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=etapa4_salva');
+            exit;
+        }
+
+        if ($acao === 'pular_etapa_4') {
+            $dadosJson['pendencias']['produto_sem_imagem'] = true;
+            $dadosJson['etapa_4_pulada'] = true;
+
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 5,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=etapa4_pulada');
+            exit;
+        }
+
+        if ($acao === 'voltar_etapa_3') {
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 3,
                     status = 'em_andamento',
                     atualizado_em = NOW()
                 WHERE id = :id

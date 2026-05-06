@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/auth.php';
 require __DIR__ . '/conexao.php';
 require __DIR__ . '/componentes.php';
+require __DIR__ . '/lib/produto_imagens.php';
 
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -132,6 +133,16 @@ if ($sucesso === 'etapa1_salva') {
     $mensagemSucesso = 'Etapa 3 salva com sucesso. Fluxo avançado para a etapa 4.';
 } elseif ($sucesso === 'etapa3_pulada') {
     $mensagemSucesso = 'Etapa 3 foi pulada e a pendência de estoque inicial foi registrada.';
+} elseif ($sucesso === 'imagem_enviada') {
+    $mensagemSucesso = 'Imagem enviada com sucesso.';
+} elseif ($sucesso === 'imagem_removida') {
+    $mensagemSucesso = 'Imagem removida com sucesso.';
+} elseif ($sucesso === 'imagem_principal_definida') {
+    $mensagemSucesso = 'Imagem principal atualizada.';
+} elseif ($sucesso === 'etapa4_salva') {
+    $mensagemSucesso = 'Etapa 4 salva com sucesso. Fluxo avançado para a etapa 5.';
+} elseif ($sucesso === 'etapa4_pulada') {
+    $mensagemSucesso = 'Etapa 4 foi pulada e a pendência de imagens foi registrada.';
 }
 if ($erro !== '') {
     $mapaErros = [
@@ -152,6 +163,10 @@ if ($erro !== '') {
         'estoque_obrigatorio' => 'Selecione um local de estoque válido.',
         'quantidade_obrigatoria' => 'Informe a quantidade inicial.',
         'quantidade_invalida' => 'A quantidade inicial deve ser numérica e maior que zero.',
+        'imagem_obrigatoria' => 'Selecione ao menos uma imagem para envio.',
+        'upload_invalido' => 'Falha ao processar upload da imagem.',
+        'imagem_invalida' => 'Imagem inválida para este produto/assistente.',
+        'imagem_principal_invalida' => 'Não foi possível definir a imagem principal.',
         'erro_interno' => 'Ocorreu um erro interno ao salvar a etapa.',
     ];
     $mensagemErro = $mapaErros[$erro] ?? 'Não foi possível processar a etapa.';
@@ -363,6 +378,13 @@ if ($produtoIdAtual > 0) {
 $totalSaldosEtapa3 = count($saldosProdutoEtapa3);
 $temPendenciaEstoqueInicial = !empty($dadosJson['pendencias']['produto_sem_estoque_inicial']) || $totalSaldosEtapa3 === 0;
 
+$imagensProduto = [];
+if ($produtoIdAtual > 0) {
+    $imagensProduto = listarImagensProduto($pdo, $produtoIdAtual);
+}
+$totalImagens = count($imagensProduto);
+$temPendenciaImagem = !empty($dadosJson['pendencias']['produto_sem_imagem']) || $totalImagens === 0;
+
 $tituloEtapa = 'Etapa 1 de 5 — Identificação da peça';
 $descricaoEtapa = 'Defina os dados estruturantes do produto para habilitar as próximas etapas.';
 $progresso = 20;
@@ -374,10 +396,14 @@ if ($etapaAtual === 2) {
     $tituloEtapa = 'Etapa 3 de 5 — Estoque e localização inicial';
     $descricaoEtapa = 'Informe o saldo inicial e o local de estoque onde esta peça está armazenada. A localização atual usa o cadastro de estoques/localizações existentes do sistema.';
     $progresso = 60;
-} elseif ($etapaAtual >= 4) {
-    $tituloEtapa = 'Etapa 4 de 5 — Em preparação';
-    $descricaoEtapa = 'A próxima etapa será disponibilizada na próxima fase do desenvolvimento.';
+} elseif ($etapaAtual === 4) {
+    $tituloEtapa = 'Etapa 4 de 5 — Imagens do produto';
+    $descricaoEtapa = 'Adicione imagens para facilitar a identificação visual da peça. As imagens serão vinculadas ao produto cadastrado.';
     $progresso = 80;
+} elseif ($etapaAtual >= 5) {
+    $tituloEtapa = 'Etapa 5 de 5 — Em preparação';
+    $descricaoEtapa = 'A etapa de revisão e conclusão será disponibilizada na próxima fase.';
+    $progresso = 100;
 }
 ?>
 <!DOCTYPE html>
@@ -659,6 +685,98 @@ if ($etapaAtual === 2) {
                                 </form>
                                 <?= botao_link('assistente_cadastro_produto_cancelar.php?id=' . $assistenteIdAtual, 'Cancelar assistente', 'cancelar') ?>
                             </div>
+                        <?php elseif ($etapaAtual === 4): ?>
+                            <div class="rounded-xl border border-slate-200 p-4 mb-6">
+                                <h2 class="text-base font-semibold text-slate-900">Etapa 4 de 5 — Imagens do produto</h2>
+                                <p class="mt-2 text-sm text-slate-600">
+                                    Adicione imagens para facilitar a identificação visual da peça. As imagens serão vinculadas ao produto cadastrado.
+                                </p>
+                                <?php if ($temPendenciaImagem): ?>
+                                    <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                                        Este produto ainda não possui imagens cadastradas. Você pode continuar, mas esta pendência aparecerá na revisão final.
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <form action="assistente_cadastro_produto_salvar.php" method="POST" enctype="multipart/form-data" class="space-y-4">
+                                <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                <input type="hidden" name="acao" value="enviar_imagem">
+                                <div class="rounded-xl border border-slate-200 p-4">
+                                    <div class="grid grid-cols-1 gap-4">
+                                        <div>
+                                            <label for="imagens" class="<?= classe_label() ?>">Arquivo de imagem *</label>
+                                            <?= input_texto('imagens[]', '', ['id' => 'imagens', 'type' => 'file', 'accept' => '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp', 'multiple' => true]) ?>
+                                            <p class="mt-1 text-xs text-slate-500">Formatos permitidos: JPG, JPEG, PNG, WEBP (máximo 5MB).</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <?= botao_submit('Enviar imagem', 'salvar') ?>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div class="rounded-xl border border-slate-200 p-4 mb-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-base font-semibold text-slate-900">Imagens vinculadas ao produto</h3>
+                                    <span class="text-sm text-slate-600"><?= $totalImagens ?> imagem(ns)</span>
+                                </div>
+                                <?php if ($totalImagens <= 0): ?>
+                                    <p class="mt-3 text-sm text-slate-600">Nenhuma imagem vinculada até o momento.</p>
+                                <?php else: ?>
+                                    <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                        <?php foreach ($imagensProduto as $img): ?>
+                                            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                                                <div class="aspect-square overflow-hidden rounded bg-slate-100">
+                                                    <img src="<?= esc((string)$img['caminho_arquivo']) ?>" alt="<?= esc((string)($img['alt_text'] ?? $img['nome_original'] ?? 'Imagem do produto')) ?>" class="h-full w-full object-cover">
+                                                </div>
+                                                <div class="mt-2 text-xs text-slate-600">
+                                                    <?= esc((string)($img['nome_original'] ?? $img['nome_arquivo'])) ?>
+                                                </div>
+                                                <?php if ((int)($img['principal'] ?? 0) === 1): ?>
+                                                    <div class="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
+                                                        Imagem principal
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="mt-3 flex flex-wrap gap-2">
+                                                    <?php if ((int)($img['principal'] ?? 0) !== 1): ?>
+                                                        <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                                            <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                                            <input type="hidden" name="acao" value="definir_imagem_principal">
+                                                            <input type="hidden" name="imagem_id" value="<?= (int)$img['id'] ?>">
+                                                            <?= botao_submit('Tornar principal', 'atalho') ?>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                    <form action="assistente_cadastro_produto_salvar.php" method="POST" onsubmit="return confirm('Remover esta imagem?');">
+                                                        <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                                        <input type="hidden" name="acao" value="remover_imagem">
+                                                        <input type="hidden" name="imagem_id" value="<?= (int)$img['id'] ?>">
+                                                        <?= botao_submit('Remover', 'perigo') ?>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:flex-wrap">
+                                <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <input type="hidden" name="acao" value="voltar_etapa_3">
+                                    <?= botao_submit('Voltar', 'cancelar') ?>
+                                </form>
+                                <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <input type="hidden" name="acao" value="salvar_etapa_4">
+                                    <?= botao_submit('Salvar e continuar', 'salvar') ?>
+                                </form>
+                                <form action="assistente_cadastro_produto_salvar.php" method="POST" onsubmit="return confirm('Pular a etapa de imagens?');">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <input type="hidden" name="acao" value="pular_etapa_4">
+                                    <?= botao_submit('Pular etapa', 'busca') ?>
+                                </form>
+                                <?= botao_link('assistente_cadastro_produto_cancelar.php?id=' . $assistenteIdAtual, 'Cancelar assistente', 'cancelar') ?>
+                            </div>
                         <?php elseif ($etapaAtual === 1): ?>
                             <form action="assistente_cadastro_produto_salvar.php" method="POST" class="space-y-6">
                                 <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
@@ -775,15 +893,15 @@ if ($etapaAtual === 2) {
                             </form>
                         <?php else: ?>
                             <div class="rounded-xl border border-slate-200 p-4">
-                                <h2 class="text-base font-semibold text-slate-900">Próxima etapa em preparação</h2>
+                                <h2 class="text-base font-semibold text-slate-900">Etapa 5 em preparação</h2>
                                 <p class="mt-2 text-sm text-slate-600">
-                                    Esta etapa será implementada na próxima fase. Você pode voltar para revisar os dados anteriores.
+                                    A etapa de revisão e conclusão será implementada na próxima fase. Você pode voltar para revisar os dados anteriores.
                                 </p>
                                 <div class="mt-4">
                                     <form action="assistente_cadastro_produto_salvar.php" method="POST">
                                         <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
-                                        <input type="hidden" name="acao" value="voltar_etapa_2">
-                                        <?= botao_submit('Voltar para etapa 2', 'cancelar') ?>
+                                        <input type="hidden" name="acao" value="voltar_etapa_3">
+                                        <?= botao_submit('Voltar para etapa 3', 'cancelar') ?>
                                     </form>
                                 </div>
                             </div>
@@ -809,8 +927,8 @@ if ($etapaAtual === 2) {
                             <li class="<?= $etapaAtual === 1 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">1. Identificação da peça</li>
                             <li class="<?= $etapaAtual === 2 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">2. Aplicabilidade veicular</li>
                             <li class="<?= $etapaAtual === 3 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">3. Estoque/localização</li>
-                            <li class="<?= $etapaAtual === 4 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">4. Imagens (fase 4)</li>
-                            <li class="text-slate-500">5. Revisão e conclusão (fase 5)</li>
+                            <li class="<?= $etapaAtual === 4 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">4. Imagens</li>
+                            <li class="<?= $etapaAtual === 5 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">5. Revisão e conclusão (fase 5)</li>
                         </ol>
                     </div>
                 </aside>
