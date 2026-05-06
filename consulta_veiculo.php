@@ -329,7 +329,9 @@ function buscarListaProdutos(PDO $pdo, string $whereSql, array $params, int $lim
             tp.nome AS tipo_peca_nome,
             mp.nome AS marca_produto_nome,
             app_agg.marcas_veiculo AS marcas_veiculo_nome,
-            app_agg.modelos_veiculo AS modelos_veiculo_nome
+            app_agg.modelos_veiculo AS modelos_veiculo_nome,
+            est_agg.locais_estoque AS locais_estoque_nome,
+            est_agg.enderecos_internos AS enderecos_internos_nome
         FROM produtos p
         INNER JOIN tipos_peca tp ON tp.id = p.tipo_peca_id
         INNER JOIN marcas_produto mp ON mp.id = p.marca_produto_id
@@ -348,6 +350,19 @@ function buscarListaProdutos(PDO $pdo, string $whereSql, array $params, int $lim
             WHERE ap.ativo = 1
             GROUP BY ap.produto_id
         ) app_agg ON app_agg.produto_id = p.id
+        LEFT JOIN (
+            SELECT
+                me.produto_id,
+                GROUP_CONCAT(DISTINCT e.nome ORDER BY e.nome SEPARATOR ', ') AS locais_estoque,
+                GROUP_CONCAT(
+                    DISTINCT NULLIF(TRIM(e.localizacao), '')
+                    ORDER BY e.localizacao
+                    SEPARATOR ', '
+                ) AS enderecos_internos
+            FROM movimentacoes_estoque me
+            INNER JOIN estoques e ON e.id = me.estoque_id
+            GROUP BY me.produto_id
+        ) est_agg ON est_agg.produto_id = p.id
         WHERE {$whereSql}
         ORDER BY p.nome_comercial ASC
         LIMIT {$limite} OFFSET {$offset}
@@ -589,6 +604,8 @@ $baseParams = [
                                         <div><span class="font-medium">Marca:</span> <?= esc($item['marca_produto_nome']) ?></div>
                                         <div><span class="font-medium">Fab. veículo:</span> <?= esc($item['marcas_veiculo_nome'] ?: '—') ?></div>
                                         <div><span class="font-medium">Modelo veículo:</span> <?= esc($item['modelos_veiculo_nome'] ?: '—') ?></div>
+                                        <div><span class="font-medium">Local de estoque:</span> <?= esc($item['locais_estoque_nome'] ?: '—') ?></div>
+                                        <div><span class="font-medium">Endereço interno:</span> <?= esc($item['enderecos_internos_nome'] ?: '—') ?></div>
                                         <div><span class="font-medium">Cód. fabricante:</span> <?= esc($item['codigo_fabricante'] ?: '—') ?></div>
                                         <div><span class="font-medium">Cód. barras:</span> <?= esc($item['codigo_barras'] ?: '—') ?></div>
                                     </div>
