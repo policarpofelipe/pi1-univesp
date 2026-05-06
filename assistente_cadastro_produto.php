@@ -126,6 +126,12 @@ if ($sucesso === 'etapa1_salva') {
     $mensagemSucesso = 'Etapa 2 salva com sucesso. Fluxo avançado para a etapa 3.';
 } elseif ($sucesso === 'etapa2_pulada') {
     $mensagemSucesso = 'Etapa 2 foi pulada e a pendência de aplicabilidade foi registrada.';
+} elseif ($sucesso === 'estoque_inicial_salvo') {
+    $mensagemSucesso = 'Estoque inicial registrado com sucesso.';
+} elseif ($sucesso === 'etapa3_salva') {
+    $mensagemSucesso = 'Etapa 3 salva com sucesso. Fluxo avançado para a etapa 4.';
+} elseif ($sucesso === 'etapa3_pulada') {
+    $mensagemSucesso = 'Etapa 3 foi pulada e a pendência de estoque inicial foi registrada.';
 }
 if ($erro !== '') {
     $mapaErros = [
@@ -143,6 +149,9 @@ if ($erro !== '') {
         'veiculo_obrigatorio' => 'Selecione uma configuração veicular válida.',
         'aplicacao_duplicada' => 'Esta configuração veicular já está vinculada a este produto.',
         'aplicacao_invalida' => 'Aplicação inválida para este assistente/produto.',
+        'estoque_obrigatorio' => 'Selecione um local de estoque válido.',
+        'quantidade_obrigatoria' => 'Informe a quantidade inicial.',
+        'quantidade_invalida' => 'A quantidade inicial deve ser numérica e maior que zero.',
         'erro_interno' => 'Ocorreu um erro interno ao salvar a etapa.',
     ];
     $mensagemErro = $mapaErros[$erro] ?? 'Não foi possível processar a etapa.';
@@ -298,6 +307,62 @@ if ($produtoIdAtual > 0) {
 $totalAplicacoes = count($aplicacoesProduto);
 $temPendenciaAplicabilidade = !empty($dadosJson['pendencias']['produto_sem_aplicabilidade']) || $totalAplicacoes === 0;
 
+$estoqueIdSelecionadoEtapa3 = (int)($_GET['estoque_id'] ?? ($dadosJson['etapa_3']['estoque_id'] ?? 0));
+$quantidadeEtapa3 = (string)($_GET['quantidade_inicial'] ?? ($dadosJson['etapa_3']['quantidade_inicial'] ?? ''));
+$observacaoEtapa3 = (string)($_GET['observacao_estoque'] ?? '');
+
+$opcoesEstoques = ['' => 'Selecione um estoque/local'];
+$stmtEstoques = $pdo->query("SELECT id, nome, localizacao FROM estoques WHERE ativo = 1 ORDER BY nome ASC");
+foreach ($stmtEstoques->fetchAll(PDO::FETCH_ASSOC) as $estoque) {
+    $nome = (string)$estoque['nome'];
+    $local = trim((string)($estoque['localizacao'] ?? ''));
+    $opcoesEstoques[(string)$estoque['id']] = $local !== '' ? $nome . ' (' . $local . ')' : $nome;
+}
+
+$saldosProdutoEtapa3 = [];
+$movimentacoesIniciaisAssistente = [];
+if ($produtoIdAtual > 0) {
+    $stmtSaldoEtapa3 = $pdo->prepare("
+        SELECT
+            e.nome AS estoque_nome,
+            e.localizacao,
+            COALESCE(SUM(me.quantidade), 0) AS saldo_atual
+        FROM estoques e
+        LEFT JOIN movimentacoes_estoque me
+            ON me.estoque_id = e.id
+           AND me.produto_id = :produto_id
+        WHERE e.ativo = 1
+        GROUP BY e.id, e.nome, e.localizacao
+        HAVING COALESCE(SUM(me.quantidade), 0) <> 0
+        ORDER BY e.nome ASC
+    ");
+    $stmtSaldoEtapa3->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+    $stmtSaldoEtapa3->execute();
+    $saldosProdutoEtapa3 = $stmtSaldoEtapa3->fetchAll(PDO::FETCH_ASSOC);
+
+    $prefixoAssistente = '[Assistente #' . $assistenteIdAtual . '] Estoque inicial%';
+    $stmtMovIni = $pdo->prepare("
+        SELECT
+            me.id,
+            e.nome AS estoque_nome,
+            me.quantidade,
+            me.observacao,
+            me.criado_em
+        FROM movimentacoes_estoque me
+        INNER JOIN estoques e ON e.id = me.estoque_id
+        WHERE me.produto_id = :produto_id
+          AND me.tipo_movimento = 'entrada'
+          AND me.observacao LIKE :prefixo
+        ORDER BY me.criado_em DESC, me.id DESC
+    ");
+    $stmtMovIni->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+    $stmtMovIni->bindValue(':prefixo', $prefixoAssistente, PDO::PARAM_STR);
+    $stmtMovIni->execute();
+    $movimentacoesIniciaisAssistente = $stmtMovIni->fetchAll(PDO::FETCH_ASSOC);
+}
+$totalSaldosEtapa3 = count($saldosProdutoEtapa3);
+$temPendenciaEstoqueInicial = !empty($dadosJson['pendencias']['produto_sem_estoque_inicial']) || $totalSaldosEtapa3 === 0;
+
 $tituloEtapa = 'Etapa 1 de 5 — Identificação da peça';
 $descricaoEtapa = 'Defina os dados estruturantes do produto para habilitar as próximas etapas.';
 $progresso = 20;
@@ -305,6 +370,14 @@ if ($etapaAtual === 2) {
     $tituloEtapa = 'Etapa 2 de 5 — Aplicabilidade veicular';
     $descricaoEtapa = 'Informe em quais veículos esta peça/produto se aplica. A compatibilidade é vinculada ao produto específico, não ao tipo de peça.';
     $progresso = 40;
+} elseif ($etapaAtual === 3) {
+    $tituloEtapa = 'Etapa 3 de 5 — Estoque e localização inicial';
+    $descricaoEtapa = 'Informe o saldo inicial e o local de estoque onde esta peça está armazenada. A localização atual usa o cadastro de estoques/localizações existentes do sistema.';
+    $progresso = 60;
+} elseif ($etapaAtual >= 4) {
+    $tituloEtapa = 'Etapa 4 de 5 — Em preparação';
+    $descricaoEtapa = 'A próxima etapa será disponibilizada na próxima fase do desenvolvimento.';
+    $progresso = 80;
 }
 ?>
 <!DOCTYPE html>
@@ -473,7 +546,120 @@ if ($etapaAtual === 2) {
                                 </form>
                                 <?= botao_link('assistente_cadastro_produto_cancelar.php?id=' . $assistenteIdAtual, 'Cancelar assistente', 'cancelar') ?>
                             </div>
-                        <?php else: ?>
+                        <?php elseif ($etapaAtual === 3): ?>
+                            <div class="rounded-xl border border-slate-200 p-4 mb-6">
+                                <h2 class="text-base font-semibold text-slate-900">Etapa 3 de 5 — Estoque e localização inicial</h2>
+                                <p class="mt-2 text-sm text-slate-600">
+                                    Informe o saldo inicial e o local de estoque onde esta peça está armazenada. A localização atual usa o cadastro de estoques/localizações existentes do sistema.
+                                </p>
+                                <?php if ($temPendenciaEstoqueInicial): ?>
+                                    <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                                        Este produto ainda não possui estoque/localização inicial cadastrada. Você pode continuar, mas esta pendência aparecerá na revisão final.
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <form action="assistente_cadastro_produto_salvar.php" method="POST" class="space-y-4">
+                                <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                <input type="hidden" name="acao" value="salvar_estoque_inicial">
+                                <div class="rounded-xl border border-slate-200 p-4">
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div>
+                                            <label for="estoque_id" class="<?= classe_label() ?>">Estoque/local *</label>
+                                            <?= select_padrao('estoque_id', $opcoesEstoques, (string)$estoqueIdSelecionadoEtapa3, ['id' => 'estoque_id']) ?>
+                                        </div>
+                                        <div>
+                                            <label for="quantidade_inicial" class="<?= classe_label() ?>">Quantidade inicial *</label>
+                                            <?= input_texto('quantidade_inicial', $quantidadeEtapa3, ['id' => 'quantidade_inicial', 'type' => 'number', 'step' => '0.01', 'min' => '0.01', 'placeholder' => 'Ex.: 10']) ?>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label for="observacao_estoque" class="<?= classe_label() ?>">Observação (opcional)</label>
+                                            <?= textarea_padrao('observacao_estoque', $observacaoEtapa3, ['id' => 'observacao_estoque', 'rows' => '2', 'placeholder' => 'Ex.: saldo inicial do cadastro']) ?>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <?= botao_submit('Salvar estoque inicial', 'salvar') ?>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div class="rounded-xl border border-slate-200 p-4 mb-4">
+                                <h3 class="text-base font-semibold text-slate-900">Saldo atual por estoque</h3>
+                                <?php if (!$saldosProdutoEtapa3): ?>
+                                    <p class="mt-3 text-sm text-slate-600">Nenhum saldo encontrado para este produto.</p>
+                                <?php else: ?>
+                                    <div class="mt-3 overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                            <thead>
+                                            <tr class="text-left text-slate-600">
+                                                <th class="px-2 py-2">Estoque</th>
+                                                <th class="px-2 py-2">Localização</th>
+                                                <th class="px-2 py-2">Saldo atual</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100">
+                                            <?php foreach ($saldosProdutoEtapa3 as $saldo): ?>
+                                                <tr>
+                                                    <td class="px-2 py-2"><?= esc((string)$saldo['estoque_nome']) ?></td>
+                                                    <td class="px-2 py-2"><?= esc((string)($saldo['localizacao'] ?? '')) ?></td>
+                                                    <td class="px-2 py-2 font-semibold"><?= number_format((float)$saldo['saldo_atual'], 2, ',', '.') ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="rounded-xl border border-slate-200 p-4 mb-4">
+                                <h3 class="text-base font-semibold text-slate-900">Movimentações iniciais registradas pelo assistente</h3>
+                                <?php if (!$movimentacoesIniciaisAssistente): ?>
+                                    <p class="mt-3 text-sm text-slate-600">Nenhuma movimentação inicial registrada por este assistente.</p>
+                                <?php else: ?>
+                                    <div class="mt-3 overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                            <thead>
+                                            <tr class="text-left text-slate-600">
+                                                <th class="px-2 py-2">Estoque</th>
+                                                <th class="px-2 py-2">Quantidade</th>
+                                                <th class="px-2 py-2">Observação</th>
+                                                <th class="px-2 py-2">Data</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100">
+                                            <?php foreach ($movimentacoesIniciaisAssistente as $mov): ?>
+                                                <tr>
+                                                    <td class="px-2 py-2"><?= esc((string)$mov['estoque_nome']) ?></td>
+                                                    <td class="px-2 py-2"><?= number_format((float)$mov['quantidade'], 2, ',', '.') ?></td>
+                                                    <td class="px-2 py-2"><?= esc((string)$mov['observacao']) ?></td>
+                                                    <td class="px-2 py-2"><?= esc((string)$mov['criado_em']) ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:flex-wrap">
+                                <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <input type="hidden" name="acao" value="voltar_etapa_2">
+                                    <?= botao_submit('Voltar', 'cancelar') ?>
+                                </form>
+                                <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <input type="hidden" name="acao" value="salvar_etapa_3">
+                                    <?= botao_submit('Salvar e continuar', 'salvar') ?>
+                                </form>
+                                <form action="assistente_cadastro_produto_salvar.php" method="POST" onsubmit="return confirm('Pular a etapa de estoque inicial?');">
+                                    <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                    <input type="hidden" name="acao" value="pular_etapa_3">
+                                    <?= botao_submit('Pular etapa', 'busca') ?>
+                                </form>
+                                <?= botao_link('assistente_cadastro_produto_cancelar.php?id=' . $assistenteIdAtual, 'Cancelar assistente', 'cancelar') ?>
+                            </div>
+                        <?php elseif ($etapaAtual === 1): ?>
                             <form action="assistente_cadastro_produto_salvar.php" method="POST" class="space-y-6">
                                 <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
                                 <input type="hidden" name="acao" value="salvar_etapa_1">
@@ -587,6 +773,20 @@ if ($etapaAtual === 2) {
                                     <?= botao_link('assistente_cadastro_produto_cancelar.php?id=' . $assistenteIdAtual, 'Cancelar assistente', 'cancelar') ?>
                                 </div>
                             </form>
+                        <?php else: ?>
+                            <div class="rounded-xl border border-slate-200 p-4">
+                                <h2 class="text-base font-semibold text-slate-900">Próxima etapa em preparação</h2>
+                                <p class="mt-2 text-sm text-slate-600">
+                                    Esta etapa será implementada na próxima fase. Você pode voltar para revisar os dados anteriores.
+                                </p>
+                                <div class="mt-4">
+                                    <form action="assistente_cadastro_produto_salvar.php" method="POST">
+                                        <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
+                                        <input type="hidden" name="acao" value="voltar_etapa_2">
+                                        <?= botao_submit('Voltar para etapa 2', 'cancelar') ?>
+                                    </form>
+                                </div>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -608,8 +808,8 @@ if ($etapaAtual === 2) {
                         <ol class="mt-3 space-y-2 text-sm">
                             <li class="<?= $etapaAtual === 1 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">1. Identificação da peça</li>
                             <li class="<?= $etapaAtual === 2 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">2. Aplicabilidade veicular</li>
-                            <li class="text-slate-500">3. Estoque/localização (fase 3)</li>
-                            <li class="text-slate-500">4. Imagens (fase 4)</li>
+                            <li class="<?= $etapaAtual === 3 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">3. Estoque/localização</li>
+                            <li class="<?= $etapaAtual === 4 ? 'font-semibold text-blue-700' : 'text-slate-500' ?>">4. Imagens (fase 4)</li>
                             <li class="text-slate-500">5. Revisão e conclusão (fase 5)</li>
                         </ol>
                     </div>

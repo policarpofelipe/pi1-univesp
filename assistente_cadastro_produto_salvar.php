@@ -40,7 +40,17 @@ if (!$assistente) {
     $redirecionarErro('assistente_invalido');
 }
 
-if ($acao === 'adicionar_aplicacao' || $acao === 'remover_aplicacao' || $acao === 'salvar_etapa_2' || $acao === 'pular_etapa_2' || $acao === 'voltar_etapa_1') {
+if (
+    $acao === 'adicionar_aplicacao' ||
+    $acao === 'remover_aplicacao' ||
+    $acao === 'salvar_etapa_2' ||
+    $acao === 'pular_etapa_2' ||
+    $acao === 'voltar_etapa_1' ||
+    $acao === 'salvar_estoque_inicial' ||
+    $acao === 'salvar_etapa_3' ||
+    $acao === 'pular_etapa_3' ||
+    $acao === 'voltar_etapa_2'
+) {
     $produtoIdAtual = (int)($assistente['produto_id'] ?? 0);
     if ($produtoIdAtual <= 0) {
         $redirecionarErro('produto_nao_disponivel');
@@ -234,6 +244,195 @@ if ($acao === 'adicionar_aplicacao' || $acao === 'remover_aplicacao' || $acao ==
             $up = $pdo->prepare("
                 UPDATE assistente_cadastro_produto
                 SET etapa_atual = 1,
+                    status = 'em_andamento',
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId);
+            exit;
+        }
+
+        if ($acao === 'salvar_estoque_inicial') {
+            $estoqueId = (int)($_POST['estoque_id'] ?? 0);
+            $quantidadeInformada = trim((string)($_POST['quantidade_inicial'] ?? ''));
+            $observacao = trim((string)($_POST['observacao_estoque'] ?? ''));
+
+            if ($estoqueId <= 0) {
+                $redirecionarErro('estoque_obrigatorio');
+            }
+            if ($quantidadeInformada === '') {
+                $redirecionarErro('quantidade_obrigatoria');
+            }
+
+            $quantidadeNormalizada = str_replace(',', '.', $quantidadeInformada);
+            if (!is_numeric($quantidadeNormalizada)) {
+                $redirecionarErro('quantidade_invalida');
+            }
+            $quantidade = (float)$quantidadeNormalizada;
+            if ($quantidade <= 0) {
+                $redirecionarErro('quantidade_invalida');
+            }
+
+            $stmtEstoque = $pdo->prepare("SELECT id FROM estoques WHERE id = :id AND ativo = 1 LIMIT 1");
+            $stmtEstoque->bindValue(':id', $estoqueId, PDO::PARAM_INT);
+            $stmtEstoque->execute();
+            if (!$stmtEstoque->fetch()) {
+                $redirecionarErro('estoque_obrigatorio');
+            }
+
+            $prefixoAssistente = '[Assistente #' . $assistenteId . '] Estoque inicial';
+            $observacaoFinal = $prefixoAssistente . ($observacao !== '' ? ' - ' . $observacao : '');
+
+            // Regra da fase: apenas um registro inicial por produto+estoque dentro do assistente.
+            $stmtExistente = $pdo->prepare("
+                SELECT id
+                FROM movimentacoes_estoque
+                WHERE produto_id = :produto_id
+                  AND estoque_id = :estoque_id
+                  AND tipo_movimento = 'entrada'
+                  AND observacao LIKE :prefixo
+                ORDER BY id DESC
+                LIMIT 1
+            ");
+            $stmtExistente->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+            $stmtExistente->bindValue(':estoque_id', $estoqueId, PDO::PARAM_INT);
+            $stmtExistente->bindValue(':prefixo', $prefixoAssistente . '%', PDO::PARAM_STR);
+            $stmtExistente->execute();
+            $movExistente = $stmtExistente->fetch(PDO::FETCH_ASSOC);
+
+            if ($movExistente) {
+                $upMov = $pdo->prepare("
+                    UPDATE movimentacoes_estoque
+                    SET quantidade = :quantidade,
+                        observacao = :observacao
+                    WHERE id = :id
+                    LIMIT 1
+                ");
+                $upMov->bindValue(':quantidade', number_format($quantidade, 2, '.', ''), PDO::PARAM_STR);
+                $upMov->bindValue(':observacao', $observacaoFinal, PDO::PARAM_STR);
+                $upMov->bindValue(':id', (int)$movExistente['id'], PDO::PARAM_INT);
+                $upMov->execute();
+            } else {
+                $insMov = $pdo->prepare("
+                    INSERT INTO movimentacoes_estoque (
+                        produto_id,
+                        estoque_id,
+                        usuario_id,
+                        tipo_movimento,
+                        quantidade,
+                        observacao,
+                        criado_em
+                    ) VALUES (
+                        :produto_id,
+                        :estoque_id,
+                        :usuario_id,
+                        'entrada',
+                        :quantidade,
+                        :observacao,
+                        NOW()
+                    )
+                ");
+                $insMov->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+                $insMov->bindValue(':estoque_id', $estoqueId, PDO::PARAM_INT);
+                $insMov->bindValue(':usuario_id', $usuarioId > 0 ? $usuarioId : null, $usuarioId > 0 ? PDO::PARAM_INT : PDO::PARAM_NULL);
+                $insMov->bindValue(':quantidade', number_format($quantidade, 2, '.', ''), PDO::PARAM_STR);
+                $insMov->bindValue(':observacao', $observacaoFinal, PDO::PARAM_STR);
+                $insMov->execute();
+            }
+
+            unset($dadosJson['pendencias']['produto_sem_estoque_inicial']);
+            unset($dadosJson['etapa_3_pulada']);
+            $dadosJson['etapa_3'] = [
+                'estoque_id' => $estoqueId,
+                'quantidade_inicial' => number_format($quantidade, 2, '.', ''),
+            ];
+
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 3,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=estoque_inicial_salvo');
+            exit;
+        }
+
+        if ($acao === 'salvar_etapa_3') {
+            $stmtSaldo = $pdo->prepare("
+                SELECT COUNT(*)
+                FROM movimentacoes_estoque
+                WHERE produto_id = :produto_id
+            ");
+            $stmtSaldo->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);
+            $stmtSaldo->execute();
+            $qtdMov = (int)$stmtSaldo->fetchColumn();
+            if ($qtdMov <= 0) {
+                $dadosJson['pendencias']['produto_sem_estoque_inicial'] = true;
+            } else {
+                unset($dadosJson['pendencias']['produto_sem_estoque_inicial']);
+            }
+
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 4,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=etapa3_salva');
+            exit;
+        }
+
+        if ($acao === 'pular_etapa_3') {
+            $dadosJson['pendencias']['produto_sem_estoque_inicial'] = true;
+            $dadosJson['etapa_3_pulada'] = true;
+
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 4,
+                    status = 'em_andamento',
+                    dados_json = :dados_json,
+                    atualizado_em = NOW()
+                WHERE id = :id
+                  AND usuario_id = :usuario_id
+                LIMIT 1
+            ");
+            $up->bindValue(':dados_json', json_encode($dadosJson, JSON_UNESCAPED_UNICODE), PDO::PARAM_STR);
+            $up->bindValue(':id', $assistenteId, PDO::PARAM_INT);
+            $up->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+            $up->execute();
+
+            header('Location: assistente_cadastro_produto.php?id=' . $assistenteId . '&sucesso=etapa3_pulada');
+            exit;
+        }
+
+        if ($acao === 'voltar_etapa_2') {
+            $up = $pdo->prepare("
+                UPDATE assistente_cadastro_produto
+                SET etapa_atual = 2,
                     status = 'em_andamento',
                     atualizado_em = NOW()
                 WHERE id = :id
