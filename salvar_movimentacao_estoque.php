@@ -154,6 +154,19 @@ try {
     }
 
     if ($tipoMovimentacao === 'saida') {
+        $stmtTipoColuna = $pdo->query("
+            SELECT COLUMN_TYPE
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'movimentacoes_estoque'
+              AND COLUMN_NAME = 'quantidade'
+            LIMIT 1
+        ");
+        $columnTypeQuantidade = strtolower((string)$stmtTipoColuna->fetchColumn());
+        if ($columnTypeQuantidade !== '' && str_contains($columnTypeQuantidade, 'unsigned')) {
+            $pdo->exec("ALTER TABLE movimentacoes_estoque MODIFY COLUMN quantidade DECIMAL(10,2) NOT NULL");
+        }
+
         $stmtSaldo = $pdo->prepare("
             SELECT COALESCE(SUM(quantidade), 0)
             FROM movimentacoes_estoque
