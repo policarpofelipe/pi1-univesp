@@ -246,20 +246,25 @@ if ($veiculoConfiguracaoId > 0) {
     <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6 print:p-0">
         <div class="mx-auto max-w-7xl">
 
-            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between print:hidden">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Relatório de Produtos por Veículo</h1>
-                    <p class="mt-1 text-sm text-slate-600">
-                        Consulte os produtos compatíveis com uma configuração veicular específica.
-                    </p>
-                </div>
+            <div class="mb-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg print:hidden">
+                <div class="p-5 md:p-6">
+                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Relatório de Produtos por Veículo</h1>
+                            <p class="mt-2 text-sm text-slate-300">
+                                Consulte os produtos compatíveis com uma configuração veicular específica.
+                            </p>
+                        </div>
 
-                <div class="flex flex-wrap gap-2">
-                    <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
-                    <?= botao_link('consulta_veiculo.php', 'Consulta interativa', 'atalho') ?>
-                    <button type="button" onclick="imprimirRelatorio()" class="<?= esc($btn_busca ?? 'px-3 py-2 rounded-lg bg-blue-600 text-white') ?>">
-                        Imprimir
-                    </button>
+                        <div class="flex flex-wrap gap-2">
+                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
+                            <?= botao_link('consulta_veiculo.php', 'Consulta interativa', 'atalho') ?>
+                            <button type="button" onclick="imprimirRelatorio()" class="<?= esc($btn_busca ?? 'px-3 py-2 rounded-lg bg-blue-600 text-white') ?>">
+                                Imprimir
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

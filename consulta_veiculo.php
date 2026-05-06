@@ -441,16 +441,21 @@ $baseParams = [
 
     <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6">
         <div class="mx-auto max-w-7xl">
-            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Consulta</h1>
-                    <p class="mt-1 text-sm text-slate-600">
-                        Lista padrão de todas as peças com busca livre e filtros opcionais.
-                    </p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
-                    <?= botao_link('consulta_veiculo.php', 'Limpar filtros', 'atalho') ?>
+            <div class="mb-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg">
+                <div class="p-5 md:p-6">
+                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Consulta</h1>
+                            <p class="mt-2 text-sm text-slate-300">
+                                Lista padrão de todas as peças com busca livre e filtros opcionais.
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
+                            <?= botao_link('consulta_veiculo.php', 'Limpar filtros', 'atalho') ?>
+                        </div>
+                    </div>
                 </div>
             </div>
 

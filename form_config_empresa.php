@@ -117,16 +117,21 @@ try {
     <main class="flex-1 p-4 md:p-6 pb-24 md:pb-6">
         <div class="mx-auto max-w-5xl">
 
-            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Minha Empresa</h1>
-                    <p class="mt-1 text-sm text-slate-600">
-                        Configure os dados institucionais da empresa utilizados pelo sistema.
-                    </p>
-                </div>
+            <div class="mb-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg">
+                <div class="p-5 md:p-6">
+                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Minha Empresa</h1>
+                            <p class="mt-2 text-sm text-slate-300">
+                                Configure os dados institucionais da empresa utilizados pelo sistema.
+                            </p>
+                        </div>
 
-                <div class="flex flex-wrap gap-2">
-                    <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
+                        <div class="flex flex-wrap gap-2">
+                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
+                        </div>
+                    </div>
                 </div>
             </div>
 
