@@ -143,7 +143,8 @@ if ($imagemPrincipal === null && $imagensProduto !== []) {
                 </div>
 
                 <div class="flex flex-wrap gap-2">
-                    <?= botao_link('listar_produtos.php', 'Voltar para listagem', 'cancelar') ?>
+                    <?= botao_link('consulta_veiculo.php', 'Voltar para consulta', 'cancelar') ?>
+                    <?= botao_link('movimentar_saida.php?produto_id=' . (int)$produto['id'], 'Registrar Saída', 'perigo') ?>
                     <?= botao_link('form_produto.php?id=' . (int)$produto['id'], 'Editar produto', 'editar') ?>
                 </div>
             </div>
