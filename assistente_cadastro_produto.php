@@ -252,7 +252,7 @@ $valores = [
     'novo_tipo_nome' => (string)($_GET['novo_tipo_nome'] ?? $dadosJson['novo_tipo_nome'] ?? ''),
     'marca_modo' => (string)($dadosJson['marca_modo'] ?? 'existente'),
     'marca_produto_id' => (string)($_GET['marca_produto_id'] ?? $dadosJson['marca_produto_id'] ?? ($produto['marca_produto_id'] ?? '')),
-    'nova_marca_nome' => (string)($_GET['nova_marca_nome'] ?? $dadosJson['nova_marca_nome'] ?? ''),
+    'nova_marca_nome' => (string)($_GET['nova_marca_produto_nome'] ?? $_GET['nova_marca_nome'] ?? $dadosJson['nova_marca_nome'] ?? ''),
     'sku_interno' => (string)($_GET['sku_interno'] ?? $dadosJson['sku_interno'] ?? ($produto['sku_interno'] ?? '')),
     'codigo_fabricante' => (string)($_GET['codigo_fabricante'] ?? $dadosJson['codigo_fabricante'] ?? ($produto['codigo_fabricante'] ?? '')),
     'nome_comercial' => (string)($_GET['nome_comercial'] ?? $dadosJson['nome_comercial'] ?? ($produto['nome_comercial'] ?? '')),
@@ -262,9 +262,9 @@ $valores = [
     'preco' => (string)($_GET['preco'] ?? $dadosJson['preco'] ?? (isset($produto['preco']) ? number_format((float)$produto['preco'], 2, '.', '') : '0.00')),
     'estoque_minimo' => (string)($_GET['estoque_minimo'] ?? $dadosJson['estoque_minimo'] ?? ($produto['estoque_minimo'] ?? '0')),
 ];
-$valores['categoria_modo'] = (string)($_GET['categoria_modo'] ?? $valores['categoria_modo']);
-$valores['tipo_modo'] = (string)($_GET['tipo_modo'] ?? $valores['tipo_modo']);
-$valores['marca_modo'] = (string)($_GET['marca_modo'] ?? $valores['marca_modo']);
+$valores['categoria_modo'] = (string)($_GET['modo_categoria'] ?? $_GET['categoria_modo'] ?? $valores['categoria_modo']);
+$valores['tipo_modo'] = (string)($_GET['modo_tipo'] ?? $_GET['tipo_modo'] ?? $valores['tipo_modo']);
+$valores['marca_modo'] = (string)($_GET['modo_marca_produto'] ?? $_GET['marca_modo'] ?? $valores['marca_modo']);
 
 $stmtCategorias = $pdo->query("SELECT id, nome FROM categorias_peca WHERE ativo = 1 ORDER BY nome ASC");
 $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
@@ -297,9 +297,9 @@ foreach ($marcas as $marca) {
     $opcoesMarcas[(string)$marca['id']] = (string)$marca['nome'];
 }
 
-$marcaVeiculoModo = (string)($_GET['marca_veiculo_modo'] ?? ($dadosJson['etapa_2']['marca_veiculo_modo'] ?? 'existente'));
-$modeloVeiculoModo = (string)($_GET['modelo_veiculo_modo'] ?? ($dadosJson['etapa_2']['modelo_veiculo_modo'] ?? 'existente'));
-$configVeiculoModo = (string)($_GET['config_veiculo_modo'] ?? ($dadosJson['etapa_2']['config_veiculo_modo'] ?? 'existente'));
+$marcaVeiculoModo = (string)($_GET['modo_marca_veiculo'] ?? $_GET['marca_veiculo_modo'] ?? ($dadosJson['etapa_2']['marca_veiculo_modo'] ?? 'existente'));
+$modeloVeiculoModo = (string)($_GET['modo_modelo_veiculo'] ?? $_GET['modelo_veiculo_modo'] ?? ($dadosJson['etapa_2']['modelo_veiculo_modo'] ?? 'existente'));
+$configVeiculoModo = (string)($_GET['modo_configuracao_veiculo'] ?? $_GET['config_veiculo_modo'] ?? ($dadosJson['etapa_2']['config_veiculo_modo'] ?? 'existente'));
 $marcaVeiculoId = (int)($_GET['marca_veiculo_id'] ?? ($dadosJson['etapa_2']['marca_veiculo_id'] ?? 0));
 $modeloVeiculoId = (int)($_GET['modelo_veiculo_id'] ?? ($dadosJson['etapa_2']['modelo_veiculo_id'] ?? 0));
 $veiculoConfiguracaoId = (int)($_GET['veiculo_configuracao_id'] ?? 0);
@@ -391,7 +391,7 @@ if ($produtoIdAtual > 0) {
 $totalAplicacoes = count($aplicacoesProduto);
 $temPendenciaAplicabilidade = !empty($dadosJson['pendencias']['produto_sem_aplicabilidade']) || $totalAplicacoes === 0;
 
-$estoqueModoEtapa3 = (string)($_GET['estoque_modo'] ?? ($dadosJson['etapa_3']['estoque_modo'] ?? 'existente'));
+$estoqueModoEtapa3 = (string)($_GET['modo_estoque'] ?? $_GET['estoque_modo'] ?? ($dadosJson['etapa_3']['estoque_modo'] ?? 'existente'));
 $estoqueIdSelecionadoEtapa3 = (int)($_GET['estoque_id'] ?? ($dadosJson['etapa_3']['estoque_id'] ?? 0));
 $novoEstoqueNomeEtapa3 = (string)($_GET['novo_estoque_nome'] ?? '');
 $novaLocalizacaoEstoqueEtapa3 = (string)($_GET['nova_localizacao_estoque'] ?? '');
@@ -572,67 +572,50 @@ if ($etapaAtual === 2) {
                                 <?php endif; ?>
                             </div>
 
-                            <form method="GET" class="rounded-xl border border-slate-200 p-4 mb-4">
-                                <input type="hidden" name="id" value="<?= (int)$assistenteIdAtual ?>">
-                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                                    <div>
-                                        <label for="marca_veiculo_id" class="<?= classe_label() ?>">Marca do veículo</label>
-                                        <?= select_padrao('marca_veiculo_id', $opcoesMarcasVeiculo, (string)$marcaVeiculoId, ['id' => 'marca_veiculo_id']) ?>
-                                    </div>
-                                    <div>
-                                        <label for="modelo_veiculo_id" class="<?= classe_label() ?>">Modelo do veículo</label>
-                                        <?= select_padrao('modelo_veiculo_id', $opcoesModelosVeiculo, (string)$modeloVeiculoId, ['id' => 'modelo_veiculo_id']) ?>
-                                    </div>
-                                    <div class="flex items-end">
-                                        <?= botao_submit('Filtrar configurações', 'busca') ?>
-                                    </div>
-                                </div>
-                            </form>
-
                             <form action="assistente_cadastro_produto_salvar.php" method="POST" class="space-y-4">
                                 <input type="hidden" name="assistente_id" value="<?= (int)$assistenteIdAtual ?>">
                                 <input type="hidden" name="acao" value="adicionar_aplicacao">
                                 <div class="rounded-xl border border-slate-200 p-4">
                                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 mb-3">
-                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="marca_veiculo_modo" value="existente" <?= $marcaVeiculoModo !== 'nova' ? 'checked' : '' ?>>Selecionar marca existente</label>
-                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="marca_veiculo_modo" value="nova" <?= $marcaVeiculoModo === 'nova' ? 'checked' : '' ?>>Cadastrar nova marca</label>
+                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modo_marca_veiculo" value="existente" <?= $marcaVeiculoModo !== 'nova' ? 'checked' : '' ?>>Selecionar marca existente</label>
+                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modo_marca_veiculo" value="nova" <?= $marcaVeiculoModo === 'nova' ? 'checked' : '' ?>>Cadastrar nova marca</label>
                                     </div>
                                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div class="md:col-span-2" style="<?= $marcaVeiculoModo === 'nova' ? 'display:none' : '' ?>">
+                                        <div id="campo-existente-marca-veiculo" class="md:col-span-2" style="<?= $marcaVeiculoModo === 'nova' ? 'display:none' : '' ?>">
                                             <label for="marca_veiculo_id_post" class="<?= classe_label() ?>">Marca do veículo existente</label>
                                             <?= select_padrao('marca_veiculo_id', $opcoesMarcasVeiculo, (string)$marcaVeiculoId, ['id' => 'marca_veiculo_id_post']) ?>
                                         </div>
-                                        <div class="md:col-span-2" style="<?= $marcaVeiculoModo !== 'nova' ? 'display:none' : '' ?>">
+                                        <div id="campo-novo-marca-veiculo" class="md:col-span-2" style="<?= $marcaVeiculoModo !== 'nova' ? 'display:none' : '' ?>">
                                             <label for="nova_marca_veiculo_nome" class="<?= classe_label() ?>">Nova marca de veículo</label>
                                             <?= input_texto('nova_marca_veiculo_nome', $novaMarcaVeiculoNome, ['id' => 'nova_marca_veiculo_nome', 'maxlength' => '100']) ?>
                                         </div>
 
                                         <div class="md:col-span-2 border-t pt-3">
                                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modelo_veiculo_modo" value="existente" <?= $modeloVeiculoModo !== 'nova' ? 'checked' : '' ?>>Selecionar modelo existente</label>
-                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modelo_veiculo_modo" value="nova" <?= $modeloVeiculoModo === 'nova' ? 'checked' : '' ?>>Cadastrar novo modelo</label>
+                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modo_modelo_veiculo" value="existente" <?= $modeloVeiculoModo !== 'nova' ? 'checked' : '' ?>>Selecionar modelo existente</label>
+                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modo_modelo_veiculo" value="nova" <?= $modeloVeiculoModo === 'nova' ? 'checked' : '' ?>>Cadastrar novo modelo</label>
                                             </div>
                                         </div>
-                                        <div class="md:col-span-2" style="<?= $modeloVeiculoModo === 'nova' ? 'display:none' : '' ?>">
+                                        <div id="campo-existente-modelo-veiculo" class="md:col-span-2" style="<?= $modeloVeiculoModo === 'nova' ? 'display:none' : '' ?>">
                                             <label for="modelo_veiculo_id_post" class="<?= classe_label() ?>">Modelo existente</label>
                                             <?= select_padrao('modelo_veiculo_id', $opcoesModelosVeiculo, (string)$modeloVeiculoId, ['id' => 'modelo_veiculo_id_post']) ?>
                                         </div>
-                                        <div class="md:col-span-2" style="<?= $modeloVeiculoModo !== 'nova' ? 'display:none' : '' ?>">
+                                        <div id="campo-novo-modelo-veiculo" class="md:col-span-2" style="<?= $modeloVeiculoModo !== 'nova' ? 'display:none' : '' ?>">
                                             <label for="novo_modelo_veiculo_nome" class="<?= classe_label() ?>">Novo modelo</label>
                                             <?= input_texto('novo_modelo_veiculo_nome', $novoModeloVeiculoNome, ['id' => 'novo_modelo_veiculo_nome', 'maxlength' => '100']) ?>
                                         </div>
 
                                         <div class="md:col-span-2 border-t pt-3">
                                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="config_veiculo_modo" value="existente" <?= $configVeiculoModo !== 'nova' ? 'checked' : '' ?>>Selecionar configuração existente</label>
-                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="config_veiculo_modo" value="nova" <?= $configVeiculoModo === 'nova' ? 'checked' : '' ?>>Cadastrar nova configuração</label>
+                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modo_configuracao_veiculo" value="existente" <?= $configVeiculoModo !== 'nova' ? 'checked' : '' ?>>Selecionar configuração existente</label>
+                                                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modo_configuracao_veiculo" value="nova" <?= $configVeiculoModo === 'nova' ? 'checked' : '' ?>>Cadastrar nova configuração</label>
                                             </div>
                                         </div>
-                                        <div class="md:col-span-2" style="<?= $configVeiculoModo === 'nova' ? 'display:none' : '' ?>">
+                                        <div id="campo-existente-config-veiculo" class="md:col-span-2" style="<?= $configVeiculoModo === 'nova' ? 'display:none' : '' ?>">
                                             <label for="veiculo_configuracao_id" class="<?= classe_label() ?>">Configuração veicular *</label>
                                             <?= select_padrao('veiculo_configuracao_id', $opcoesConfiguracoesVeiculo, (string)$veiculoConfiguracaoId, ['id' => 'veiculo_configuracao_id']) ?>
                                         </div>
-                                        <div class="md:col-span-2 grid grid-cols-1 gap-3 md:grid-cols-3" style="<?= $configVeiculoModo !== 'nova' ? 'display:none' : '' ?>">
+                                        <div id="campo-novo-config-veiculo" class="md:col-span-2 grid grid-cols-1 gap-3 md:grid-cols-3" style="<?= $configVeiculoModo !== 'nova' ? 'display:none' : '' ?>">
                                             <div><label class="<?= classe_label() ?>">Ano início</label><?= input_texto('config_ano_inicio', $configAnoInicio, ['type' => 'number']) ?></div>
                                             <div><label class="<?= classe_label() ?>">Ano fim</label><?= input_texto('config_ano_fim', $configAnoFim, ['type' => 'number']) ?></div>
                                             <div><label class="<?= classe_label() ?>">Versão</label><?= input_texto('config_versao', $configVersao) ?></div>
@@ -735,15 +718,15 @@ if ($etapaAtual === 2) {
                                 <input type="hidden" name="acao" value="salvar_estoque_inicial">
                                 <div class="rounded-xl border border-slate-200 p-4">
                                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 mb-3">
-                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="estoque_modo" value="existente" <?= $estoqueModoEtapa3 !== 'novo' ? 'checked' : '' ?>>Selecionar estoque existente</label>
-                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="estoque_modo" value="novo" <?= $estoqueModoEtapa3 === 'novo' ? 'checked' : '' ?>>Cadastrar novo estoque/local</label>
+                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modo_estoque" value="existente" <?= $estoqueModoEtapa3 !== 'novo' ? 'checked' : '' ?>>Selecionar estoque existente</label>
+                                        <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="modo_estoque" value="novo" <?= $estoqueModoEtapa3 === 'novo' ? 'checked' : '' ?>>Cadastrar novo estoque/local</label>
                                     </div>
                                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div style="<?= $estoqueModoEtapa3 === 'novo' ? 'display:none' : '' ?>">
+                                        <div id="campo-existente-estoque" style="<?= $estoqueModoEtapa3 === 'novo' ? 'display:none' : '' ?>">
                                             <label for="estoque_id" class="<?= classe_label() ?>">Estoque/local *</label>
                                             <?= select_padrao('estoque_id', $opcoesEstoques, (string)$estoqueIdSelecionadoEtapa3, ['id' => 'estoque_id']) ?>
                                         </div>
-                                        <div style="<?= $estoqueModoEtapa3 !== 'novo' ? 'display:none' : '' ?>">
+                                        <div id="campo-novo-estoque" style="<?= $estoqueModoEtapa3 !== 'novo' ? 'display:none' : '' ?>">
                                             <label class="<?= classe_label() ?>">Nome do novo estoque *</label>
                                             <?= input_texto('novo_estoque_nome', $novoEstoqueNomeEtapa3, ['maxlength' => '100']) ?>
                                         </div>
@@ -943,23 +926,23 @@ if ($etapaAtual === 2) {
                                 <h2 class="text-base font-semibold text-slate-900">Categoria da peça</h2>
                                 <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                                     <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                        <input type="radio" name="categoria_modo" value="existente" <?= $valores['categoria_modo'] !== 'nova' ? 'checked' : '' ?>>
+                                        <input type="radio" name="modo_categoria" value="existente" <?= $valores['categoria_modo'] !== 'nova' ? 'checked' : '' ?>>
                                         Selecionar existente
                                     </label>
                                     <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                        <input type="radio" name="categoria_modo" value="nova" <?= $valores['categoria_modo'] === 'nova' ? 'checked' : '' ?>>
+                                        <input type="radio" name="modo_categoria" value="nova" <?= $valores['categoria_modo'] === 'nova' ? 'checked' : '' ?>>
                                         Cadastrar nova
                                     </label>
                                 </div>
                                 <div class="mt-3">
                                     <label for="categoria_peca_id" class="<?= classe_label() ?>">Categoria existente</label>
-                                    <div style="<?= $valores['categoria_modo'] === 'nova' ? 'display:none' : '' ?>">
+                                    <div id="campo-existente-categoria" style="<?= $valores['categoria_modo'] === 'nova' ? 'display:none' : '' ?>">
                                         <?= select_padrao('categoria_peca_id', $opcoesCategorias, $valores['categoria_peca_id'], ['id' => 'categoria_peca_id']) ?>
                                     </div>
                                 </div>
                                 <div class="mt-3">
                                     <label for="nova_categoria_nome" class="<?= classe_label() ?>">Nova categoria</label>
-                                    <div style="<?= $valores['categoria_modo'] !== 'nova' ? 'display:none' : '' ?>">
+                                    <div id="campo-novo-categoria" style="<?= $valores['categoria_modo'] !== 'nova' ? 'display:none' : '' ?>">
                                         <?= input_texto('nova_categoria_nome', $valores['nova_categoria_nome'], ['id' => 'nova_categoria_nome', 'maxlength' => '100', 'placeholder' => 'Ex.: Freios']) ?>
                                     </div>
                                 </div>
@@ -969,23 +952,23 @@ if ($etapaAtual === 2) {
                                 <h2 class="text-base font-semibold text-slate-900">Tipo de peça</h2>
                                 <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                                     <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                        <input type="radio" name="tipo_modo" value="existente" <?= $valores['tipo_modo'] !== 'novo' ? 'checked' : '' ?>>
+                                        <input type="radio" name="modo_tipo" value="existente" <?= $valores['tipo_modo'] !== 'novo' ? 'checked' : '' ?>>
                                         Selecionar existente
                                     </label>
                                     <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                        <input type="radio" name="tipo_modo" value="novo" <?= $valores['tipo_modo'] === 'novo' ? 'checked' : '' ?>>
+                                        <input type="radio" name="modo_tipo" value="novo" <?= $valores['tipo_modo'] === 'novo' ? 'checked' : '' ?>>
                                         Cadastrar novo
                                     </label>
                                 </div>
                                 <div class="mt-3">
                                     <label for="tipo_peca_id" class="<?= classe_label() ?>">Tipo existente (filtrado por categoria)</label>
-                                    <div style="<?= $valores['tipo_modo'] === 'novo' ? 'display:none' : '' ?>">
+                                    <div id="campo-existente-tipo" style="<?= $valores['tipo_modo'] === 'novo' ? 'display:none' : '' ?>">
                                         <?= select_padrao('tipo_peca_id', $opcoesTipos, $valores['tipo_peca_id'], ['id' => 'tipo_peca_id']) ?>
                                     </div>
                                 </div>
                                 <div class="mt-3">
                                     <label for="novo_tipo_nome" class="<?= classe_label() ?>">Novo tipo</label>
-                                    <div style="<?= $valores['tipo_modo'] !== 'novo' ? 'display:none' : '' ?>">
+                                    <div id="campo-novo-tipo" style="<?= $valores['tipo_modo'] !== 'novo' ? 'display:none' : '' ?>">
                                         <?= input_texto('novo_tipo_nome', $valores['novo_tipo_nome'], ['id' => 'novo_tipo_nome', 'maxlength' => '150', 'placeholder' => 'Ex.: Pastilha dianteira']) ?>
                                     </div>
                                 </div>
@@ -995,24 +978,24 @@ if ($etapaAtual === 2) {
                                 <h2 class="text-base font-semibold text-slate-900">Marca do produto</h2>
                                 <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                                     <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                        <input type="radio" name="marca_modo" value="existente" <?= $valores['marca_modo'] !== 'nova' ? 'checked' : '' ?>>
+                                        <input type="radio" name="modo_marca_produto" value="existente" <?= $valores['marca_modo'] !== 'nova' ? 'checked' : '' ?>>
                                         Selecionar existente
                                     </label>
                                     <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                        <input type="radio" name="marca_modo" value="nova" <?= $valores['marca_modo'] === 'nova' ? 'checked' : '' ?>>
+                                        <input type="radio" name="modo_marca_produto" value="nova" <?= $valores['marca_modo'] === 'nova' ? 'checked' : '' ?>>
                                         Cadastrar nova
                                     </label>
                                 </div>
                                 <div class="mt-3">
                                     <label for="marca_produto_id" class="<?= classe_label() ?>">Marca existente</label>
-                                    <div style="<?= $valores['marca_modo'] === 'nova' ? 'display:none' : '' ?>">
+                                    <div id="campo-existente-marca-produto" style="<?= $valores['marca_modo'] === 'nova' ? 'display:none' : '' ?>">
                                         <?= select_padrao('marca_produto_id', $opcoesMarcas, $valores['marca_produto_id'], ['id' => 'marca_produto_id']) ?>
                                     </div>
                                 </div>
                                 <div class="mt-3">
                                     <label for="nova_marca_nome" class="<?= classe_label() ?>">Nova marca</label>
-                                    <div style="<?= $valores['marca_modo'] !== 'nova' ? 'display:none' : '' ?>">
-                                        <?= input_texto('nova_marca_nome', $valores['nova_marca_nome'], ['id' => 'nova_marca_nome', 'maxlength' => '100', 'placeholder' => 'Ex.: Bosch']) ?>
+                                    <div id="campo-novo-marca-produto" style="<?= $valores['marca_modo'] !== 'nova' ? 'display:none' : '' ?>">
+                                        <?= input_texto('nova_marca_produto_nome', $valores['nova_marca_nome'], ['id' => 'nova_marca_nome', 'maxlength' => '100', 'placeholder' => 'Ex.: Bosch']) ?>
                                     </div>
                                 </div>
                             </div>
@@ -1226,5 +1209,36 @@ if ($etapaAtual === 2) {
         </div>
     </main>
 </div>
+<script>
+(() => {
+    const toggles = [
+        { name: 'modo_categoria', existing: 'campo-existente-categoria', novo: 'campo-novo-categoria', novoValue: 'nova' },
+        { name: 'modo_tipo', existing: 'campo-existente-tipo', novo: 'campo-novo-tipo', novoValue: 'novo' },
+        { name: 'modo_marca_produto', existing: 'campo-existente-marca-produto', novo: 'campo-novo-marca-produto', novoValue: 'nova' },
+        { name: 'modo_marca_veiculo', existing: 'campo-existente-marca-veiculo', novo: 'campo-novo-marca-veiculo', novoValue: 'nova' },
+        { name: 'modo_modelo_veiculo', existing: 'campo-existente-modelo-veiculo', novo: 'campo-novo-modelo-veiculo', novoValue: 'nova' },
+        { name: 'modo_configuracao_veiculo', existing: 'campo-existente-config-veiculo', novo: 'campo-novo-config-veiculo', novoValue: 'nova' },
+        { name: 'modo_estoque', existing: 'campo-existente-estoque', novo: 'campo-novo-estoque', novoValue: 'novo' },
+    ];
+
+    const update = (cfg) => {
+        const checked = document.querySelector(`input[name="${cfg.name}"]:checked`);
+        if (!checked) return;
+        const existing = document.getElementById(cfg.existing);
+        const novo = document.getElementById(cfg.novo);
+        if (!existing || !novo) return;
+        const showNew = checked.value === cfg.novoValue;
+        existing.style.display = showNew ? 'none' : '';
+        novo.style.display = showNew ? '' : 'none';
+    };
+
+    toggles.forEach((cfg) => {
+        document.querySelectorAll(`input[name="${cfg.name}"]`).forEach((el) => {
+            el.addEventListener('change', () => update(cfg));
+        });
+        update(cfg);
+    });
+})();
+</script>
 </body>
 </html>

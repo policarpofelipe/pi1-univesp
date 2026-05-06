@@ -23,13 +23,13 @@ if ($usuarioId <= 0 || $assistenteId <= 0) {
 $redirecionarErro = function (string $erro) use ($assistenteId): void {
     $qs = ['id=' . $assistenteId, 'erro=' . urlencode($erro)];
     $preservar = [
-        'categoria_modo','categoria_peca_id','nova_categoria_nome','tipo_modo','tipo_peca_id','novo_tipo_nome',
-        'marca_modo','marca_produto_id','nova_marca_nome','sku_interno','codigo_fabricante','nome_comercial',
+        'modo_categoria','categoria_modo','categoria_peca_id','nova_categoria_nome','modo_tipo','tipo_modo','tipo_peca_id','novo_tipo_nome',
+        'modo_marca_produto','marca_modo','marca_produto_id','nova_marca_nome','nova_marca_produto_nome','sku_interno','codigo_fabricante','nome_comercial',
         'codigo_barras','descricao','custo','preco','estoque_minimo',
-        'marca_veiculo_modo','marca_veiculo_id','nova_marca_veiculo_nome','modelo_veiculo_modo','modelo_veiculo_id',
-        'novo_modelo_veiculo_nome','config_veiculo_modo','veiculo_configuracao_id','config_ano_inicio','config_ano_fim',
+        'modo_marca_veiculo','marca_veiculo_modo','marca_veiculo_id','nova_marca_veiculo_nome','modo_modelo_veiculo','modelo_veiculo_modo','modelo_veiculo_id',
+        'novo_modelo_veiculo_nome','modo_configuracao_veiculo','config_veiculo_modo','veiculo_configuracao_id','config_ano_inicio','config_ano_fim',
         'config_motorizacao','config_combustivel','config_versao','observacao',
-        'estoque_modo','estoque_id','novo_estoque_nome','nova_localizacao_estoque','quantidade_inicial','observacao_estoque'
+        'modo_estoque','estoque_modo','estoque_id','novo_estoque_nome','nova_localizacao_estoque','quantidade_inicial','observacao_estoque'
     ];
     foreach ($preservar as $campo) {
         if (isset($_POST[$campo])) {
@@ -105,9 +105,9 @@ if (
 
     try {
         if ($acao === 'adicionar_aplicacao') {
-            $marcaVeiculoModo = (string)($_POST['marca_veiculo_modo'] ?? 'existente');
-            $modeloVeiculoModo = (string)($_POST['modelo_veiculo_modo'] ?? 'existente');
-            $configVeiculoModo = (string)($_POST['config_veiculo_modo'] ?? 'existente');
+            $marcaVeiculoModo = (string)($_POST['modo_marca_veiculo'] ?? $_POST['marca_veiculo_modo'] ?? 'existente');
+            $modeloVeiculoModo = (string)($_POST['modo_modelo_veiculo'] ?? $_POST['modelo_veiculo_modo'] ?? 'existente');
+            $configVeiculoModo = (string)($_POST['modo_configuracao_veiculo'] ?? $_POST['config_veiculo_modo'] ?? 'existente');
             $marcaVeiculoId = (int)($_POST['marca_veiculo_id'] ?? 0);
             $modeloVeiculoId = (int)($_POST['modelo_veiculo_id'] ?? 0);
             $veiculoConfiguracaoId = (int)($_POST['veiculo_configuracao_id'] ?? 0);
@@ -383,7 +383,7 @@ if (
         }
 
         if ($acao === 'salvar_estoque_inicial') {
-            $estoqueModo = (string)($_POST['estoque_modo'] ?? 'existente');
+            $estoqueModo = (string)($_POST['modo_estoque'] ?? $_POST['estoque_modo'] ?? 'existente');
             $estoqueId = (int)($_POST['estoque_id'] ?? 0);
             $novoEstoqueNome = trim((string)($_POST['novo_estoque_nome'] ?? ''));
             $novaLocalizacaoEstoque = trim((string)($_POST['nova_localizacao_estoque'] ?? ''));
@@ -773,17 +773,17 @@ if (
     }
 }
 
-$categoriaModo = (string)($_POST['categoria_modo'] ?? 'existente');
+$categoriaModo = (string)($_POST['modo_categoria'] ?? $_POST['categoria_modo'] ?? 'existente');
 $categoriaId = (int)($_POST['categoria_peca_id'] ?? 0);
 $novaCategoriaNome = trim((string)($_POST['nova_categoria_nome'] ?? ''));
 
-$tipoModo = (string)($_POST['tipo_modo'] ?? 'existente');
+$tipoModo = (string)($_POST['modo_tipo'] ?? $_POST['tipo_modo'] ?? 'existente');
 $tipoId = (int)($_POST['tipo_peca_id'] ?? 0);
 $novoTipoNome = trim((string)($_POST['novo_tipo_nome'] ?? ''));
 
-$marcaModo = (string)($_POST['marca_modo'] ?? 'existente');
+$marcaModo = (string)($_POST['modo_marca_produto'] ?? $_POST['marca_modo'] ?? 'existente');
 $marcaId = (int)($_POST['marca_produto_id'] ?? 0);
-$novaMarcaNome = trim((string)($_POST['nova_marca_nome'] ?? ''));
+$novaMarcaNome = trim((string)($_POST['nova_marca_produto_nome'] ?? $_POST['nova_marca_nome'] ?? ''));
 
 $skuInterno = trim((string)($_POST['sku_interno'] ?? ''));
 $codigoFabricante = trim((string)($_POST['codigo_fabricante'] ?? ''));
