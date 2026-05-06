@@ -477,14 +477,26 @@ if ($produtoIdAtual > 0) {
         SELECT
             e.nome AS estoque_nome,
             e.localizacao,
-            COALESCE(SUM(me.quantidade), 0) AS saldo_atual
+            COALESCE(SUM(
+                CASE
+                    WHEN me.tipo_movimento = 'saida' THEN -me.quantidade
+                    WHEN me.tipo_movimento = 'entrada' THEN me.quantidade
+                    ELSE me.quantidade
+                END
+            ), 0) AS saldo_atual
         FROM estoques e
         LEFT JOIN movimentacoes_estoque me
             ON me.estoque_id = e.id
            AND me.produto_id = :produto_id
         WHERE e.ativo = 1
         GROUP BY e.id, e.nome, e.localizacao
-        HAVING COALESCE(SUM(me.quantidade), 0) <> 0
+        HAVING COALESCE(SUM(
+            CASE
+                WHEN me.tipo_movimento = 'saida' THEN -me.quantidade
+                WHEN me.tipo_movimento = 'entrada' THEN me.quantidade
+                ELSE me.quantidade
+            END
+        ), 0) <> 0
         ORDER BY e.nome ASC
     ");
     $stmtSaldoEtapa3->bindValue(':produto_id', $produtoIdAtual, PDO::PARAM_INT);

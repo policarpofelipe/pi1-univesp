@@ -27,7 +27,13 @@ $sql = "
         e.id AS estoque_id,
         e.nome AS estoque_nome,
 
-        COALESCE(SUM(me.quantidade), 0) AS saldo_atual
+        COALESCE(SUM(
+            CASE
+                WHEN me.tipo_movimento = 'saida' THEN -me.quantidade
+                WHEN me.tipo_movimento = 'entrada' THEN me.quantidade
+                ELSE me.quantidade
+            END
+        ), 0) AS saldo_atual
 
     FROM produtos p
     CROSS JOIN estoques e
@@ -61,7 +67,13 @@ $sql .= "
         p.ativo,
         e.id,
         e.nome
-    HAVING COALESCE(SUM(me.quantidade), 0) <= p.estoque_minimo
+    HAVING COALESCE(SUM(
+        CASE
+            WHEN me.tipo_movimento = 'saida' THEN -me.quantidade
+            WHEN me.tipo_movimento = 'entrada' THEN me.quantidade
+            ELSE me.quantidade
+        END
+    ), 0) <= p.estoque_minimo
     ORDER BY
         saldo_atual ASC,
         p.nome_comercial ASC,

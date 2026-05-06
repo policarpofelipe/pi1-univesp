@@ -90,11 +90,23 @@ $sqlSaldos = "
         me.produto_id,
         e.nome AS estoque_nome,
         e.localizacao,
-        COALESCE(SUM(me.quantidade), 0) AS saldo
+        COALESCE(SUM(
+            CASE
+                WHEN me.tipo_movimento = 'saida' THEN -me.quantidade
+                WHEN me.tipo_movimento = 'entrada' THEN me.quantidade
+                ELSE me.quantidade
+            END
+        ), 0) AS saldo
     FROM movimentacoes_estoque me
     INNER JOIN estoques e ON e.id = me.estoque_id
     GROUP BY me.produto_id, me.estoque_id, e.nome, e.localizacao
-    HAVING COALESCE(SUM(me.quantidade), 0) <> 0
+    HAVING COALESCE(SUM(
+        CASE
+            WHEN me.tipo_movimento = 'saida' THEN -me.quantidade
+            WHEN me.tipo_movimento = 'entrada' THEN me.quantidade
+            ELSE me.quantidade
+        END
+    ), 0) <> 0
     ORDER BY e.nome ASC
 ";
 $stmtSaldos = $pdo->query($sqlSaldos);

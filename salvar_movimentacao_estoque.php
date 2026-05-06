@@ -103,7 +103,7 @@ if ($tipoMovimentacao === 'ajuste' && $quantidadeBase == 0.0) {
 
 $quantidadeFinal = match ($tipoMovimentacao) {
     'entrada' => abs($quantidadeBase),
-    'saida'   => abs($quantidadeBase) * -1,
+    'saida'   => abs($quantidadeBase),
     'ajuste'  => $quantidadeBase,
     default   => 0.0,
 };

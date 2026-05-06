@@ -89,7 +89,13 @@ if ($produtoSelecionado > 0 && $estoqueSelecionado > 0) {
     $produtoInfo = $stmtProdutoInfo->fetch(PDO::FETCH_ASSOC);
 
     $sqlSaldo = "
-        SELECT COALESCE(SUM(quantidade), 0) AS saldo_atual
+        SELECT COALESCE(SUM(
+            CASE
+                WHEN tipo_movimento = 'saida' THEN -quantidade
+                WHEN tipo_movimento = 'entrada' THEN quantidade
+                ELSE quantidade
+            END
+        ), 0) AS saldo_atual
         FROM movimentacoes_estoque
         WHERE produto_id = :produto_id
           AND estoque_id = :estoque_id
