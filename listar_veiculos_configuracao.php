@@ -18,37 +18,37 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
         'sucesso' => [
             'cadastrado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'ConfiguraÃ§Ã£o veicular cadastrada com sucesso.',
+                'texto'  => 'Configuração veicular cadastrada com sucesso.',
             ],
             'editado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'ConfiguraÃ§Ã£o veicular atualizada com sucesso.',
+                'texto'  => 'Configuração veicular atualizada com sucesso.',
             ],
             'excluido' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'ConfiguraÃ§Ã£o veicular excluÃ­da com sucesso.',
+                'texto'  => 'Configuração veicular excluída com sucesso.',
             ],
             'inativado' => [
                 'classe' => 'border-yellow-200 bg-yellow-50 text-yellow-700',
-                'texto'  => 'A configuraÃ§Ã£o possui vÃ­nculos e foi apenas inativada.',
+                'texto'  => 'A configuração possui vínculos e foi apenas inativada.',
             ],
         ],
         'erro' => [
             'metodo_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'MÃ©todo de requisiÃ§Ã£o invÃ¡lido.',
+                'texto'  => 'Método de requisição inválido.',
             ],
             'id_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'ID invÃ¡lido para a operaÃ§Ã£o solicitada.',
+                'texto'  => 'ID inválido para a operação solicitada.',
             ],
             'registro_nao_encontrado' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Registro nÃ£o encontrado.',
+                'texto'  => 'Registro não encontrado.',
             ],
             'erro_ao_excluir' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Ocorreu um erro ao excluir a configuraÃ§Ã£o veicular.',
+                'texto'  => 'Ocorreu um erro ao excluir a configuração veicular.',
             ],
         ],
     ];
@@ -69,7 +69,7 @@ $retorno = null;
 if ($sucesso === 'importacao' && $nImportacao > 0) {
     $retorno = [
         'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        'texto'  => 'ImportaÃ§Ã£o concluÃ­da: ' . $nImportacao . ' registro(s) gravado(s).',
+        'texto'  => 'Importação concluída: ' . $nImportacao . ' registro(s) gravado(s).',
     ];
 } elseif ($sucesso !== '') {
     $retorno = mensagemRetorno('sucesso', $sucesso);
@@ -125,7 +125,7 @@ $totalConfiguracoes = count($configuracoes);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConfiguraÃ§Ãµes Veiculares</title>
+    <title>Configurações Veiculares</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -152,14 +152,14 @@ $totalConfiguracoes = count($configuracoes);
                     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
-                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Configuracoes Veiculares</h1>
-                            <p class="mt-2 text-sm text-slate-300">Gerencie ano, motorizacao, combustivel e versao de cada modelo.</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Configurações Veiculares</h1>
+                            <p class="mt-2 text-sm text-slate-300">Gerencie ano, motorização, combustível e versão de cada modelo.</p>
                         </div>
 
                         <div class="flex flex-wrap gap-2">
                             <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('importar_planilha.php?tipo=veiculos_configuracao', 'Importar planilha', 'busca') ?>
-                    <?= botao_link('form_veiculo_configuracao.php', 'Nova configuracao', 'salvar') ?>
+                    <?= botao_link('form_veiculo_configuracao.php', 'Nova configuração', 'salvar') ?>
                         </div>
                     </div>
                 </div>
@@ -174,10 +174,10 @@ $totalConfiguracoes = count($configuracoes);
             <div class="<?= classe_box() ?> mb-6">
                 <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
                     <div class="md:col-span-9">
-                        <label for="busca" class="<?= classe_label() ?>">Buscar configuraÃ§Ã£o</label>
+                        <label for="busca" class="<?= classe_label() ?>">Buscar configuração</label>
                         <?= input_texto('busca', $busca, [
                             'id' => 'busca',
-                            'placeholder' => 'Digite marca, modelo, versÃ£o, motorizaÃ§Ã£o ou combustÃ­vel'
+                            'placeholder' => 'Digite marca, modelo, versão, motorização ou combustível'
                         ]) ?>
                     </div>
 
@@ -197,26 +197,26 @@ $totalConfiguracoes = count($configuracoes);
                 </div>
 
                 <div class="<?= classe_box() ?>">
-                    <div class="text-sm text-slate-500">UsuÃ¡rio logado</div>
+                    <div class="text-sm text-slate-500">Usuário logado</div>
                     <div class="mt-2 text-base font-semibold text-slate-900">
-                        <?= esc($_SESSION['usuario_nome'] ?? 'UsuÃ¡rio') ?>
+                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
                     </div>
                 </div>
             </div>
 
             <div class="<?= classe_box() ?>">
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">Lista de configuraÃ§Ãµes veiculares</h2>
+                    <h2 class="text-lg font-semibold text-slate-900">Lista de configurações veiculares</h2>
                 </div>
 
                 <?php if (!$configuracoes): ?>
                     <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
                         <p class="text-sm text-slate-600">
-                            Nenhuma configuraÃ§Ã£o veicular encontrada.
+                            Nenhuma configuração veicular encontrada.
                         </p>
 
                         <div class="mt-4">
-                            <?= botao_link('form_veiculo_configuracao.php', 'Cadastrar primeira configuraÃ§Ã£o', 'salvar') ?>
+                            <?= botao_link('form_veiculo_configuracao.php', 'Cadastrar primeira configuração', 'salvar') ?>
                         </div>
                     </div>
                 <?php else: ?>
@@ -228,11 +228,11 @@ $totalConfiguracoes = count($configuracoes);
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Marca</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Modelo</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Ano</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">MotorizaÃ§Ã£o</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">CombustÃ­vel</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">VersÃ£o</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Motorização</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Combustível</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Versão</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">AÃ§Ãµes</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -264,15 +264,15 @@ $totalConfiguracoes = count($configuracoes);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-700">
-                                            <?= esc($config['motorizacao'] ?: 'â€”') ?>
+                                            <?= esc($config['motorizacao'] ?: '—') ?>
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-700">
-                                            <?= esc($config['combustivel'] ?: 'â€”') ?>
+                                            <?= esc($config['combustivel'] ?: '—') ?>
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-700">
-                                            <?= esc($config['versao'] ?: 'â€”') ?>
+                                            <?= esc($config['versao'] ?: '—') ?>
                                         </td>
 
                                         <td class="px-4 py-4">
@@ -297,7 +297,7 @@ $totalConfiguracoes = count($configuracoes);
 
                                                 <?= botao_excluir(
                                                     'excluir_veiculo_configuracao.php?id=' . (int)$config['id'],
-                                                    'Tem certeza que deseja excluir esta configuraÃ§Ã£o veicular?',
+                                                    'Tem certeza que deseja excluir esta configuração veicular?',
                                                     'Excluir'
                                                 ) ?>
                                             </div>

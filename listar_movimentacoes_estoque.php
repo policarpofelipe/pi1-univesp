@@ -18,33 +18,33 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
         'sucesso' => [
             'cadastrado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'MovimentaÃ§Ã£o registrada com sucesso.',
+                'texto'  => 'Movimentação registrada com sucesso.',
             ],
             'editado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'MovimentaÃ§Ã£o atualizada com sucesso.',
+                'texto'  => 'Movimentação atualizada com sucesso.',
             ],
             'excluido' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'MovimentaÃ§Ã£o excluÃ­da com sucesso.',
+                'texto'  => 'Movimentação excluída com sucesso.',
             ],
         ],
         'erro' => [
             'metodo_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'MÃ©todo de requisiÃ§Ã£o invÃ¡lido.',
+                'texto'  => 'Método de requisição inválido.',
             ],
             'id_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'ID invÃ¡lido para a operaÃ§Ã£o solicitada.',
+                'texto'  => 'ID inválido para a operação solicitada.',
             ],
             'registro_nao_encontrado' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Registro nÃ£o encontrado.',
+                'texto'  => 'Registro não encontrado.',
             ],
             'erro_ao_excluir' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Ocorreu um erro ao excluir a movimentaÃ§Ã£o.',
+                'texto'  => 'Ocorreu um erro ao excluir a movimentação.',
             ],
         ],
     ];
@@ -71,7 +71,7 @@ if ($sucesso !== '') {
 $tiposMovimentacao = [
     ''        => 'Todos os tipos',
     'entrada' => 'Entrada',
-    'saida'   => 'SaÃ­da',
+    'saida'   => 'Saída',
     'ajuste'  => 'Ajuste',
 ];
 
@@ -129,7 +129,7 @@ $totalMovimentacoes = count($movimentacoes);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MovimentaÃ§Ãµes de Estoque</title>
+    <title>Movimentações de Estoque</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -156,13 +156,13 @@ $totalMovimentacoes = count($movimentacoes);
                     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
-                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Movimentacoes</h1>
-                            <p class="mt-2 text-sm text-slate-300">Acompanhe entradas, saidas e ajustes de estoque.</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Movimentações</h1>
+                            <p class="mt-2 text-sm text-slate-300">Acompanhe entradas, saídas e ajustes de estoque.</p>
                         </div>
 
                         <div class="flex flex-wrap gap-2">
                             <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
-                    <?= botao_link('form_movimentacao_estoque.php', 'Nova movimentacao', 'salvar') ?>
+                    <?= botao_link('form_movimentacao_estoque.php', 'Nova movimentação', 'salvar') ?>
                         </div>
                     </div>
                 </div>
@@ -177,10 +177,10 @@ $totalMovimentacoes = count($movimentacoes);
             <div class="<?= classe_box() ?> mb-6">
                 <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
                     <div class="md:col-span-6">
-                        <label for="busca" class="<?= classe_label() ?>">Buscar movimentaÃ§Ã£o</label>
+                        <label for="busca" class="<?= classe_label() ?>">Buscar movimentação</label>
                         <?= input_texto('busca', $busca, [
                             'id' => 'busca',
-                            'placeholder' => 'Digite produto, SKU, estoque ou observaÃ§Ã£o'
+                            'placeholder' => 'Digite produto, SKU, estoque ou observação'
                         ]) ?>
                     </div>
 
@@ -210,26 +210,26 @@ $totalMovimentacoes = count($movimentacoes);
                 </div>
 
                 <div class="<?= classe_box() ?>">
-                    <div class="text-sm text-slate-500">UsuÃ¡rio logado</div>
+                    <div class="text-sm text-slate-500">Usuário logado</div>
                     <div class="mt-2 text-base font-semibold text-slate-900">
-                        <?= esc($_SESSION['usuario_nome'] ?? 'UsuÃ¡rio') ?>
+                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
                     </div>
                 </div>
             </div>
 
             <div class="<?= classe_box() ?>">
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">Lista de movimentaÃ§Ãµes</h2>
+                    <h2 class="text-lg font-semibold text-slate-900">Lista de movimentações</h2>
                 </div>
 
                 <?php if (!$movimentacoes): ?>
                     <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
                         <p class="text-sm text-slate-600">
-                            Nenhuma movimentaÃ§Ã£o encontrada.
+                            Nenhuma movimentação encontrada.
                         </p>
 
                         <div class="mt-4">
-                            <?= botao_link('form_movimentacao_estoque.php', 'Registrar primeira movimentaÃ§Ã£o', 'salvar') ?>
+                            <?= botao_link('form_movimentacao_estoque.php', 'Registrar primeira movimentação', 'salvar') ?>
                         </div>
                     </div>
                 <?php else: ?>
@@ -243,9 +243,9 @@ $totalMovimentacoes = count($movimentacoes);
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Estoque</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Quantidade</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">UsuÃ¡rio</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Usuário</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Data</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ObservaÃ§Ã£o</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Observação</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -292,7 +292,7 @@ $totalMovimentacoes = count($movimentacoes);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($mov['usuario_nome'] ?: 'â€”') ?>
+                                            <?= esc($mov['usuario_nome'] ?: '—') ?>
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
@@ -300,7 +300,7 @@ $totalMovimentacoes = count($movimentacoes);
                                         </td>
 
                                         <td class="rounded-r-xl px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($mov['observacao'] ?: 'â€”') ?>
+                                            <?= esc($mov['observacao'] ?: '—') ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

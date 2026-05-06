@@ -18,37 +18,37 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
         'sucesso' => [
             'cadastrado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Tipo de peÃ§a cadastrado com sucesso.',
+                'texto'  => 'Tipo de peça cadastrado com sucesso.',
             ],
             'editado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Tipo de peÃ§a atualizado com sucesso.',
+                'texto'  => 'Tipo de peça atualizado com sucesso.',
             ],
             'excluido' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Tipo de peÃ§a excluÃ­do com sucesso.',
+                'texto'  => 'Tipo de peça excluído com sucesso.',
             ],
             'inativado' => [
                 'classe' => 'border-yellow-200 bg-yellow-50 text-yellow-700',
-                'texto'  => 'O tipo possui vÃ­nculos e foi apenas inativado.',
+                'texto'  => 'O tipo possui vínculos e foi apenas inativado.',
             ],
         ],
         'erro' => [
             'metodo_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'MÃ©todo de requisiÃ§Ã£o invÃ¡lido.',
+                'texto'  => 'Método de requisição inválido.',
             ],
             'id_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'ID invÃ¡lido para a operaÃ§Ã£o solicitada.',
+                'texto'  => 'ID inválido para a operação solicitada.',
             ],
             'registro_nao_encontrado' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Registro nÃ£o encontrado.',
+                'texto'  => 'Registro não encontrado.',
             ],
             'erro_ao_excluir' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Ocorreu um erro ao excluir o tipo de peÃ§a.',
+                'texto'  => 'Ocorreu um erro ao excluir o tipo de peça.',
             ],
         ],
     ];
@@ -69,7 +69,7 @@ $retorno = null;
 if ($sucesso === 'importacao' && $nImportacao > 0) {
     $retorno = [
         'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        'texto'  => 'ImportaÃ§Ã£o concluÃ­da: ' . $nImportacao . ' registro(s) gravado(s).',
+        'texto'  => 'Importação concluída: ' . $nImportacao . ' registro(s) gravado(s).',
     ];
 } elseif ($sucesso !== '') {
     $retorno = mensagemRetorno('sucesso', $sucesso);
@@ -116,7 +116,7 @@ $totalTipos = count($tipos);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tipos de PeÃ§a</title>
+    <title>Tipos de Peça</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -143,14 +143,14 @@ $totalTipos = count($tipos);
                     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
-                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Tipos de Peca</h1>
-                            <p class="mt-2 text-sm text-slate-300">Gerencie os tipos funcionais de peca vinculados as categorias do catalogo.</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Tipos de Peça</h1>
+                            <p class="mt-2 text-sm text-slate-300">Gerencie os tipos funcionais de peça vinculados às categorias do catálogo.</p>
                         </div>
 
                         <div class="flex flex-wrap gap-2">
                             <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('importar_planilha.php?tipo=tipos_peca', 'Importar planilha', 'busca') ?>
-                    <?= botao_link('form_tipo_peca.php', 'Novo tipo de peca', 'salvar') ?>
+                    <?= botao_link('form_tipo_peca.php', 'Novo tipo de peça', 'salvar') ?>
                         </div>
                     </div>
                 </div>
@@ -165,10 +165,10 @@ $totalTipos = count($tipos);
             <div class="<?= classe_box() ?> mb-6">
                 <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
                     <div class="md:col-span-9">
-                        <label for="busca" class="<?= classe_label() ?>">Buscar tipo de peÃ§a</label>
+                        <label for="busca" class="<?= classe_label() ?>">Buscar tipo de peça</label>
                         <?= input_texto('busca', $busca, [
                             'id' => 'busca',
-                            'placeholder' => 'Digite nome do tipo, descriÃ§Ã£o ou categoria'
+                            'placeholder' => 'Digite nome do tipo, descrição ou categoria'
                         ]) ?>
                     </div>
 
@@ -188,22 +188,22 @@ $totalTipos = count($tipos);
                 </div>
 
                 <div class="<?= classe_box() ?>">
-                    <div class="text-sm text-slate-500">UsuÃ¡rio logado</div>
+                    <div class="text-sm text-slate-500">Usuário logado</div>
                     <div class="mt-2 text-base font-semibold text-slate-900">
-                        <?= esc($_SESSION['usuario_nome'] ?? 'UsuÃ¡rio') ?>
+                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
                     </div>
                 </div>
             </div>
 
             <div class="<?= classe_box() ?>">
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">Lista de tipos de peÃ§a</h2>
+                    <h2 class="text-lg font-semibold text-slate-900">Lista de tipos de peça</h2>
                 </div>
 
                 <?php if (!$tipos): ?>
                     <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
                         <p class="text-sm text-slate-600">
-                            Nenhum tipo de peÃ§a encontrado.
+                            Nenhum tipo de peça encontrado.
                         </p>
 
                         <div class="mt-4">
@@ -217,11 +217,11 @@ $totalTipos = count($tipos);
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ID</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Categoria</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de peÃ§a</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">DescriÃ§Ã£o</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de peça</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Descrição</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Atualizado em</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">AÃ§Ãµes</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -245,7 +245,7 @@ $totalTipos = count($tipos);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($tipo['descricao'] ?: 'â€”') ?>
+                                            <?= esc($tipo['descricao'] ?: '—') ?>
                                         </td>
 
                                         <td class="px-4 py-4">
@@ -261,7 +261,7 @@ $totalTipos = count($tipos);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($tipo['atualizado_em'] ?: $tipo['criado_em'] ?: 'â€”') ?>
+                                            <?= esc($tipo['atualizado_em'] ?: $tipo['criado_em'] ?: '—') ?>
                                         </td>
 
                                         <td class="rounded-r-xl px-4 py-4">
@@ -274,7 +274,7 @@ $totalTipos = count($tipos);
 
                                                 <?= botao_excluir(
                                                     'excluir_tipo_peca.php?id=' . (int)$tipo['id'],
-                                                    'Tem certeza que deseja excluir este tipo de peÃ§a?',
+                                                    'Tem certeza que deseja excluir este tipo de peça?',
                                                     'Excluir'
                                                 ) ?>
                                             </div>

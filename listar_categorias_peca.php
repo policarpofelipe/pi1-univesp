@@ -26,25 +26,25 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
             ],
             'excluido' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Categoria excluÃ­da com sucesso.',
+                'texto'  => 'Categoria excluída com sucesso.',
             ],
             'inativado' => [
                 'classe' => 'border-yellow-200 bg-yellow-50 text-yellow-700',
-                'texto'  => 'A categoria possui vÃ­nculos e foi apenas inativada.',
+                'texto'  => 'A categoria possui vínculos e foi apenas inativada.',
             ],
         ],
         'erro' => [
             'metodo_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'MÃ©todo de requisiÃ§Ã£o invÃ¡lido.',
+                'texto'  => 'Método de requisição inválido.',
             ],
             'id_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'ID invÃ¡lido para a operaÃ§Ã£o solicitada.',
+                'texto'  => 'ID inválido para a operação solicitada.',
             ],
             'registro_nao_encontrado' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Registro nÃ£o encontrado.',
+                'texto'  => 'Registro não encontrado.',
             ],
             'erro_ao_excluir' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
@@ -69,7 +69,7 @@ $retorno = null;
 if ($sucesso === 'importacao' && $nImportacao > 0) {
     $retorno = [
         'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        'texto'  => 'ImportaÃ§Ã£o concluÃ­da: ' . $nImportacao . ' registro(s) gravado(s).',
+        'texto'  => 'Importação concluída: ' . $nImportacao . ' registro(s) gravado(s).',
     ];
 } elseif ($sucesso !== '') {
     $retorno = mensagemRetorno('sucesso', $sucesso);
@@ -109,7 +109,7 @@ $totalCategorias = count($categorias);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Categorias de PeÃ§a</title>
+    <title>Categorias de Peça</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -136,8 +136,8 @@ $totalCategorias = count($categorias);
                     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
-                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Categorias de Peca</h1>
-                            <p class="mt-2 text-sm text-slate-300">Gerencie as categorias que estruturam o catalogo de pecas.</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Categorias de Peça</h1>
+                            <p class="mt-2 text-sm text-slate-300">Gerencie as categorias que estruturam o catálogo de peças.</p>
                         </div>
 
                         <div class="flex flex-wrap gap-2">
@@ -161,7 +161,7 @@ $totalCategorias = count($categorias);
                         <label for="busca" class="<?= classe_label() ?>">Buscar categoria</label>
                         <?= input_texto('busca', $busca, [
                             'id' => 'busca',
-                            'placeholder' => 'Digite nome ou descriÃ§Ã£o da categoria'
+                            'placeholder' => 'Digite nome ou descrição da categoria'
                         ]) ?>
                     </div>
 
@@ -181,9 +181,9 @@ $totalCategorias = count($categorias);
                 </div>
 
                 <div class="<?= classe_box() ?>">
-                    <div class="text-sm text-slate-500">UsuÃ¡rio logado</div>
+                    <div class="text-sm text-slate-500">Usuário logado</div>
                     <div class="mt-2 text-base font-semibold text-slate-900">
-                        <?= esc($_SESSION['usuario_nome'] ?? 'UsuÃ¡rio') ?>
+                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
                     </div>
                 </div>
             </div>
@@ -210,10 +210,10 @@ $totalCategorias = count($categorias);
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ID</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Nome</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">DescriÃ§Ã£o</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Descrição</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Atualizado em</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">AÃ§Ãµes</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -231,7 +231,7 @@ $totalCategorias = count($categorias);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($categoria['descricao'] ?: 'â€”') ?>
+                                            <?= esc($categoria['descricao'] ?: '—') ?>
                                         </td>
 
                                         <td class="px-4 py-4">
@@ -247,7 +247,7 @@ $totalCategorias = count($categorias);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($categoria['atualizado_em'] ?: $categoria['criado_em'] ?: 'â€”') ?>
+                                            <?= esc($categoria['atualizado_em'] ?: $categoria['criado_em'] ?: '—') ?>
                                         </td>
 
                                         <td class="rounded-r-xl px-4 py-4">

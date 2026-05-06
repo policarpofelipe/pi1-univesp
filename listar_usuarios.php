@@ -18,37 +18,37 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
         'sucesso' => [
             'cadastrado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'UsuÃ¡rio cadastrado com sucesso.',
+                'texto'  => 'Usuário cadastrado com sucesso.',
             ],
             'editado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'UsuÃ¡rio atualizado com sucesso.',
+                'texto'  => 'Usuário atualizado com sucesso.',
             ],
             'excluido' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'UsuÃ¡rio excluÃ­do com sucesso.',
+                'texto'  => 'Usuário excluído com sucesso.',
             ],
             'inativado' => [
                 'classe' => 'border-yellow-200 bg-yellow-50 text-yellow-700',
-                'texto'  => 'O usuÃ¡rio possui vÃ­nculos e foi apenas inativado.',
+                'texto'  => 'O usuário possui vínculos e foi apenas inativado.',
             ],
         ],
         'erro' => [
             'metodo_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'MÃ©todo de requisiÃ§Ã£o invÃ¡lido.',
+                'texto'  => 'Método de requisição inválido.',
             ],
             'id_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'ID invÃ¡lido para a operaÃ§Ã£o solicitada.',
+                'texto'  => 'ID inválido para a operação solicitada.',
             ],
             'registro_nao_encontrado' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Registro nÃ£o encontrado.',
+                'texto'  => 'Registro não encontrado.',
             ],
             'erro_ao_excluir' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Ocorreu um erro ao excluir o usuÃ¡rio.',
+                'texto'  => 'Ocorreu um erro ao excluir o usuário.',
             ],
         ],
     ];
@@ -106,7 +106,7 @@ $totalUsuarios = count($usuarios);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UsuÃ¡rios</title>
+    <title>Usuários</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -133,13 +133,13 @@ $totalUsuarios = count($usuarios);
                     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
-                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Usuarios</h1>
-                            <p class="mt-2 text-sm text-slate-300">Gerencie os acessos de usuarios ao sistema.</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Usuários</h1>
+                            <p class="mt-2 text-sm text-slate-300">Gerencie os acessos de usuários ao sistema.</p>
                         </div>
 
                         <div class="flex flex-wrap gap-2">
                             <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
-                    <?= botao_link('form_usuario.php', 'Novo usuario', 'salvar') ?>
+                    <?= botao_link('form_usuario.php', 'Novo usuário', 'salvar') ?>
                         </div>
                     </div>
                 </div>
@@ -154,7 +154,7 @@ $totalUsuarios = count($usuarios);
             <div class="<?= classe_box() ?> mb-6">
                 <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
                     <div class="md:col-span-9">
-                        <label for="busca" class="<?= classe_label() ?>">Buscar usuÃ¡rio</label>
+                        <label for="busca" class="<?= classe_label() ?>">Buscar usuário</label>
                         <?= input_texto('busca', $busca, [
                             'id' => 'busca',
                             'placeholder' => 'Digite nome ou e-mail'
@@ -177,26 +177,26 @@ $totalUsuarios = count($usuarios);
                 </div>
 
                 <div class="<?= classe_box() ?>">
-                    <div class="text-sm text-slate-500">UsuÃ¡rio logado</div>
+                    <div class="text-sm text-slate-500">Usuário logado</div>
                     <div class="mt-2 text-base font-semibold text-slate-900">
-                        <?= esc($_SESSION['usuario_nome'] ?? 'UsuÃ¡rio') ?>
+                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
                     </div>
                 </div>
             </div>
 
             <div class="<?= classe_box() ?>">
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">Lista de usuÃ¡rios</h2>
+                    <h2 class="text-lg font-semibold text-slate-900">Lista de usuários</h2>
                 </div>
 
                 <?php if (!$usuarios): ?>
                     <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
                         <p class="text-sm text-slate-600">
-                            Nenhum usuÃ¡rio encontrado.
+                            Nenhum usuário encontrado.
                         </p>
 
                         <div class="mt-4">
-                            <?= botao_link('form_usuario.php', 'Cadastrar primeiro usuÃ¡rio', 'salvar') ?>
+                            <?= botao_link('form_usuario.php', 'Cadastrar primeiro usuário', 'salvar') ?>
                         </div>
                     </div>
                 <?php else: ?>
@@ -209,7 +209,7 @@ $totalUsuarios = count($usuarios);
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">E-mail</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Atualizado em</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">AÃ§Ãµes</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -243,7 +243,7 @@ $totalUsuarios = count($usuarios);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($usuario['atualizado_em'] ?: $usuario['criado_em'] ?: 'â€”') ?>
+                                            <?= esc($usuario['atualizado_em'] ?: $usuario['criado_em'] ?: '—') ?>
                                         </td>
 
                                         <td class="rounded-r-xl px-4 py-4">
@@ -256,7 +256,7 @@ $totalUsuarios = count($usuarios);
 
                                                 <?= botao_excluir(
                                                     'excluir_usuario.php?id=' . (int)$usuario['id'],
-                                                    'Tem certeza que deseja excluir este usuÃ¡rio?',
+                                                    'Tem certeza que deseja excluir este usuário?',
                                                     'Excluir'
                                                 ) ?>
                                             </div>

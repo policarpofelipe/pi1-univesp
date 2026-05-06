@@ -18,37 +18,37 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
         'sucesso' => [
             'cadastrado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Marca de veÃ­culo cadastrada com sucesso.',
+                'texto'  => 'Marca de veículo cadastrada com sucesso.',
             ],
             'editado' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Marca de veÃ­culo atualizada com sucesso.',
+                'texto'  => 'Marca de veículo atualizada com sucesso.',
             ],
             'excluido' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Marca de veÃ­culo excluÃ­da com sucesso.',
+                'texto'  => 'Marca de veículo excluída com sucesso.',
             ],
             'inativado' => [
                 'classe' => 'border-yellow-200 bg-yellow-50 text-yellow-700',
-                'texto'  => 'A marca possui vÃ­nculos e foi apenas inativada.',
+                'texto'  => 'A marca possui vínculos e foi apenas inativada.',
             ],
         ],
         'erro' => [
             'metodo_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'MÃ©todo de requisiÃ§Ã£o invÃ¡lido.',
+                'texto'  => 'Método de requisição inválido.',
             ],
             'id_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'ID invÃ¡lido para a operaÃ§Ã£o solicitada.',
+                'texto'  => 'ID inválido para a operação solicitada.',
             ],
             'registro_nao_encontrado' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Registro nÃ£o encontrado.',
+                'texto'  => 'Registro não encontrado.',
             ],
             'erro_ao_excluir' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Ocorreu um erro ao excluir a marca de veÃ­culo.',
+                'texto'  => 'Ocorreu um erro ao excluir a marca de veículo.',
             ],
         ],
     ];
@@ -69,7 +69,7 @@ $retorno = null;
 if ($sucesso === 'importacao' && $nImportacao > 0) {
     $retorno = [
         'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        'texto'  => 'ImportaÃ§Ã£o concluÃ­da: ' . $nImportacao . ' registro(s) gravado(s).',
+        'texto'  => 'Importação concluída: ' . $nImportacao . ' registro(s) gravado(s).',
     ];
 } elseif ($sucesso !== '') {
     $retorno = mensagemRetorno('sucesso', $sucesso);
@@ -108,7 +108,7 @@ $totalMarcas = count($marcas);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marcas de VeÃ­culo</title>
+    <title>Marcas de Veículo</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -135,8 +135,8 @@ $totalMarcas = count($marcas);
                     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
-                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Marcas de Veiculo</h1>
-                            <p class="mt-2 text-sm text-slate-300">Gerencie as marcas que compoem o catalogo veicular do sistema.</p>
+                            <h1 class="mt-2 text-2xl md:text-3xl font-bold">Marcas de Veículo</h1>
+                            <p class="mt-2 text-sm text-slate-300">Gerencie as marcas que compõem o catálogo veicular do sistema.</p>
                         </div>
 
                         <div class="flex flex-wrap gap-2">
@@ -160,7 +160,7 @@ $totalMarcas = count($marcas);
                         <label for="busca" class="<?= classe_label() ?>">Buscar marca</label>
                         <?= input_texto('busca', $busca, [
                             'id' => 'busca',
-                            'placeholder' => 'Digite o nome da marca do veÃ­culo'
+                            'placeholder' => 'Digite o nome da marca do veículo'
                         ]) ?>
                     </div>
 
@@ -180,22 +180,22 @@ $totalMarcas = count($marcas);
                 </div>
 
                 <div class="<?= classe_box() ?>">
-                    <div class="text-sm text-slate-500">UsuÃ¡rio logado</div>
+                    <div class="text-sm text-slate-500">Usuário logado</div>
                     <div class="mt-2 text-base font-semibold text-slate-900">
-                        <?= esc($_SESSION['usuario_nome'] ?? 'UsuÃ¡rio') ?>
+                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
                     </div>
                 </div>
             </div>
 
             <div class="<?= classe_box() ?>">
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">Lista de marcas de veÃ­culo</h2>
+                    <h2 class="text-lg font-semibold text-slate-900">Lista de marcas de veículo</h2>
                 </div>
 
                 <?php if (!$marcas): ?>
                     <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
                         <p class="text-sm text-slate-600">
-                            Nenhuma marca de veÃ­culo encontrada.
+                            Nenhuma marca de veículo encontrada.
                         </p>
 
                         <div class="mt-4">
@@ -211,7 +211,7 @@ $totalMarcas = count($marcas);
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Nome</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Atualizado em</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">AÃ§Ãµes</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -241,7 +241,7 @@ $totalMarcas = count($marcas);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($marca['atualizado_em'] ?: $marca['criado_em'] ?: 'â€”') ?>
+                                            <?= esc($marca['atualizado_em'] ?: $marca['criado_em'] ?: '—') ?>
                                         </td>
 
                                         <td class="rounded-r-xl px-4 py-4">
@@ -254,7 +254,7 @@ $totalMarcas = count($marcas);
 
                                                 <?= botao_excluir(
                                                     'excluir_marca_veiculo.php?id=' . (int)$marca['id'],
-                                                    'Tem certeza que deseja excluir esta marca de veÃ­culo?',
+                                                    'Tem certeza que deseja excluir esta marca de veículo?',
                                                     'Excluir'
                                                 ) ?>
                                             </div>

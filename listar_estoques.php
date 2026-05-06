@@ -26,25 +26,25 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
             ],
             'excluido' => [
                 'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'texto'  => 'Local de estoque excluÃ­do com sucesso.',
+                'texto'  => 'Local de estoque excluído com sucesso.',
             ],
             'inativado' => [
                 'classe' => 'border-yellow-200 bg-yellow-50 text-yellow-700',
-                'texto'  => 'O local possui vÃ­nculos e foi apenas inativado.',
+                'texto'  => 'O local possui vínculos e foi apenas inativado.',
             ],
         ],
         'erro' => [
             'metodo_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'MÃ©todo de requisiÃ§Ã£o invÃ¡lido.',
+                'texto'  => 'Método de requisição inválido.',
             ],
             'id_invalido' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'ID invÃ¡lido para a operaÃ§Ã£o solicitada.',
+                'texto'  => 'ID inválido para a operação solicitada.',
             ],
             'registro_nao_encontrado' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
-                'texto'  => 'Registro nÃ£o encontrado.',
+                'texto'  => 'Registro não encontrado.',
             ],
             'erro_ao_excluir' => [
                 'classe' => 'border-red-200 bg-red-50 text-red-700',
@@ -69,7 +69,7 @@ $retorno = null;
 if ($sucesso === 'importacao' && $nImportacao > 0) {
     $retorno = [
         'classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        'texto'  => 'ImportaÃ§Ã£o concluÃ­da: ' . $nImportacao . ' registro(s) gravado(s).',
+        'texto'  => 'Importação concluída: ' . $nImportacao . ' registro(s) gravado(s).',
     ];
 } elseif ($sucesso !== '') {
     $retorno = mensagemRetorno('sucesso', $sucesso);
@@ -140,7 +140,7 @@ $totalEstoques = count($estoques);
                         <div>
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Sistema de Controle de Estoque</p>
                             <h1 class="mt-2 text-2xl md:text-3xl font-bold">Locais de Estoque</h1>
-                            <p class="mt-2 text-sm text-slate-300">Gerencie depositos, prateleiras, almoxarifados e outros pontos de armazenamento.</p>
+                            <p class="mt-2 text-sm text-slate-300">Gerencie depósitos, prateleiras, almoxarifados e outros pontos de armazenamento.</p>
                         </div>
 
                         <div class="flex flex-wrap gap-2">
@@ -164,7 +164,7 @@ $totalEstoques = count($estoques);
                         <label for="busca" class="<?= classe_label() ?>">Buscar local de estoque</label>
                         <?= input_texto('busca', $busca, [
                             'id' => 'busca',
-                            'placeholder' => 'Digite nome ou localizaÃ§Ã£o'
+                            'placeholder' => 'Digite nome ou localização'
                         ]) ?>
                     </div>
 
@@ -184,9 +184,9 @@ $totalEstoques = count($estoques);
                 </div>
 
                 <div class="<?= classe_box() ?>">
-                    <div class="text-sm text-slate-500">UsuÃ¡rio logado</div>
+                    <div class="text-sm text-slate-500">Usuário logado</div>
                     <div class="mt-2 text-base font-semibold text-slate-900">
-                        <?= esc($_SESSION['usuario_nome'] ?? 'UsuÃ¡rio') ?>
+                        <?= esc($_SESSION['usuario_nome'] ?? 'Usuário') ?>
                     </div>
                 </div>
             </div>
@@ -213,10 +213,10 @@ $totalEstoques = count($estoques);
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ID</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Nome</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">LocalizaÃ§Ã£o</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Localização</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Atualizado em</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">AÃ§Ãµes</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -234,7 +234,7 @@ $totalEstoques = count($estoques);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($estoque['localizacao'] ?: 'â€”') ?>
+                                            <?= esc($estoque['localizacao'] ?: '—') ?>
                                         </td>
 
                                         <td class="px-4 py-4">
@@ -250,7 +250,7 @@ $totalEstoques = count($estoques);
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
-                                            <?= esc($estoque['atualizado_em'] ?: $estoque['criado_em'] ?: 'â€”') ?>
+                                            <?= esc($estoque['atualizado_em'] ?: $estoque['criado_em'] ?: '—') ?>
                                         </td>
 
                                         <td class="rounded-r-xl px-4 py-4">
