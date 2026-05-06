@@ -492,35 +492,34 @@ $filtrosAvancadosAtivos = $baseParams['marca_veiculo_id'] !== ''
                     <div>
                         <label for="q" class="<?= classe_label() ?>">Buscar</label>
                         <div class="flex flex-col gap-2 md:flex-row">
-                            <?= select_padrao('campo_busca', [
-                                'produto' => 'Produto',
-                                'sku' => 'SKU',
-                                'codigo_fabricante' => 'Código fabricante',
-                                'codigo_barras' => 'Código de barras',
-                                'tipo_peca' => 'Tipo de peça',
-                                'marca_produto' => 'Marca do produto',
-                            ], $estado['campo_busca'], ['id' => 'campo_busca', 'class' => 'md:w-56']) ?>
-                            <?= input_texto('q', $estado['q'], [
-                                'id' => 'q',
-                                'placeholder' => 'Digite o termo...',
-                                'class' => 'md:flex-1'
-                            ]) ?>
+                            <div class="md:w-56">
+                                <?= select_padrao('campo_busca', [
+                                    'produto' => 'Produto',
+                                    'sku' => 'SKU',
+                                    'codigo_fabricante' => 'Código fabricante',
+                                    'codigo_barras' => 'Código de barras',
+                                    'tipo_peca' => 'Tipo de peça',
+                                    'marca_produto' => 'Marca do produto',
+                                ], $estado['campo_busca'], ['id' => 'campo_busca']) ?>
+                            </div>
+                            <div class="md:flex-1">
+                                <?= input_texto('q', $estado['q'], [
+                                    'id' => 'q',
+                                    'placeholder' => 'Digite o termo...'
+                                ]) ?>
+                            </div>
                             <div class="flex gap-2 md:w-auto">
+                                <button
+                                    type="button"
+                                    id="btn-toggle-filtros"
+                                    class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                >
+                                    Filtros
+                                </button>
                                 <?= botao_submit('Buscar', 'busca') ?>
                                 <?= botao_link('consulta_veiculo.php', 'Limpar', 'cancelar') ?>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="flex items-center justify-between border-t border-slate-200 pt-3">
-                        <p class="text-xs text-slate-500">Filtros avançados</p>
-                        <button
-                            type="button"
-                            id="btn-toggle-filtros"
-                            class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                        >
-                            Filtros
-                        </button>
                     </div>
 
                     <div id="bloco-filtros-avancados" class="grid grid-cols-1 gap-4 md:grid-cols-3 <?= $filtrosAvancadosAtivos ? '' : 'hidden' ?>">
