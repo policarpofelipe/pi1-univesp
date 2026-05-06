@@ -39,7 +39,7 @@ if ($id > 0) {
     $paginaRetorno = 'form_movimentacao_estoque.php';
 }
 
-$redirecionarForm = function (string $erro) use ($id, $paginaRetorno, $produtoId, $estoqueId): void {
+$redirecionarForm = function (string $erro) use ($id, $paginaRetorno, $produtoId, $estoqueId, $quantidadeInformada): void {
     $params = ['erro=' . urlencode($erro)];
 
     if ($id > 0) {
@@ -51,6 +51,9 @@ $redirecionarForm = function (string $erro) use ($id, $paginaRetorno, $produtoId
 
         if ($estoqueId > 0) {
             $params[] = 'estoque_id=' . $estoqueId;
+        }
+        if ($quantidadeInformada !== '') {
+            $params[] = 'quantidade=' . urlencode($quantidadeInformada);
         }
     }
 
@@ -103,6 +106,15 @@ $quantidadeFinal = match ($tipoMovimentacao) {
 };
 
 try {
+    if ($usuarioId > 0) {
+        $stmtUsuario = $pdo->prepare("SELECT id FROM usuarios WHERE id = :id LIMIT 1");
+        $stmtUsuario->bindValue(':id', $usuarioId, PDO::PARAM_INT);
+        $stmtUsuario->execute();
+        if (!$stmtUsuario->fetch()) {
+            $usuarioId = 0;
+        }
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Validar existência do produto
@@ -141,6 +153,22 @@ try {
         $redirecionarForm('estoque_obrigatorio');
     }
 
+    if ($tipoMovimentacao === 'saida') {
+        $stmtSaldo = $pdo->prepare("
+            SELECT COALESCE(SUM(quantidade), 0)
+            FROM movimentacoes_estoque
+            WHERE produto_id = :produto_id
+              AND estoque_id = :estoque_id
+        ");
+        $stmtSaldo->bindValue(':produto_id', $produtoId, PDO::PARAM_INT);
+        $stmtSaldo->bindValue(':estoque_id', $estoqueId, PDO::PARAM_INT);
+        $stmtSaldo->execute();
+        $saldoAtual = (float)$stmtSaldo->fetchColumn();
+        if (abs($quantidadeBase) > $saldoAtual) {
+            $redirecionarForm('saldo_insuficiente');
+        }
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Atualização de movimentação
@@ -170,6 +198,7 @@ try {
                 usuario_id = :usuario_id,
                 tipo_movimento = :tipo_movimentacao,
                 quantidade = :quantidade,
+                custo_unitario = :custo_unitario,
                 observacao = :observacao
             WHERE id = :id
             LIMIT 1
@@ -181,6 +210,7 @@ try {
         $stmtUpdate->bindValue(':usuario_id', $usuarioId > 0 ? $usuarioId : null, $usuarioId > 0 ? PDO::PARAM_INT : PDO::PARAM_NULL);
         $stmtUpdate->bindValue(':tipo_movimentacao', $tipoMovimentacao);
         $stmtUpdate->bindValue(':quantidade', number_format($quantidadeFinal, 2, '.', ''), PDO::PARAM_STR);
+        $stmtUpdate->bindValue(':custo_unitario', null, PDO::PARAM_NULL);
         $stmtUpdate->bindValue(':observacao', $observacao !== '' ? $observacao : null, $observacao !== '' ? PDO::PARAM_STR : PDO::PARAM_NULL);
         $stmtUpdate->bindValue(':id', $id, PDO::PARAM_INT);
         $stmtUpdate->execute();
@@ -201,6 +231,7 @@ try {
             usuario_id,
             tipo_movimento,
             quantidade,
+            custo_unitario,
             observacao,
             criado_em
         ) VALUES (
@@ -209,6 +240,7 @@ try {
             :usuario_id,
             :tipo_movimentacao,
             :quantidade,
+            :custo_unitario,
             :observacao,
             NOW()
         )
@@ -220,6 +252,7 @@ try {
     $stmtInsert->bindValue(':usuario_id', $usuarioId > 0 ? $usuarioId : null, $usuarioId > 0 ? PDO::PARAM_INT : PDO::PARAM_NULL);
     $stmtInsert->bindValue(':tipo_movimentacao', $tipoMovimentacao);
     $stmtInsert->bindValue(':quantidade', number_format($quantidadeFinal, 2, '.', ''), PDO::PARAM_STR);
+    $stmtInsert->bindValue(':custo_unitario', null, PDO::PARAM_NULL);
     $stmtInsert->bindValue(':observacao', $observacao !== '' ? $observacao : null, $observacao !== '' ? PDO::PARAM_STR : PDO::PARAM_NULL);
     $stmtInsert->execute();
 
@@ -227,5 +260,6 @@ try {
     exit;
 
 } catch (Throwable $e) {
+    error_log('salvar_movimentacao_estoque.php erro: ' . $e->getMessage());
     $redirecionarForm('erro_interno');
 }

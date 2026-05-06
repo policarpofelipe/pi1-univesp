@@ -20,8 +20,10 @@ $mapaErros = [
     'estoque_obrigatorio'    => 'Selecione um local de estoque.',
     'quantidade_obrigatoria' => 'Informe a quantidade.',
     'quantidade_invalida'    => 'Informe uma quantidade válida e maior que zero.',
+    'saldo_insuficiente'     => 'Saldo insuficiente no estoque selecionado para registrar esta saída.',
     'erro_interno'           => 'Ocorreu um erro interno ao processar a operação.',
 ];
+$quantidadeInformada = trim((string)($_GET['quantidade'] ?? ''));
 
 if ($erroCodigo !== '' && isset($mapaErros[$erroCodigo])) {
     $erro = $mapaErros[$erroCodigo];
@@ -148,7 +150,7 @@ foreach ($estoques as $estoque) {
 
                         <div>
                             <label for="quantidade" class="<?= classe_label() ?>">Quantidade de saída</label>
-                            <?= input_numero('quantidade', '', [
+                            <?= input_numero('quantidade', $quantidadeInformada, [
                                 'id' => 'quantidade',
                                 'step' => '0.01',
                                 'min' => '0.01',
