@@ -90,6 +90,8 @@ function esc($valor): string
 {
     return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
 }
+
+$marcadorData = date('d/m/Y');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -98,141 +100,184 @@ function esc($valor): string
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - Sistema de Controle de Estoque</title>
     <style>
+        *{box-sizing:border-box}
         body{
-            font-family: Arial, Helvetica, sans-serif;
-            background:#f4f6f8;
             margin:0;
             min-height:100vh;
+            font-family: Inter, Arial, Helvetica, sans-serif;
+            background:linear-gradient(135deg,#0f172a,#1e293b 55%,#0b1220);
+            color:#0f172a;
             display:flex;
             align-items:center;
             justify-content:center;
             padding:24px;
-            box-sizing:border-box;
         }
-
-        .container{
+        .layout{
             width:100%;
-            max-width:460px;
+            max-width:1140px;
+            min-height:640px;
+            border-radius:24px;
+            overflow:hidden;
+            display:grid;
+            grid-template-columns:minmax(350px,460px) 1fr;
+            box-shadow:0 30px 70px rgba(2,6,23,.45);
+            border:1px solid rgba(148,163,184,.25);
+            background:#fff;
         }
-
-        .card{
-            background:#ffffff;
-            padding:40px;
-            border-radius:8px;
-            box-shadow:0 5px 20px rgba(0,0,0,0.08);
+        .painel-form{
+            background:#fff;
+            padding:40px 34px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
         }
-
-        h1{
-            margin-top:0;
+        .logo{
+            font-size:12px;
+            letter-spacing:.12em;
+            text-transform:uppercase;
+            color:#475569;
             margin-bottom:10px;
-            font-size:24px;
-            text-align:center;
-            color:#111827;
         }
-
+        h1{
+            margin:0 0 8px 0;
+            font-size:28px;
+            line-height:1.15;
+            color:#0f172a;
+        }
         .subtitulo{
             margin:0 0 24px 0;
-            text-align:center;
             font-size:14px;
-            color:#6b7280;
+            color:#64748b;
         }
-
         label{
             display:block;
             margin-bottom:6px;
-            font-weight:bold;
-            font-size:14px;
-            color:#111827;
+            font-weight:600;
+            font-size:13px;
+            color:#334155;
         }
-
         input{
             width:100%;
-            padding:11px 12px;
-            margin-bottom:16px;
-            border:1px solid #d1d5db;
-            border-radius:4px;
+            padding:11px 13px;
+            margin-bottom:14px;
+            border:1px solid #cbd5e1;
+            border-radius:12px;
             font-size:14px;
-            box-sizing:border-box;
+            transition:.2s border-color,.2s box-shadow;
         }
-
         input:focus{
             outline:none;
-            border-color:#1f2937;
+            border-color:#2563eb;
+            box-shadow:0 0 0 3px rgba(37,99,235,.15);
         }
-
         button{
             width:100%;
-            padding:12px;
+            padding:12px 14px;
             border:none;
-            border-radius:4px;
-            background:#1f2937;
-            color:white;
-            font-size:15px;
+            border-radius:12px;
+            background:#2563eb;
+            color:#fff;
+            font-size:14px;
+            font-weight:700;
             cursor:pointer;
+            transition:.2s background,.2s transform;
         }
-
-        button:hover{
-            background:#111827;
-        }
-
+        button:hover{background:#1d4ed8}
+        button:active{transform:translateY(1px)}
         .erro{
             background:#fee2e2;
             color:#991b1b;
+            border:1px solid #fecaca;
             padding:10px 12px;
-            margin-bottom:18px;
-            border-radius:4px;
-            font-size:14px;
+            margin-bottom:16px;
+            border-radius:12px;
+            font-size:13px;
         }
-
         .sucesso{
             background:#dcfce7;
             color:#166534;
+            border:1px solid #86efac;
             padding:10px 12px;
-            margin-bottom:18px;
-            border-radius:4px;
-            font-size:14px;
-        }
-
-        .links{
-            margin-top:18px;
-            text-align:center;
-            font-size:14px;
-        }
-
-        .links a{
-            color:#1f2937;
-            text-decoration:none;
-            font-weight:bold;
-        }
-
-        .links a:hover{
-            text-decoration:underline;
-        }
-
-        .projeto{
-            margin-top:24px;
-            padding:15px;
-            background:#f8fafc;
-            border-radius:6px;
+            margin-bottom:16px;
+            border-radius:12px;
             font-size:13px;
-            color:#333;
-            line-height:1.55;
         }
-
-        .projeto strong{
-            display:block;
-            margin-bottom:8px;
-            color:#111827;
+        .links{
+            margin-top:16px;
+            text-align:center;
+            font-size:13px;
+            color:#475569;
+        }
+        .links a{
+            color:#1e293b;
+            text-decoration:none;
+            font-weight:700;
+        }
+        .links a:hover{text-decoration:underline}
+        .banner{
+            position:relative;
+            color:#e2e8f0;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(59,130,246,.45) 0, rgba(59,130,246,0) 44%),
+                radial-gradient(circle at 80% 70%, rgba(14,116,144,.35) 0, rgba(14,116,144,0) 45%),
+                linear-gradient(145deg,#0f172a,#1e293b 60%,#0b1220);
+            padding:36px;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+        }
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            border:1px solid rgba(148,163,184,.35);
+            background:rgba(15,23,42,.35);
+            color:#cbd5e1;
+            border-radius:999px;
+            padding:7px 12px;
+            font-size:12px;
+            width:max-content;
+        }
+        .banner h2{
+            margin:18px 0 10px 0;
+            font-size:34px;
+            line-height:1.1;
+            color:#f8fafc;
+        }
+        .banner p{margin:0 0 14px 0;font-size:14px;line-height:1.55}
+        .lista{
+            margin:0;
+            padding-left:18px;
+            font-size:13px;
+            line-height:1.5;
+        }
+        .github-link{
+            margin-top:20px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            width:max-content;
+            padding:10px 14px;
+            border-radius:12px;
+            text-decoration:none;
+            font-size:13px;
+            font-weight:700;
+            color:#fff;
+            background:#2563eb;
+        }
+        .github-link:hover{background:#1d4ed8}
+        @media (max-width: 920px){
+            .layout{grid-template-columns:1fr}
+            .banner{order:-1;min-height:290px}
         }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <div class="card">
-
-        <h1>Cadastre-se</h1>
-        <p class="subtitulo">Crie seu acesso ao sistema</p>
+<div class="layout">
+    <section class="painel-form">
+        <div class="logo">Sistema de Controle de Estoque</div>
+        <h1>Criar conta</h1>
+        <p class="subtitulo">Cadastre seu acesso para iniciar no sistema.</p>
 
         <?php if ($erro !== ''): ?>
             <div class="erro"><?= esc($erro) ?></div>
@@ -287,20 +332,28 @@ function esc($valor): string
         <div class="links">
             Já tem acesso? <a href="login.php">Entrar</a>
         </div>
+    </section>
 
-        <div class="projeto">
-            <strong>Projeto Integrador UNIVESP — Grupo 21</strong>
-            FELIPE BONIFACIO PERONA<br>
-            FELIPE DA COSTA JARDIM<br>
-            FABIO DIAS REZENDE CARVALHO<br>
-            RENAN ESTEVES QUINTINO SILVA<br>
-            FABIO ICCARO SILVESTRE DE ALMEIDA<br>
-            FELIPE MARTINS POLICARPO<br>
-            MARCOS PAULO DE CARVALHO GOMES<br>
-            PACHELLI PERILLO BENVENUTI DE MORAES
+    <aside class="banner">
+        <div>
+            <span class="badge">Marcador da apresentação: <?= esc($marcadorData) ?></span>
+            <h2>Projeto Integrador PI.1</h2>
+            <p><strong>Universidade Virtual do Estado de São Paulo</strong></p>
+            <p><strong>Grupo 21</strong></p>
+            <p><strong>Título:</strong> Sistema Web de Controle de Estoque de Autopeças com Associação de Aplicações Veiculares</p>
+            <p><strong>Autores (ordem alfabética):</strong></p>
+            <ul class="lista">
+                <li>FABIO DIAS REZENDE CARVALHO</li>
+                <li>FABIO ICCARO SILVESTRE DE ALMEIDA</li>
+                <li>FELIPE MARTINS POLICARPO</li>
+                <li>RENAN ESTEVES QUINTINO SILVA</li>
+            </ul>
         </div>
 
-    </div>
+        <a class="github-link" href="https://github.com/policarpofelipe/pi1-univesp" target="_blank" rel="noopener noreferrer">
+            Ver repositório no GitHub
+        </a>
+    </aside>
 </div>
 
 </body>
