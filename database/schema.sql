@@ -40,6 +40,25 @@ CREATE TABLE `aplicacoes_produto` (
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `assistente_cadastro_produto`
+--
+
+CREATE TABLE `assistente_cadastro_produto` (
+  `id` bigint UNSIGNED NOT NULL,
+  `usuario_id` int UNSIGNED NOT NULL,
+  `produto_id` int UNSIGNED DEFAULT NULL,
+  `etapa_atual` tinyint UNSIGNED NOT NULL DEFAULT '1',
+  `dados_json` json DEFAULT NULL,
+  `status` enum('rascunho','em_andamento','concluido','cancelado') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'rascunho',
+  `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `concluido_em` datetime DEFAULT NULL,
+  `cancelado_em` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura para tabela `categorias_peca`
 --
 
@@ -266,6 +285,16 @@ ALTER TABLE `aplicacoes_produto`
   ADD KEY `idx_aplicacoes_produto_ativo` (`ativo`);
 
 --
+-- Índices de tabela `assistente_cadastro_produto`
+--
+ALTER TABLE `assistente_cadastro_produto`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_assistente_cadastro_produto_usuario` (`usuario_id`),
+  ADD KEY `idx_assistente_cadastro_produto_status` (`status`),
+  ADD KEY `idx_assistente_cadastro_produto_produto` (`produto_id`),
+  ADD KEY `idx_assistente_usuario_status` (`usuario_id`,`status`);
+
+--
 -- Índices de tabela `categorias_peca`
 --
 ALTER TABLE `categorias_peca`
@@ -394,6 +423,12 @@ ALTER TABLE `aplicacoes_produto`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de tabela `assistente_cadastro_produto`
+--
+ALTER TABLE `assistente_cadastro_produto`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de tabela `categorias_peca`
 --
 ALTER TABLE `categorias_peca`
@@ -475,6 +510,13 @@ ALTER TABLE `veiculos_configuracao`
 ALTER TABLE `aplicacoes_produto`
   ADD CONSTRAINT `fk_aplicacoes_produto_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_aplicacoes_produto_veiculo` FOREIGN KEY (`veiculo_configuracao_id`) REFERENCES `veiculos_configuracao` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Restrições para tabelas `assistente_cadastro_produto`
+--
+ALTER TABLE `assistente_cadastro_produto`
+  ADD CONSTRAINT `fk_assistente_cadastro_produto_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_assistente_cadastro_produto_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Restrições para tabelas `modelos_veiculo`

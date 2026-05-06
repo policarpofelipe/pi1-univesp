@@ -14,6 +14,11 @@ $menuPrincipal = [
         'label' => 'Painel',
         'icon'  => 'M5 4h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1M5 16h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1M15 12h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1M15 4h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1',
     ],
+    [
+        'url'   => 'assistente_cadastro_produto.php',
+        'label' => 'Assistente de Cadastro',
+        'icon'  => 'M4 5h16M4 12h16M4 19h10',
+    ],
 ];
 
 $menuCadastros = [

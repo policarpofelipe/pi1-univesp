@@ -93,6 +93,7 @@ $cards = [
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                            <?= botao_link('assistente_cadastro_produto.php', 'Assistente cadastro', 'atalho') ?>
                             <?= botao_link('consulta_veiculo.php', 'Consulta por veículo', 'atalho') ?>
                             <?= botao_link('saldo_estoque.php', 'Saldo de estoque', 'atalho') ?>
                             <?= botao_link('movimentar_entrada.php', 'Entrada', 'salvar') ?>
