@@ -5,6 +5,7 @@ require __DIR__ . '/auth.php';
 require __DIR__ . '/conexao.php';
 require __DIR__ . '/componentes.php';
 require __DIR__ . '/lib/produto_imagens.php';
+require __DIR__ . '/lib/sku_interno.php';
 
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -190,7 +191,7 @@ if ($erro !== '') {
         'sku_obrigatorio' => 'Informe o SKU interno.',
         'codigo_fabricante_obrigatorio' => 'Informe o código do fabricante.',
         'nome_obrigatorio' => 'Informe o nome comercial.',
-        'sku_duplicado' => 'Já existe um produto com este SKU.',
+        'sku_duplicado' => 'Este SKU já está em uso. Gere uma nova sugestão ou informe outro SKU.',
         'codigo_fabricante_duplicado' => 'Já existe produto com este código de fabricante para a marca selecionada.',
         'codigo_barras_duplicado' => 'Já existe produto com este código de barras.',
         'veiculo_obrigatorio' => 'Selecione uma configuração veicular válida.',
@@ -265,6 +266,11 @@ $valores = [
 $valores['categoria_modo'] = (string)($_GET['modo_categoria'] ?? $_GET['categoria_modo'] ?? $valores['categoria_modo']);
 $valores['tipo_modo'] = (string)($_GET['modo_tipo'] ?? $_GET['tipo_modo'] ?? $valores['tipo_modo']);
 $valores['marca_modo'] = (string)($_GET['modo_marca_produto'] ?? $_GET['marca_modo'] ?? $valores['marca_modo']);
+
+$sugestaoSkuInterno = '';
+if ($produtoIdAtual <= 0) {
+    $sugestaoSkuInterno = gerarSugestaoSkuInterno($pdo);
+}
 
 $stmtCategorias = $pdo->query("SELECT id, nome FROM categorias_peca WHERE ativo = 1 ORDER BY nome ASC");
 $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
@@ -1081,7 +1087,24 @@ if ($etapaAtual === 2) {
                                 <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div>
                                         <label for="sku_interno" class="<?= classe_label() ?>">SKU interno *</label>
-                                        <?= input_texto('sku_interno', $valores['sku_interno'], ['id' => 'sku_interno', 'maxlength' => '60', 'required' => true]) ?>
+                                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                            <div class="flex-1">
+                                                <?= input_texto('sku_interno', $valores['sku_interno'], ['id' => 'sku_interno', 'maxlength' => '60', 'required' => true]) ?>
+                                            </div>
+                                            <?php if ($produtoIdAtual <= 0): ?>
+                                                <button
+                                                    type="button"
+                                                    id="usar-sku-sistema-assistente"
+                                                    data-sku-sugestao="<?= esc($sugestaoSkuInterno) ?>"
+                                                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                                >
+                                                    Usar SKU do sistema
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if ($produtoIdAtual <= 0 && $sugestaoSkuInterno !== ''): ?>
+                                            <p class="mt-1 text-xs text-slate-500">Sugestão atual: <?= esc($sugestaoSkuInterno) ?></p>
+                                        <?php endif; ?>
                                     </div>
                                     <div>
                                         <label for="codigo_fabricante" class="<?= classe_label() ?>">Código fabricante *</label>
@@ -1393,6 +1416,20 @@ if ($etapaAtual === 2) {
         });
 
         refreshModelos(false);
+    }
+
+    const btnUsarSkuSistemaAssistente = document.getElementById('usar-sku-sistema-assistente');
+    const inputSkuInterno = document.getElementById('sku_interno');
+    if (btnUsarSkuSistemaAssistente && inputSkuInterno) {
+        btnUsarSkuSistemaAssistente.addEventListener('click', () => {
+            const sugestao = btnUsarSkuSistemaAssistente.getAttribute('data-sku-sugestao') || '';
+            if (sugestao.trim() === '') {
+                return;
+            }
+            inputSkuInterno.value = sugestao;
+            inputSkuInterno.dispatchEvent(new Event('input', { bubbles: true }));
+            inputSkuInterno.focus();
+        });
     }
 })();
 </script>

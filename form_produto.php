@@ -5,6 +5,7 @@ require __DIR__ . '/auth.php';
 require __DIR__ . '/conexao.php';
 require __DIR__ . '/componentes.php';
 require __DIR__ . '/lib/produto_imagens.php';
+require __DIR__ . '/lib/sku_interno.php';
 
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -27,7 +28,7 @@ $mapaErros = [
     'sku_obrigatorio'               => 'Informe o SKU interno.',
     'codigo_fabricante_obrigatorio' => 'Informe o código do fabricante.',
     'nome_obrigatorio'              => 'Informe o nome comercial do produto.',
-    'sku_duplicado'                 => 'Já existe um produto cadastrado com este SKU interno.',
+    'sku_duplicado'                 => 'Este SKU já está em uso. Gere uma nova sugestão ou informe outro SKU.',
     'codigo_fabricante_duplicado'   => 'Já existe um produto com este código de fabricante para essa marca.',
     'codigo_barras_duplicado'       => 'Já existe um produto cadastrado com este código de barras.',
     'registro_nao_encontrado'       => 'Produto não encontrado.',
@@ -67,6 +68,11 @@ $dados = [
     'estoque_minimo'     => '0',
     'ativo'              => '1',
 ];
+
+$sugestaoSkuInterno = '';
+if (!$modoEdicao) {
+    $sugestaoSkuInterno = gerarSugestaoSkuInterno($pdo);
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -240,12 +246,29 @@ if ($modoEdicao && (int)$dados['id'] > 0) {
 
                         <div>
                             <label for="sku_interno" class="<?= classe_label() ?>">SKU interno</label>
-                            <?= input_texto('sku_interno', $dados['sku_interno'], [
-                                'id' => 'sku_interno',
-                                'maxlength' => '60',
-                                'required' => true,
-                                'placeholder' => 'Identificador interno do produto'
-                            ]) ?>
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <div class="flex-1">
+                                    <?= input_texto('sku_interno', $dados['sku_interno'], [
+                                        'id' => 'sku_interno',
+                                        'maxlength' => '60',
+                                        'required' => true,
+                                        'placeholder' => 'Identificador interno do produto'
+                                    ]) ?>
+                                </div>
+                                <?php if (!$modoEdicao): ?>
+                                    <button
+                                        type="button"
+                                        id="usar-sku-sistema"
+                                        data-sku-sugestao="<?= esc($sugestaoSkuInterno) ?>"
+                                        class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                    >
+                                        Usar SKU do sistema
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                            <?php if (!$modoEdicao && $sugestaoSkuInterno !== ''): ?>
+                                <p class="mt-1 text-xs text-slate-500">Sugestão atual: <?= esc($sugestaoSkuInterno) ?></p>
+                            <?php endif; ?>
                         </div>
 
                         <div>
@@ -416,6 +439,26 @@ if ($modoEdicao && (int)$dados['id'] > 0) {
         </div>
     </main>
 </div>
+
+<script>
+(() => {
+    const btnUsarSkuSistema = document.getElementById('usar-sku-sistema');
+    const inputSkuInterno = document.getElementById('sku_interno');
+    if (!btnUsarSkuSistema || !inputSkuInterno) {
+        return;
+    }
+
+    btnUsarSkuSistema.addEventListener('click', () => {
+        const sugestao = btnUsarSkuSistema.getAttribute('data-sku-sugestao') || '';
+        if (sugestao.trim() === '') {
+            return;
+        }
+        inputSkuInterno.value = sugestao;
+        inputSkuInterno.dispatchEvent(new Event('input', { bubbles: true }));
+        inputSkuInterno.focus();
+    });
+})();
+</script>
 
 </body>
 </html>

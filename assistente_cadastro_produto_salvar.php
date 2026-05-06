@@ -1093,5 +1093,11 @@ try {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
+    if ($e instanceof PDOException) {
+        $mensagem = (string)$e->getMessage();
+        if ($e->getCode() === '23000' && (stripos($mensagem, 'uq_produtos_sku_interno') !== false || stripos($mensagem, 'sku_interno') !== false)) {
+            $redirecionarErro('sku_duplicado');
+        }
+    }
     $redirecionarErro('erro_interno');
 }

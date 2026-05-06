@@ -351,5 +351,11 @@ try {
     exit;
 
 } catch (Throwable $e) {
+    if ($e instanceof PDOException) {
+        $mensagem = (string)$e->getMessage();
+        if ($e->getCode() === '23000' && (stripos($mensagem, 'uq_produtos_sku_interno') !== false || stripos($mensagem, 'sku_interno') !== false)) {
+            $redirecionarForm('sku_duplicado');
+        }
+    }
     $redirecionarForm('erro_interno');
 }
