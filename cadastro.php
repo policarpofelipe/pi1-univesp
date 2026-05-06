@@ -108,20 +108,14 @@ $marcadorData = date('d/m/Y');
             background:linear-gradient(135deg,#0f172a,#1e293b 55%,#0b1220);
             color:#0f172a;
             display:flex;
-            align-items:center;
-            justify-content:center;
-            padding:24px;
+            padding:0;
         }
         .layout{
             width:100%;
-            max-width:1140px;
-            min-height:640px;
-            border-radius:24px;
+            min-height:100vh;
             overflow:hidden;
             display:grid;
             grid-template-columns:minmax(350px,460px) 1fr;
-            box-shadow:0 30px 70px rgba(2,6,23,.45);
-            border:1px solid rgba(148,163,184,.25);
             background:#fff;
         }
         .painel-form{
@@ -341,7 +335,7 @@ $marcadorData = date('d/m/Y');
             <p><strong>Universidade Virtual do Estado de São Paulo</strong></p>
             <p><strong>Grupo 21</strong></p>
             <p><strong>Título:</strong> Sistema Web de Controle de Estoque de Autopeças com Associação de Aplicações Veiculares</p>
-            <p><strong>Autores (ordem alfabética):</strong></p>
+            <p><strong>Autores:</strong></p>
             <ul class="lista">
                 <li>FABIO DIAS REZENDE CARVALHO</li>
                 <li>FABIO ICCARO SILVESTRE DE ALMEIDA</li>
