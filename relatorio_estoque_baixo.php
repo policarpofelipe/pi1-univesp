@@ -12,6 +12,15 @@ function esc(?string $valor): string
     return htmlspecialchars($valor ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+function carregarDependenciasExportacao(): void
+{
+    $autoload = __DIR__ . '/vendor/autoload.php';
+    if (!is_file($autoload)) {
+        throw new RuntimeException('Dependências de exportação ausentes. Execute composer install.');
+    }
+    require_once $autoload;
+}
+
 $busca = trim($_GET['busca'] ?? '');
 
 $sql = "
@@ -101,6 +110,122 @@ foreach ($linhas as $linha) {
         $totalCritico++;
     }
 }
+
+$erroFlash = '';
+$erroCodigo = trim((string)($_GET['erro'] ?? ''));
+if ($erroCodigo === 'dependencia_exportacao') {
+    $erroFlash = 'Não foi possível exportar: dependências ausentes. Execute composer install na raiz do projeto.';
+}
+
+$exportar = trim((string)($_GET['exportar'] ?? ''));
+if (in_array($exportar, ['pdf', 'planilha'], true)) {
+    try {
+        carregarDependenciasExportacao();
+
+        if ($exportar === 'planilha') {
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Estoque baixo');
+            $sheet->fromArray([[
+                'Produto',
+                'SKU',
+                'Código fabricante',
+                'Código barras',
+                'Estoque',
+                'Estoque mínimo',
+                'Saldo atual',
+                'Situação',
+            ]], null, 'A1');
+
+            $linhaPlanilha = 2;
+            foreach ($linhas as $linha) {
+                $saldoAtual = (float)$linha['saldo_atual'];
+                $situacaoTexto = 'Abaixo do mínimo';
+                if ($saldoAtual < 0) {
+                    $situacaoTexto = 'Saldo negativo';
+                } elseif ($saldoAtual == 0.0) {
+                    $situacaoTexto = 'Sem estoque';
+                }
+                $sheet->fromArray([[
+                    (string)$linha['nome_comercial'],
+                    (string)$linha['sku_interno'],
+                    (string)$linha['codigo_fabricante'],
+                    (string)($linha['codigo_barras'] ?? ''),
+                    (string)$linha['estoque_nome'],
+                    (float)$linha['estoque_minimo'],
+                    $saldoAtual,
+                    $situacaoTexto,
+                ]], null, 'A' . $linhaPlanilha);
+                $linhaPlanilha++;
+            }
+
+            foreach (range('A', 'H') as $coluna) {
+                $sheet->getColumnDimension($coluna)->setAutoSize(true);
+            }
+
+            $nomeArquivo = 'relatorio_estoque_baixo_' . date('Ymd_His') . '.xlsx';
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+            header('Cache-Control: max-age=0');
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save('php://output');
+            exit;
+        }
+
+        if (!class_exists(\Dompdf\Dompdf::class)) {
+            header('Location: relatorio_estoque_baixo.php?erro=dependencia_exportacao' . ($busca !== '' ? '&busca=' . urlencode($busca) : ''));
+            exit;
+        }
+
+        $html = '<html><head><meta charset="UTF-8"><style>
+            body{font-family:DejaVu Sans,sans-serif;color:#1e293b;font-size:12px}
+            .cab{background:linear-gradient(90deg,#0f172a,#1e293b);color:#fff;padding:18px 20px;border-radius:10px}
+            .cab h1{margin:0;font-size:22px}
+            .cab p{margin:6px 0 0 0;font-size:11px;color:#cbd5e1}
+            .meta{margin:12px 0 14px 0;font-size:11px;color:#475569}
+            table{width:100%;border-collapse:collapse}
+            th,td{border:1px solid #cbd5e1;padding:6px;text-align:left;vertical-align:top}
+            th{background:#f1f5f9;font-size:11px}
+        </style></head><body>';
+        $html .= '<div class="cab"><h1>Relatório de Estoque Baixo</h1><p>Sistema de Controle de Estoque</p></div>';
+        $html .= '<div class="meta">Gerado em: ' . date('d/m/Y H:i') . ($busca !== '' ? ' | Filtro: ' . esc($busca) : '') . '</div>';
+        $html .= '<table><thead><tr>
+            <th>Produto</th><th>SKU</th><th>Estoque</th><th>Mínimo</th><th>Saldo</th><th>Situação</th>
+        </tr></thead><tbody>';
+        if ($linhas === []) {
+            $html .= '<tr><td colspan="6">Nenhum item encontrado.</td></tr>';
+        } else {
+            foreach ($linhas as $linha) {
+                $saldoAtual = (float)$linha['saldo_atual'];
+                $situacaoTexto = 'Abaixo do mínimo';
+                if ($saldoAtual < 0) {
+                    $situacaoTexto = 'Saldo negativo';
+                } elseif ($saldoAtual == 0.0) {
+                    $situacaoTexto = 'Sem estoque';
+                }
+                $html .= '<tr>'
+                    . '<td>' . esc((string)$linha['nome_comercial']) . '</td>'
+                    . '<td>' . esc((string)$linha['sku_interno']) . '</td>'
+                    . '<td>' . esc((string)$linha['estoque_nome']) . '</td>'
+                    . '<td>' . number_format((float)$linha['estoque_minimo'], 2, ',', '.') . '</td>'
+                    . '<td>' . number_format($saldoAtual, 2, ',', '.') . '</td>'
+                    . '<td>' . esc($situacaoTexto) . '</td>'
+                    . '</tr>';
+            }
+        }
+        $html .= '</tbody></table></body></html>';
+
+        $dompdf = new \Dompdf\Dompdf(['isRemoteEnabled' => false]);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream('relatorio_estoque_baixo_' . date('Ymd_His') . '.pdf', ['Attachment' => true]);
+        exit;
+    } catch (Throwable $e) {
+        header('Location: relatorio_estoque_baixo.php?erro=dependencia_exportacao' . ($busca !== '' ? '&busca=' . urlencode($busca) : ''));
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -143,10 +268,18 @@ foreach ($linhas as $linha) {
                             <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                             <?= botao_link('saldo_estoque.php', 'Ver saldo completo', 'atalho') ?>
                             <?= botao_link('movimentar_entrada.php', 'Registrar entrada', 'salvar') ?>
+                            <?= botao_link('relatorio_estoque_baixo.php?exportar=pdf' . ($busca !== '' ? '&busca=' . urlencode($busca) : ''), 'Exportar PDF', 'busca') ?>
+                            <?= botao_link('relatorio_estoque_baixo.php?exportar=planilha' . ($busca !== '' ? '&busca=' . urlencode($busca) : ''), 'Exportar planilha', 'atalho') ?>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <?php if ($erroFlash !== ''): ?>
+                <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <?= esc($erroFlash) ?>
+                </div>
+            <?php endif; ?>
 
             <div class="<?= classe_box() ?> mb-6">
                 <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">

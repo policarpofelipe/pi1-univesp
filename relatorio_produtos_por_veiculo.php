@@ -12,6 +12,15 @@ function esc(?string $valor): string
     return htmlspecialchars($valor ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+function carregarDependenciasExportacao(): void
+{
+    $autoload = __DIR__ . '/vendor/autoload.php';
+    if (!is_file($autoload)) {
+        throw new RuntimeException('Dependências de exportação ausentes. Execute composer install.');
+    }
+    require_once $autoload;
+}
+
 $marcaVeiculoId = (int)($_GET['marca_veiculo_id'] ?? 0);
 $modeloVeiculoId = (int)($_GET['modelo_veiculo_id'] ?? 0);
 $veiculoConfiguracaoId = (int)($_GET['veiculo_configuracao_id'] ?? 0);
@@ -213,6 +222,144 @@ if ($veiculoConfiguracaoId > 0) {
 
     $totalTipos = count($agrupado);
 }
+
+$erroFlash = '';
+$erroCodigo = trim((string)($_GET['erro'] ?? ''));
+if ($erroCodigo === 'dependencia_exportacao') {
+    $erroFlash = 'Não foi possível exportar: dependências ausentes. Execute composer install na raiz do projeto.';
+}
+
+$exportar = trim((string)($_GET['exportar'] ?? ''));
+if (in_array($exportar, ['pdf', 'planilha'], true) && $veiculoConfiguracaoId > 0 && $configuracaoSelecionada) {
+    try {
+        carregarDependenciasExportacao();
+
+        $anoLabel = ((int)$configuracaoSelecionada['ano_inicio'] === (int)$configuracaoSelecionada['ano_fim'])
+            ? (string)$configuracaoSelecionada['ano_inicio']
+            : $configuracaoSelecionada['ano_inicio'] . ' a ' . $configuracaoSelecionada['ano_fim'];
+        $partesVeiculo = [
+            (string)$configuracaoSelecionada['marca_nome'],
+            (string)$configuracaoSelecionada['modelo_nome'],
+            $anoLabel,
+        ];
+        if (!empty($configuracaoSelecionada['motorizacao'])) {
+            $partesVeiculo[] = (string)$configuracaoSelecionada['motorizacao'];
+        }
+        if (!empty($configuracaoSelecionada['combustivel'])) {
+            $partesVeiculo[] = (string)$configuracaoSelecionada['combustivel'];
+        }
+        if (!empty($configuracaoSelecionada['versao'])) {
+            $partesVeiculo[] = (string)$configuracaoSelecionada['versao'];
+        }
+        $veiculoLabelExport = implode(' / ', $partesVeiculo);
+
+        if ($exportar === 'planilha') {
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Produtos por veiculo');
+            $sheet->fromArray([[
+                'Veículo',
+                'Tipo de peça',
+                'Produto',
+                'Marca produto',
+                'SKU',
+                'Código fabricante',
+                'Código barras',
+                'Preço',
+                'Observação da aplicação',
+            ]], null, 'A1');
+
+            $linhaPlanilha = 2;
+            foreach ($agrupado as $grupo) {
+                foreach ($grupo['produtos'] as $produto) {
+                    $sheet->fromArray([[
+                        $veiculoLabelExport,
+                        (string)$grupo['tipo_peca_nome'],
+                        (string)$produto['nome_comercial'],
+                        (string)$produto['marca_produto_nome'],
+                        (string)$produto['sku_interno'],
+                        (string)$produto['codigo_fabricante'],
+                        (string)($produto['codigo_barras'] ?: ''),
+                        (float)$produto['preco'],
+                        (string)($grupo['observacao'] ?? ''),
+                    ]], null, 'A' . $linhaPlanilha);
+                    $linhaPlanilha++;
+                }
+            }
+            foreach (range('A', 'I') as $coluna) {
+                $sheet->getColumnDimension($coluna)->setAutoSize(true);
+            }
+            $nomeArquivo = 'relatorio_produtos_por_veiculo_' . date('Ymd_His') . '.xlsx';
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
+            header('Cache-Control: max-age=0');
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save('php://output');
+            exit;
+        }
+
+        if (!class_exists(\Dompdf\Dompdf::class)) {
+            $qs = http_build_query([
+                'erro' => 'dependencia_exportacao',
+                'marca_veiculo_id' => $marcaVeiculoId,
+                'modelo_veiculo_id' => $modeloVeiculoId,
+                'veiculo_configuracao_id' => $veiculoConfiguracaoId,
+            ]);
+            header('Location: relatorio_produtos_por_veiculo.php?' . $qs);
+            exit;
+        }
+
+        $html = '<html><head><meta charset="UTF-8"><style>
+            body{font-family:DejaVu Sans,sans-serif;color:#1e293b;font-size:12px}
+            .cab{background:linear-gradient(90deg,#0f172a,#1e293b);color:#fff;padding:18px 20px;border-radius:10px}
+            .cab h1{margin:0;font-size:22px}
+            .cab p{margin:6px 0 0 0;font-size:11px;color:#cbd5e1}
+            .meta{margin:12px 0 14px 0;font-size:11px;color:#475569}
+            table{width:100%;border-collapse:collapse}
+            th,td{border:1px solid #cbd5e1;padding:6px;text-align:left;vertical-align:top}
+            th{background:#f1f5f9;font-size:11px}
+        </style></head><body>';
+        $html .= '<div class="cab"><h1>Relatório de Produtos por Veículo</h1><p>Sistema de Controle de Estoque</p></div>';
+        $html .= '<div class="meta">Gerado em: ' . date('d/m/Y H:i') . ' | Veículo: ' . esc($veiculoLabelExport) . '</div>';
+        $html .= '<table><thead><tr>
+            <th>Tipo</th><th>Produto</th><th>Marca</th><th>SKU</th><th>Cód. fabricante</th><th>Cód. barras</th><th>Preço</th>
+        </tr></thead><tbody>';
+        if ($agrupado === []) {
+            $html .= '<tr><td colspan="7">Nenhum produto compatível encontrado.</td></tr>';
+        } else {
+            foreach ($agrupado as $grupo) {
+                foreach ($grupo['produtos'] as $produto) {
+                    $html .= '<tr>'
+                        . '<td>' . esc((string)$grupo['tipo_peca_nome']) . '</td>'
+                        . '<td>' . esc((string)$produto['nome_comercial']) . '</td>'
+                        . '<td>' . esc((string)$produto['marca_produto_nome']) . '</td>'
+                        . '<td>' . esc((string)$produto['sku_interno']) . '</td>'
+                        . '<td>' . esc((string)$produto['codigo_fabricante']) . '</td>'
+                        . '<td>' . esc((string)($produto['codigo_barras'] ?: '')) . '</td>'
+                        . '<td>R$ ' . number_format((float)$produto['preco'], 2, ',', '.') . '</td>'
+                        . '</tr>';
+                }
+            }
+        }
+        $html .= '</tbody></table></body></html>';
+
+        $dompdf = new \Dompdf\Dompdf(['isRemoteEnabled' => false]);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream('relatorio_produtos_por_veiculo_' . date('Ymd_His') . '.pdf', ['Attachment' => true]);
+        exit;
+    } catch (Throwable $e) {
+        $qs = http_build_query([
+            'erro' => 'dependencia_exportacao',
+            'marca_veiculo_id' => $marcaVeiculoId,
+            'modelo_veiculo_id' => $modeloVeiculoId,
+            'veiculo_configuracao_id' => $veiculoConfiguracaoId,
+        ]);
+        header('Location: relatorio_produtos_por_veiculo.php?' . $qs);
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -260,6 +407,16 @@ if ($veiculoConfiguracaoId > 0) {
                         <div class="flex flex-wrap gap-2">
                             <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                             <?= botao_link('consulta_veiculo.php', 'Consulta interativa', 'atalho') ?>
+                            <?= botao_link(
+                                'relatorio_produtos_por_veiculo.php?exportar=pdf&marca_veiculo_id=' . $marcaVeiculoId . '&modelo_veiculo_id=' . $modeloVeiculoId . '&veiculo_configuracao_id=' . $veiculoConfiguracaoId,
+                                'Exportar PDF',
+                                'busca'
+                            ) ?>
+                            <?= botao_link(
+                                'relatorio_produtos_por_veiculo.php?exportar=planilha&marca_veiculo_id=' . $marcaVeiculoId . '&modelo_veiculo_id=' . $modeloVeiculoId . '&veiculo_configuracao_id=' . $veiculoConfiguracaoId,
+                                'Exportar planilha',
+                                'atalho'
+                            ) ?>
                             <button type="button" onclick="imprimirRelatorio()" class="<?= esc($btn_busca ?? 'px-3 py-2 rounded-lg bg-blue-600 text-white') ?>">
                                 Imprimir
                             </button>
@@ -267,6 +424,12 @@ if ($veiculoConfiguracaoId > 0) {
                     </div>
                 </div>
             </div>
+
+            <?php if ($erroFlash !== ''): ?>
+                <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 print:hidden">
+                    <?= esc($erroFlash) ?>
+                </div>
+            <?php endif; ?>
 
             <div class="<?= classe_box() ?> mb-6 print:hidden">
                 <form method="GET" class="grid grid-cols-1 gap-6 md:grid-cols-3">
