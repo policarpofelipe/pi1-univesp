@@ -19,6 +19,7 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
             'cadastrado' => ['classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700', 'texto' => 'Aplicação do produto cadastrada com sucesso.'],
             'editado' => ['classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700', 'texto' => 'Aplicação do produto atualizada com sucesso.'],
             'excluido' => ['classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700', 'texto' => 'Aplicação do produto excluída com sucesso.'],
+            'importacao' => ['classe' => 'border-emerald-200 bg-emerald-50 text-emerald-700', 'texto' => 'Importação concluída com sucesso.'],
         ],
         'erro' => [
             'metodo_invalido' => ['classe' => 'border-red-200 bg-red-50 text-red-700', 'texto' => 'Método de requisição inválido.'],
@@ -120,6 +121,7 @@ $totalAplicacoes = count($aplicacoes);
                             <p class="mt-2 text-sm text-slate-300">Gerencie a compatibilidade veicular por produto/peça específica.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
+                            <?= botao_link('importar_planilha.php?tipo=aplicacoes_produto', 'Importar planilha', 'busca') ?>
                             <?= botao_link('form_aplicacao_produto.php', 'Nova aplicação', 'salvar') ?>
                         </div>
                     </div>

@@ -73,6 +73,22 @@ function opcoes_modelos_compostos(PDO $pdo): array
 }
 
 /**
+ * @return array<int, string>
+ */
+function opcoes_skus_produtos(PDO $pdo): array
+{
+    $stmt = $pdo->query('SELECT sku_interno FROM produtos ORDER BY sku_interno ASC');
+    $itens = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $sku = trim((string)($row['sku_interno'] ?? ''));
+        if ($sku !== '') {
+            $itens[] = $sku;
+        }
+    }
+    return array_values(array_unique($itens));
+}
+
+/**
  * @return array<string, array<int, string>>
  */
 function opcoes_modelo_importacao(PDO $pdo, string $tipo): array
@@ -91,6 +107,12 @@ function opcoes_modelo_importacao(PDO $pdo, string $tipo): array
     }
     if ($tipo === 'veiculos_configuracao') {
         return ['modelo_veiculo_nome' => opcoes_modelos_compostos($pdo)];
+    }
+    if ($tipo === 'aplicacoes_produto') {
+        return [
+            'produto_sku_interno' => opcoes_skus_produtos($pdo),
+            'modelo_veiculo_nome' => opcoes_modelos_compostos($pdo),
+        ];
     }
     return [];
 }
