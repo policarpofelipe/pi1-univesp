@@ -407,6 +407,62 @@ function importacao_planilha_mapa_configuracoes_veiculo(PDO $pdo): array
 }
 
 /**
+ * @return int[]
+ */
+function importacao_planilha_buscar_configuracoes_compativeis(
+    PDO $pdo,
+    int $modeloId,
+    int $anoInicio,
+    int $anoFim,
+    string $motorizacao,
+    string $combustivel,
+    string $versao
+): array {
+    $sql = "
+        SELECT id
+        FROM veiculos_configuracao
+        WHERE modelo_veiculo_id = :modelo_veiculo_id
+          AND ano_inicio <= :ano_fim
+          AND ano_fim >= :ano_inicio
+    ";
+    $params = [
+        ':modelo_veiculo_id' => [$modeloId, PDO::PARAM_INT],
+        ':ano_inicio' => [$anoInicio, PDO::PARAM_INT],
+        ':ano_fim' => [$anoFim, PDO::PARAM_INT],
+    ];
+
+    $motorizacao = mb_strtolower(trim($motorizacao));
+    $combustivel = mb_strtolower(trim($combustivel));
+    $versao = mb_strtolower(trim($versao));
+
+    if ($motorizacao !== '') {
+        $sql .= " AND LOWER(TRIM(COALESCE(motorizacao, ''))) = :motorizacao";
+        $params[':motorizacao'] = [$motorizacao, PDO::PARAM_STR];
+    }
+    if ($combustivel !== '') {
+        $sql .= " AND LOWER(TRIM(COALESCE(combustivel, ''))) = :combustivel";
+        $params[':combustivel'] = [$combustivel, PDO::PARAM_STR];
+    }
+    if ($versao !== '') {
+        $sql .= " AND LOWER(TRIM(COALESCE(versao, ''))) = :versao";
+        $params[':versao'] = [$versao, PDO::PARAM_STR];
+    }
+
+    $sql .= " ORDER BY ano_inicio ASC, ano_fim ASC, id ASC";
+    $stmt = $pdo->prepare($sql);
+    foreach ($params as $k => [$v, $t]) {
+        $stmt->bindValue($k, $v, $t);
+    }
+    $stmt->execute();
+
+    $ids = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $ids[] = (int)$row['id'];
+    }
+    return $ids;
+}
+
+/**
  * @return array<string, true>
  */
 function importacao_planilha_nomes_existentes_no_banco(PDO $pdo, string $tipo): array
@@ -518,7 +574,6 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
     $mapaMarcasVeiculo = in_array($tipo, ['modelos_veiculo'], true) ? importacao_planilha_mapa_nomes_para_ids($pdo, 'marcas_veiculo') : [];
     $mapaModelosCompostos = in_array($tipo, ['veiculos_configuracao', 'aplicacoes_produto'], true) ? importacao_planilha_mapa_modelos_compostos($pdo) : [];
     $mapaProdutosSku = in_array($tipo, ['aplicacoes_produto'], true) ? importacao_planilha_mapa_produtos_por_sku($pdo) : [];
-    $mapaConfiguracoes = in_array($tipo, ['aplicacoes_produto'], true) ? importacao_planilha_mapa_configuracoes_veiculo($pdo) : [];
 
     $out = [];
     foreach ($linhas as $numLinha => $dados) {
@@ -838,25 +893,36 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
                 && ctype_digit($anoFim)
             ) {
                 $modeloId = $mapaModelosCompostos[$modeloCompKey];
-                $chaveConfig = $modeloId . '|'
-                    . (int)$anoInicio . '|'
-                    . (int)$anoFim . '|'
-                    . mb_strtolower($mot) . '|'
-                    . mb_strtolower($comb) . '|'
-                    . mb_strtolower($ver);
-                if (!isset($mapaConfiguracoes[$chaveConfig])) {
+                $produtoId = $mapaProdutosSku[mb_strtolower($sku)];
+
+                $configIdsCompativeis = importacao_planilha_buscar_configuracoes_compativeis(
+                    $pdo,
+                    $modeloId,
+                    (int)$anoInicio,
+                    (int)$anoFim,
+                    $mot,
+                    $comb,
+                    $ver
+                );
+
+                if ($configIdsCompativeis === []) {
                     $erros[] = 'Configuração veicular não encontrada para os dados informados.';
                 } else {
-                    $produtoId = $mapaProdutosSku[mb_strtolower($sku)];
-                    $configId = $mapaConfiguracoes[$chaveConfig];
-                    $chaveDup = $produtoId . '|' . $configId;
-
-                    if (isset($vistos[$chaveDup])) {
-                        $erros[] = 'Aplicação repetida na planilha (linha ' . $vistos[$chaveDup] . ').';
-                    } else {
+                    $temNovaAplicacao = false;
+                    foreach ($configIdsCompativeis as $configId) {
+                        $chaveDup = $produtoId . '|' . $configId;
+                        if (isset($vistos[$chaveDup])) {
+                            $erros[] = 'Aplicação repetida na planilha (linha ' . $vistos[$chaveDup] . ').';
+                            continue;
+                        }
                         $vistos[$chaveDup] = $numLinha;
+
+                        if (!isset($existentes[$chaveDup])) {
+                            $temNovaAplicacao = true;
+                        }
                     }
-                    if (isset($existentes[$chaveDup])) {
+
+                    if (!$temNovaAplicacao) {
                         $erros[] = 'Esta aplicação já existe no cadastro.';
                     }
                 }
@@ -885,7 +951,6 @@ function importacao_planilha_gravar(PDO $pdo, string $tipo, array $validadas): i
     $marcasVeiculo = $tipo === 'modelos_veiculo' ? importacao_planilha_mapa_nomes_para_ids($pdo, 'marcas_veiculo') : [];
     $modelosCompostos = in_array($tipo, ['veiculos_configuracao', 'aplicacoes_produto'], true) ? importacao_planilha_mapa_modelos_compostos($pdo) : [];
     $produtosSku = $tipo === 'aplicacoes_produto' ? importacao_planilha_mapa_produtos_por_sku($pdo) : [];
-    $configuracoes = $tipo === 'aplicacoes_produto' ? importacao_planilha_mapa_configuracoes_veiculo($pdo) : [];
 
     $pdo->beginTransaction();
     try {
@@ -992,26 +1057,54 @@ function importacao_planilha_gravar(PDO $pdo, string $tipo, array $validadas): i
 
                 $produtoId = $produtosSku[$sku] ?? 0;
                 $modeloId = $modelosCompostos[$modeloComp] ?? 0;
-                $configKey = $modeloId . '|' . $anoInicio . '|' . $anoFim . '|' . $mot . '|' . $comb . '|' . $ver;
-                $configId = $configuracoes[$configKey] ?? 0;
 
-                if ($produtoId <= 0 || $configId <= 0) {
+                if ($produtoId <= 0 || $modeloId <= 0 || $anoInicio <= 0 || $anoFim <= 0) {
                     continue;
                 }
 
-                $st = $pdo->prepare('
-                    INSERT INTO aplicacoes_produto
-                    (produto_id, veiculo_configuracao_id, observacao, ativo, criado_em, atualizado_em)
-                    VALUES (:produto_id, :veiculo_configuracao_id, :observacao, :ativo, NOW(), NOW())
-                ');
-                $st->bindValue(':produto_id', $produtoId, PDO::PARAM_INT);
-                $st->bindValue(':veiculo_configuracao_id', $configId, PDO::PARAM_INT);
-                $obs = ($d['observacao'] ?? '') !== '' ? $d['observacao'] : null;
-                $st->bindValue(':observacao', $obs, $obs !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+                $configIdsCompativeis = importacao_planilha_buscar_configuracoes_compativeis(
+                    $pdo,
+                    $modeloId,
+                    $anoInicio,
+                    $anoFim,
+                    $mot,
+                    $comb,
+                    $ver
+                );
+                if ($configIdsCompativeis === []) {
+                    continue;
+                }
+
                 $ativo = ((string)($d['ativo'] ?? '1')) === '0' ? 0 : 1;
-                $st->bindValue(':ativo', $ativo, PDO::PARAM_INT);
-                $st->execute();
-                $inseridos++;
+                $obs = ($d['observacao'] ?? '') !== '' ? $d['observacao'] : null;
+
+                foreach ($configIdsCompativeis as $configId) {
+                    $stExiste = $pdo->prepare('
+                        SELECT id
+                        FROM aplicacoes_produto
+                        WHERE produto_id = :produto_id
+                          AND veiculo_configuracao_id = :veiculo_configuracao_id
+                        LIMIT 1
+                    ');
+                    $stExiste->bindValue(':produto_id', $produtoId, PDO::PARAM_INT);
+                    $stExiste->bindValue(':veiculo_configuracao_id', $configId, PDO::PARAM_INT);
+                    $stExiste->execute();
+                    if ($stExiste->fetch(PDO::FETCH_ASSOC)) {
+                        continue;
+                    }
+
+                    $st = $pdo->prepare('
+                        INSERT INTO aplicacoes_produto
+                        (produto_id, veiculo_configuracao_id, observacao, ativo, criado_em, atualizado_em)
+                        VALUES (:produto_id, :veiculo_configuracao_id, :observacao, :ativo, NOW(), NOW())
+                    ');
+                    $st->bindValue(':produto_id', $produtoId, PDO::PARAM_INT);
+                    $st->bindValue(':veiculo_configuracao_id', $configId, PDO::PARAM_INT);
+                    $st->bindValue(':observacao', $obs, $obs !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+                    $st->bindValue(':ativo', $ativo, PDO::PARAM_INT);
+                    $st->execute();
+                    $inseridos++;
+                }
             }
         }
         $pdo->commit();
