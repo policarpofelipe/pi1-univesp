@@ -335,12 +335,34 @@ function importacao_planilha_mapa_modelos_compostos(PDO $pdo): array
     ");
     $mapa = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $composto = mb_strtolower(trim((string)$row['marca_nome']) . ' / ' . trim((string)$row['modelo_nome']));
+        $composto = importacao_planilha_normalizar_modelo_composto(
+            trim((string)$row['marca_nome']) . ' / ' . trim((string)$row['modelo_nome'])
+        );
         if ($composto !== '') {
             $mapa[$composto] = (int)$row['id'];
         }
     }
     return $mapa;
+}
+
+function importacao_planilha_normalizar_modelo_composto(string $valor): string
+{
+    $valor = trim($valor);
+    if ($valor === '') {
+        return '';
+    }
+
+    // Aceita "Marca/Modelo", "Marca / Modelo" e variações de espaçamento.
+    if (strpos($valor, '/') !== false) {
+        [$marca, $modelo] = array_pad(explode('/', $valor, 2), 2, '');
+        $marca = trim($marca);
+        $modelo = trim($modelo);
+        if ($marca !== '' && $modelo !== '') {
+            return mb_strtolower($marca . ' / ' . $modelo);
+        }
+    }
+
+    return mb_strtolower($valor);
 }
 
 /**
@@ -600,6 +622,7 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
 
         if ($tipo === 'veiculos_configuracao') {
             $modeloComp = trim((string)($dados['modelo_veiculo_nome'] ?? ''));
+            $modeloCompKey = importacao_planilha_normalizar_modelo_composto($modeloComp);
             $anoInicio = trim((string)($dados['ano_inicio'] ?? ''));
             $anoFim = trim((string)($dados['ano_fim'] ?? ''));
             $mot = trim((string)($dados['motorizacao'] ?? ''));
@@ -609,7 +632,7 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
 
             if ($modeloComp === '') {
                 $erros[] = 'Modelo é obrigatório.';
-            } elseif (!isset($mapaModelosCompostos[mb_strtolower($modeloComp)])) {
+            } elseif (!isset($mapaModelosCompostos[$modeloCompKey])) {
                 $erros[] = 'Modelo não encontrado (use um valor da lista).';
             }
 
@@ -810,11 +833,11 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
                 $sku !== ''
                 && isset($mapaProdutosSku[mb_strtolower($sku)])
                 && $modeloComp !== ''
-                && isset($mapaModelosCompostos[mb_strtolower($modeloComp)])
+                && isset($mapaModelosCompostos[$modeloCompKey])
                 && ctype_digit($anoInicio)
                 && ctype_digit($anoFim)
             ) {
-                $modeloId = $mapaModelosCompostos[mb_strtolower($modeloComp)];
+                $modeloId = $mapaModelosCompostos[$modeloCompKey];
                 $chaveConfig = $modeloId . '|'
                     . (int)$anoInicio . '|'
                     . (int)$anoFim . '|'
@@ -960,7 +983,7 @@ function importacao_planilha_gravar(PDO $pdo, string $tipo, array $validadas): i
                 $inseridos++;
             } elseif ($tipo === 'aplicacoes_produto') {
                 $sku = mb_strtolower(trim((string)$d['produto_sku_interno']));
-                $modeloComp = mb_strtolower(trim((string)$d['modelo_veiculo_nome']));
+                $modeloComp = importacao_planilha_normalizar_modelo_composto((string)$d['modelo_veiculo_nome']);
                 $mot = mb_strtolower(trim((string)($d['motorizacao'] ?? '')));
                 $comb = mb_strtolower(trim((string)($d['combustivel'] ?? '')));
                 $ver = mb_strtolower(trim((string)($d['versao'] ?? '')));
