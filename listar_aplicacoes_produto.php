@@ -26,6 +26,7 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
             'id_invalido' => ['classe' => 'border-red-200 bg-red-50 text-red-700', 'texto' => 'ID inválido para a operação solicitada.'],
             'registro_nao_encontrado' => ['classe' => 'border-red-200 bg-red-50 text-red-700', 'texto' => 'Registro não encontrado.'],
             'erro_ao_excluir' => ['classe' => 'border-red-200 bg-red-50 text-red-700', 'texto' => 'Ocorreu um erro ao excluir a aplicação.'],
+            'importacao_sem_insercoes' => ['classe' => 'border-amber-200 bg-amber-50 text-amber-800', 'texto' => 'Nenhuma aplicação foi importada. Verifique se os produtos e configurações veiculares informados na planilha já existem no sistema.'],
         ],
     ];
 
@@ -39,12 +40,56 @@ function mensagemRetorno(?string $tipo, ?string $codigo): ?array
 $busca = trim((string)($_GET['busca'] ?? ''));
 $sucesso = trim((string)($_GET['sucesso'] ?? ''));
 $erro = trim((string)($_GET['erro'] ?? ''));
+$nImportados = max(0, (int)($_GET['n'] ?? 0));
+$linhasLidas = max(0, (int)($_GET['linhas_lidas'] ?? 0));
+$linhasValidas = max(0, (int)($_GET['linhas_validas'] ?? 0));
+$linhasIgnoradas = max(0, (int)($_GET['ignorados'] ?? 0));
+$linhasDuplicadas = max(0, (int)($_GET['duplicados'] ?? 0));
+$produtoNaoEncontrado = max(0, (int)($_GET['produto_nao_encontrado'] ?? 0));
+$configNaoEncontrada = max(0, (int)($_GET['config_nao_encontrada'] ?? 0));
+$linhasProdutoNaoEncontrado = trim((string)($_GET['linhas_produto_nao_encontrado'] ?? ''));
+$linhasConfigNaoEncontrada = trim((string)($_GET['linhas_config_nao_encontrada'] ?? ''));
+$linhasDuplicadasLista = trim((string)($_GET['linhas_duplicadas'] ?? ''));
 
 $retorno = null;
 if ($sucesso !== '') {
     $retorno = mensagemRetorno('sucesso', $sucesso);
 } elseif ($erro !== '') {
     $retorno = mensagemRetorno('erro', $erro);
+}
+
+$resumoImportacao = [];
+if ($sucesso === 'importacao' || $erro === 'importacao_sem_insercoes') {
+    if ($sucesso === 'importacao') {
+        $resumoImportacao[] = 'Importação concluída. ' . $nImportados . ' aplicação(ões) importada(s) com sucesso.';
+    }
+    if ($linhasLidas > 0) {
+        $resumoImportacao[] = 'Total de linhas lidas: ' . $linhasLidas . '.';
+    }
+    if ($linhasValidas > 0) {
+        $resumoImportacao[] = 'Total de linhas válidas: ' . $linhasValidas . '.';
+    }
+    if ($linhasIgnoradas > 0) {
+        $resumoImportacao[] = 'Linhas ignoradas: ' . $linhasIgnoradas . '.';
+    }
+    if ($linhasDuplicadas > 0) {
+        $resumoImportacao[] = 'Aplicações já existentes/duplicadas: ' . $linhasDuplicadas . '.';
+        if ($linhasDuplicadasLista !== '') {
+            $resumoImportacao[] = 'Linhas duplicadas: ' . $linhasDuplicadasLista . '.';
+        }
+    }
+    if ($produtoNaoEncontrado > 0) {
+        $resumoImportacao[] = 'Produto não encontrado: ' . $produtoNaoEncontrado . '.';
+        if ($linhasProdutoNaoEncontrado !== '') {
+            $resumoImportacao[] = 'Produto não encontrado nas linhas: ' . $linhasProdutoNaoEncontrado . '.';
+        }
+    }
+    if ($configNaoEncontrada > 0) {
+        $resumoImportacao[] = 'Configuração veicular não encontrada: ' . $configNaoEncontrada . '.';
+        if ($linhasConfigNaoEncontrada !== '') {
+            $resumoImportacao[] = 'Configuração veicular não encontrada nas linhas: ' . $linhasConfigNaoEncontrada . '.';
+        }
+    }
 }
 
 $sql = "
@@ -131,6 +176,13 @@ $totalAplicacoes = count($aplicacoes);
             <?php if ($retorno): ?>
                 <div class="mb-6 rounded-xl border px-4 py-3 text-sm <?= esc($retorno['classe']) ?>">
                     <?= esc($retorno['texto']) ?>
+                    <?php if ($resumoImportacao !== []): ?>
+                        <ul class="mt-2 list-disc pl-5 space-y-1">
+                            <?php foreach ($resumoImportacao as $linhaResumo): ?>
+                                <li><?= esc($linhaResumo) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
 

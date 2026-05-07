@@ -113,9 +113,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $erroFlash = 'Não há linhas válidas para importar. Corrija a planilha e envie novamente.';
             } else {
                 try {
-                    $n = importacao_planilha_gravar($pdo, $tipo, $validadas);
+                    $n = 0;
                     unset($_SESSION[$chaveSessao]);
                     $volta = $config['volta_lista'];
+
+                    if ($tipo === 'aplicacoes_produto') {
+                        $resumo = importacao_planilha_gravar_aplicacoes_produto_detalhado($pdo, $validadas);
+                        $n = (int)$resumo['inseridos'];
+
+                        $qs = http_build_query([
+                            'linhas_lidas' => (int)$resumo['linhas_lidas'],
+                            'linhas_validas' => (int)$resumo['linhas_validas'],
+                            'inseridos' => (int)$resumo['inseridos'],
+                            'ignorados' => (int)$resumo['ignorados'],
+                            'duplicados' => (int)$resumo['duplicados'],
+                            'produto_nao_encontrado' => (int)$resumo['produto_nao_encontrado'],
+                            'config_nao_encontrada' => (int)$resumo['config_nao_encontrada'],
+                            'linhas_produto_nao_encontrado' => (string)$resumo['linhas_produto_nao_encontrado'],
+                            'linhas_config_nao_encontrada' => (string)$resumo['linhas_config_nao_encontrada'],
+                            'linhas_duplicadas' => (string)$resumo['linhas_duplicadas'],
+                        ]);
+
+                        if ($n > 0) {
+                            header('Location: ' . $volta . '?sucesso=importacao&n=' . $n . '&' . $qs);
+                        } else {
+                            header('Location: ' . $volta . '?erro=importacao_sem_insercoes&' . $qs);
+                        }
+                        exit;
+                    }
+
+                    $n = importacao_planilha_gravar($pdo, $tipo, $validadas);
                     header('Location: ' . $volta . '?sucesso=importacao&n=' . $n);
                     exit;
                 } catch (Throwable $e) {

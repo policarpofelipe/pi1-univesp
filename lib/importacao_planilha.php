@@ -463,6 +463,24 @@ function importacao_planilha_buscar_configuracoes_compativeis(
 }
 
 /**
+ * @param int[] $linhas
+ */
+function importacao_planilha_limitar_linhas_mensagem(array $linhas, int $max = 50): string
+{
+    if ($linhas === []) {
+        return '';
+    }
+    $linhas = array_values(array_unique(array_map('intval', $linhas)));
+    sort($linhas);
+    $excedeu = count($linhas) > $max;
+    if ($excedeu) {
+        $linhas = array_slice($linhas, 0, $max);
+    }
+    $texto = implode(',', $linhas);
+    return $excedeu ? ($texto . ',...') : $texto;
+}
+
+/**
  * @return array<string, true>
  */
 function importacao_planilha_nomes_existentes_no_banco(PDO $pdo, string $tipo): array
@@ -716,8 +734,8 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
                 $erros[] = 'Observações ultrapassam ' . $lim['observacoes'] . ' caracteres.';
             }
 
-            if ($modeloComp !== '' && ctype_digit($anoInicio) && ctype_digit($anoFim) && isset($mapaModelosCompostos[mb_strtolower($modeloComp)])) {
-                $dup = $mapaModelosCompostos[mb_strtolower($modeloComp)]
+            if ($modeloComp !== '' && ctype_digit($anoInicio) && ctype_digit($anoFim) && isset($mapaModelosCompostos[$modeloCompKey])) {
+                $dup = $mapaModelosCompostos[$modeloCompKey]
                     . '|' . (int)$anoInicio
                     . '|' . (int)$anoFim
                     . '|' . mb_strtolower($mot)
@@ -833,6 +851,7 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
         if ($tipo === 'aplicacoes_produto') {
             $sku = trim((string)($dados['produto_sku_interno'] ?? ''));
             $modeloComp = trim((string)($dados['modelo_veiculo_nome'] ?? ''));
+            $modeloCompKey = importacao_planilha_normalizar_modelo_composto($modeloComp);
             $anoInicio = trim((string)($dados['ano_inicio'] ?? ''));
             $anoFim = trim((string)($dados['ano_fim'] ?? ''));
             $mot = trim((string)($dados['motorizacao'] ?? ''));
@@ -851,7 +870,7 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
 
             if ($modeloComp === '') {
                 $erros[] = 'Modelo do veículo é obrigatório.';
-            } elseif (!isset($mapaModelosCompostos[mb_strtolower($modeloComp)])) {
+            } elseif (!isset($mapaModelosCompostos[$modeloCompKey])) {
                 $erros[] = 'Modelo não encontrado (use um valor da lista).';
             }
 
@@ -937,6 +956,166 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
         ];
     }
     return $out;
+}
+
+/**
+ * @param array<int, array{linha:int,dados:array<string,string>,importavel:bool,erros:string[]}> $validadas
+ * @return array{
+ *   linhas_lidas:int,
+ *   linhas_validas:int,
+ *   inseridos:int,
+ *   ignorados:int,
+ *   duplicados:int,
+ *   produto_nao_encontrado:int,
+ *   config_nao_encontrada:int,
+ *   linhas_produto_nao_encontrado:string,
+ *   linhas_config_nao_encontrada:string,
+ *   linhas_duplicadas:string
+ * }
+ */
+function importacao_planilha_gravar_aplicacoes_produto_detalhado(PDO $pdo, array $validadas): array
+{
+    $linhasLidas = count($validadas);
+    $linhasValidas = 0;
+    $inseridos = 0;
+    $ignorados = 0;
+    $duplicados = 0;
+    $produtoNaoEncontrado = 0;
+    $configNaoEncontrada = 0;
+    $linhasProduto = [];
+    $linhasConfig = [];
+    $linhasDuplicadas = [];
+
+    $modelosCompostos = importacao_planilha_mapa_modelos_compostos($pdo);
+    $produtosSku = importacao_planilha_mapa_produtos_por_sku($pdo);
+
+    foreach ($validadas as $item) {
+        if (!empty($item['importavel'])) {
+            $linhasValidas++;
+            continue;
+        }
+        $linha = (int)($item['linha'] ?? 0);
+        $erros = array_map(static fn($e) => mb_strtolower((string)$e), (array)($item['erros'] ?? []));
+        if (array_filter($erros, static fn($e) => strpos($e, 'produto') !== false && strpos($e, 'não encontrado') !== false)) {
+            $produtoNaoEncontrado++;
+            if ($linha > 0) { $linhasProduto[] = $linha; }
+        }
+        if (array_filter($erros, static fn($e) => strpos($e, 'configuração veicular não encontrada') !== false)) {
+            $configNaoEncontrada++;
+            if ($linha > 0) { $linhasConfig[] = $linha; }
+        }
+        if (array_filter($erros, static fn($e) => strpos($e, 'já existe') !== false || strpos($e, 'repetida') !== false)) {
+            $duplicados++;
+            if ($linha > 0) { $linhasDuplicadas[] = $linha; }
+        }
+    }
+
+    $pdo->beginTransaction();
+    try {
+        foreach ($validadas as $item) {
+            if (!$item['importavel']) {
+                $ignorados++;
+                continue;
+            }
+            $linha = (int)$item['linha'];
+            $d = $item['dados'];
+
+            $sku = mb_strtolower(trim((string)$d['produto_sku_interno']));
+            $modeloComp = importacao_planilha_normalizar_modelo_composto((string)$d['modelo_veiculo_nome']);
+            $mot = mb_strtolower(trim((string)($d['motorizacao'] ?? '')));
+            $comb = mb_strtolower(trim((string)($d['combustivel'] ?? '')));
+            $ver = mb_strtolower(trim((string)($d['versao'] ?? '')));
+            $anoInicio = (int)($d['ano_inicio'] ?? 0);
+            $anoFim = (int)($d['ano_fim'] ?? 0);
+
+            $produtoId = $produtosSku[$sku] ?? 0;
+            $modeloId = $modelosCompostos[$modeloComp] ?? 0;
+            if ($produtoId <= 0) {
+                $produtoNaoEncontrado++;
+                $linhasProduto[] = $linha;
+                $ignorados++;
+                continue;
+            }
+            if ($modeloId <= 0 || $anoInicio <= 0 || $anoFim <= 0) {
+                $configNaoEncontrada++;
+                $linhasConfig[] = $linha;
+                $ignorados++;
+                continue;
+            }
+
+            $configIds = importacao_planilha_buscar_configuracoes_compativeis(
+                $pdo,
+                $modeloId,
+                $anoInicio,
+                $anoFim,
+                $mot,
+                $comb,
+                $ver
+            );
+            if ($configIds === []) {
+                $configNaoEncontrada++;
+                $linhasConfig[] = $linha;
+                $ignorados++;
+                continue;
+            }
+
+            $ativo = ((string)($d['ativo'] ?? '1')) === '0' ? 0 : 1;
+            $obs = ($d['observacao'] ?? '') !== '' ? $d['observacao'] : null;
+            $inseriuNestaLinha = false;
+
+            foreach ($configIds as $configId) {
+                $stExiste = $pdo->prepare('
+                    SELECT id
+                    FROM aplicacoes_produto
+                    WHERE produto_id = :produto_id
+                      AND veiculo_configuracao_id = :veiculo_configuracao_id
+                    LIMIT 1
+                ');
+                $stExiste->bindValue(':produto_id', $produtoId, PDO::PARAM_INT);
+                $stExiste->bindValue(':veiculo_configuracao_id', $configId, PDO::PARAM_INT);
+                $stExiste->execute();
+                if ($stExiste->fetch(PDO::FETCH_ASSOC)) {
+                    continue;
+                }
+
+                $st = $pdo->prepare('
+                    INSERT INTO aplicacoes_produto
+                    (produto_id, veiculo_configuracao_id, observacao, ativo, criado_em, atualizado_em)
+                    VALUES (:produto_id, :veiculo_configuracao_id, :observacao, :ativo, NOW(), NOW())
+                ');
+                $st->bindValue(':produto_id', $produtoId, PDO::PARAM_INT);
+                $st->bindValue(':veiculo_configuracao_id', $configId, PDO::PARAM_INT);
+                $st->bindValue(':observacao', $obs, $obs !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+                $st->bindValue(':ativo', $ativo, PDO::PARAM_INT);
+                $st->execute();
+                $inseridos++;
+                $inseriuNestaLinha = true;
+            }
+
+            if (!$inseriuNestaLinha) {
+                $duplicados++;
+                $linhasDuplicadas[] = $linha;
+                $ignorados++;
+            }
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+
+    return [
+        'linhas_lidas' => $linhasLidas,
+        'linhas_validas' => $linhasValidas,
+        'inseridos' => $inseridos,
+        'ignorados' => $ignorados,
+        'duplicados' => $duplicados,
+        'produto_nao_encontrado' => $produtoNaoEncontrado,
+        'config_nao_encontrada' => $configNaoEncontrada,
+        'linhas_produto_nao_encontrado' => importacao_planilha_limitar_linhas_mensagem($linhasProduto),
+        'linhas_config_nao_encontrada' => importacao_planilha_limitar_linhas_mensagem($linhasConfig),
+        'linhas_duplicadas' => importacao_planilha_limitar_linhas_mensagem($linhasDuplicadas),
+    ];
 }
 
 /**
