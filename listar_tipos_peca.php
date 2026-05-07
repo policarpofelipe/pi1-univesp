@@ -148,7 +148,6 @@ $totalTipos = count($tipos);
                         </div>
 
                         <div class="flex flex-wrap gap-2">
-                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('importar_planilha.php?tipo=tipos_peca', 'Importar planilha', 'busca') ?>
                     <?= botao_link('form_tipo_peca.php', 'Novo tipo de peça', 'salvar') ?>
                         </div>

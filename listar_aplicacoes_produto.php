@@ -120,7 +120,6 @@ $totalAplicacoes = count($aplicacoes);
                             <p class="mt-2 text-sm text-slate-300">Gerencie a compatibilidade veicular por produto/peça específica.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                             <?= botao_link('form_aplicacao_produto.php', 'Nova aplicação', 'salvar') ?>
                         </div>
                     </div>

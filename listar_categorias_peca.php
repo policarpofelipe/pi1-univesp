@@ -141,7 +141,6 @@ $totalCategorias = count($categorias);
                         </div>
 
                         <div class="flex flex-wrap gap-2">
-                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('importar_planilha.php?tipo=categorias_peca', 'Importar planilha', 'busca') ?>
                     <?= botao_link('form_categoria_peca.php', 'Nova categoria', 'salvar') ?>
                         </div>

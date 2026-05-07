@@ -138,7 +138,6 @@ $totalUsuarios = count($usuarios);
                         </div>
 
                         <div class="flex flex-wrap gap-2">
-                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('form_usuario.php', 'Novo usuário', 'salvar') ?>
                         </div>
                     </div>

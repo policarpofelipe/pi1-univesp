@@ -170,7 +170,6 @@ $totalProdutos = count($produtos);
                         </div>
 
                         <div class="flex flex-wrap gap-2">
-                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('importar_planilha.php?tipo=produtos', 'Importar planilha', 'busca') ?>
                     <?= botao_link('form_produto.php', 'Novo produto', 'salvar') ?>
                         </div>

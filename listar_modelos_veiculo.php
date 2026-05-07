@@ -146,7 +146,6 @@ $totalModelos = count($modelos);
                         </div>
 
                         <div class="flex flex-wrap gap-2">
-                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('importar_planilha.php?tipo=modelos_veiculo', 'Importar planilha', 'busca') ?>
                     <?= botao_link('form_modelo_veiculo.php', 'Novo modelo', 'salvar') ?>
                         </div>

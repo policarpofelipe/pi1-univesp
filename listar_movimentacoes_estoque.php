@@ -161,7 +161,6 @@ $totalMovimentacoes = count($movimentacoes);
                         </div>
 
                         <div class="flex flex-wrap gap-2">
-                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('form_movimentacao_estoque.php', 'Nova movimentação', 'salvar') ?>
                         </div>
                     </div>

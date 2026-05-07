@@ -140,7 +140,6 @@ $totalMarcas = count($marcas);
                         </div>
 
                         <div class="flex flex-wrap gap-2">
-                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('importar_planilha.php?tipo=marcas_produto', 'Importar planilha', 'busca') ?>
                     <?= botao_link('form_marca_produto.php', 'Nova marca', 'salvar') ?>
                         </div>

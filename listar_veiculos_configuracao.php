@@ -157,7 +157,6 @@ $totalConfiguracoes = count($configuracoes);
                         </div>
 
                         <div class="flex flex-wrap gap-2">
-                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
                     <?= botao_link('importar_planilha.php?tipo=veiculos_configuracao', 'Importar planilha', 'busca') ?>
                     <?= botao_link('form_veiculo_configuracao.php', 'Nova configuração', 'salvar') ?>
                         </div>
