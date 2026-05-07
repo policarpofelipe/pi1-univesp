@@ -142,7 +142,7 @@ try {
             <?php endif; ?>
 
             <div class="<?= classe_box() ?>">
-                <form action="salvar_config_empresa.php" method="POST" class="space-y-6">
+                <form id="form-config-empresa" action="salvar_config_empresa.php" method="POST" class="space-y-6">
                     <input type="hidden" name="id" value="<?= (int)$dados['id'] ?>">
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -269,19 +269,79 @@ try {
                     </div>
 
                     <div class="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row">
-                        <?= botao_submit('Salvar configuração', 'salvar') ?>
-                        <?= botao_link('painel.php', 'Cancelar', 'cancelar') ?>
+                        <button
+                            type="button"
+                            id="btn-editar-config"
+                            class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                            Editar
+                        </button>
+                        <button
+                            type="submit"
+                            id="btn-salvar-config"
+                            class="hidden inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                        >
+                            Salvar configuração
+                        </button>
+                        <button
+                            type="button"
+                            id="btn-cancelar-edicao-config"
+                            class="hidden inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                            Cancelar
+                        </button>
                     </div>
                 </form>
-            </div>
-
-            <div class="mt-6 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
-                <strong class="text-slate-800">Observação:</strong>
-                esta tela não é um cadastro mercantil genérico de empresas; ela representa a identidade institucional do sistema. Em termos arquitetônicos, é configuração, não coleção.
             </div>
         </div>
     </main>
 </div>
+
+<script>
+(() => {
+    const form = document.getElementById('form-config-empresa');
+    const btnEditar = document.getElementById('btn-editar-config');
+    const btnSalvar = document.getElementById('btn-salvar-config');
+    const btnCancelar = document.getElementById('btn-cancelar-edicao-config');
+
+    if (!form || !btnEditar || !btnSalvar || !btnCancelar) {
+        return;
+    }
+
+    const fields = Array.from(form.querySelectorAll('input, textarea, select'))
+        .filter((el) => el.name !== 'id');
+
+    const initialValues = new Map();
+    fields.forEach((field) => {
+        initialValues.set(field.name, field.value);
+    });
+
+    const setEditingMode = (editing) => {
+        fields.forEach((field) => {
+            field.disabled = !editing;
+        });
+        btnEditar.classList.toggle('hidden', editing);
+        btnSalvar.classList.toggle('hidden', !editing);
+        btnCancelar.classList.toggle('hidden', !editing);
+    };
+
+    btnEditar.addEventListener('click', () => {
+        setEditingMode(true);
+    });
+
+    btnCancelar.addEventListener('click', () => {
+        fields.forEach((field) => {
+            const originalValue = initialValues.get(field.name);
+            if (typeof originalValue === 'string') {
+                field.value = originalValue;
+            }
+        });
+        setEditingMode(false);
+    });
+
+    setEditingMode(false);
+})();
+</script>
 
 </body>
 </html>
