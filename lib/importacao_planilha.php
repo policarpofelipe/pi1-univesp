@@ -76,6 +76,10 @@ function importacao_planilha_tipos(): array
                 'custo',
                 'preco',
                 'estoque_minimo',
+                'estoque_nome',
+                'estoque_localizacao',
+                'quantidade_inicial',
+                'observacao_estoque',
             ],
             'limites' => [
                 'tipo_peca_nome' => 150,
@@ -85,6 +89,9 @@ function importacao_planilha_tipos(): array
                 'codigo_barras' => 50,
                 'nome_comercial' => 180,
                 'descricao' => 65535,
+                'estoque_nome' => 100,
+                'estoque_localizacao' => 150,
+                'observacao_estoque' => 255,
             ],
             'linhas_exemplo' => [[
                 'tipo_peca_nome' => 'Escolha da lista',
@@ -97,6 +104,10 @@ function importacao_planilha_tipos(): array
                 'custo' => '10.50',
                 'preco' => '18.90',
                 'estoque_minimo' => '5',
+                'estoque_nome' => 'Estoque principal',
+                'estoque_localizacao' => 'Corredor A, prateleira 2',
+                'quantidade_inicial' => '12',
+                'observacao_estoque' => 'saldo inicial via importação',
             ]],
         ],
         'marcas_veiculo' => [
@@ -763,6 +774,10 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
             $custo = trim((string)($dados['custo'] ?? '0'));
             $preco = trim((string)($dados['preco'] ?? '0'));
             $estoqueMinimo = trim((string)($dados['estoque_minimo'] ?? '0'));
+            $estoqueNome = trim((string)($dados['estoque_nome'] ?? ''));
+            $estoqueLocalizacao = trim((string)($dados['estoque_localizacao'] ?? ''));
+            $quantidadeInicial = trim((string)($dados['quantidade_inicial'] ?? ''));
+            $observacaoEstoque = trim((string)($dados['observacao_estoque'] ?? ''));
 
             if ($tipoNome === '' || !isset($mapaTipos[mb_strtolower($tipoNome)])) {
                 $erros[] = 'Tipo de peça inválido.';
@@ -791,6 +806,15 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
             if ($descricao !== '' && mb_strlen($descricao) > (int)$lim['descricao']) {
                 $erros[] = 'Descrição muito longa.';
             }
+            if ($estoqueNome !== '' && mb_strlen($estoqueNome) > (int)$lim['estoque_nome']) {
+                $erros[] = 'Estoque nome ultrapassa ' . $lim['estoque_nome'] . ' caracteres.';
+            }
+            if ($estoqueLocalizacao !== '' && mb_strlen($estoqueLocalizacao) > (int)$lim['estoque_localizacao']) {
+                $erros[] = 'Estoque localização ultrapassa ' . $lim['estoque_localizacao'] . ' caracteres.';
+            }
+            if ($observacaoEstoque !== '' && mb_strlen($observacaoEstoque) > (int)$lim['observacao_estoque']) {
+                $erros[] = 'Observação de estoque ultrapassa ' . $lim['observacao_estoque'] . ' caracteres.';
+            }
 
             $custoNorm = str_replace(',', '.', $custo);
             $precoNorm = str_replace(',', '.', $preco);
@@ -809,6 +833,28 @@ function importacao_planilha_validar_linhas(PDO $pdo, string $tipo, array $linha
                 $erros[] = 'Estoque mínimo deve ser inteiro >= 0.';
             } else {
                 $dados['estoque_minimo'] = (string)((int)$estoqueNorm);
+            }
+
+            $deveProcessarEstoqueInicial =
+                $quantidadeInicial !== '' ||
+                $estoqueNome !== '' ||
+                $estoqueLocalizacao !== '' ||
+                $observacaoEstoque !== '';
+
+            if ($deveProcessarEstoqueInicial) {
+                if ($estoqueNome === '') {
+                    $erros[] = 'Estoque nome é obrigatório quando houver estoque inicial.';
+                }
+                if ($quantidadeInicial === '') {
+                    $erros[] = 'Quantidade inicial é obrigatória quando houver estoque inicial.';
+                } else {
+                    $qtdNorm = str_replace(',', '.', $quantidadeInicial);
+                    if (!is_numeric($qtdNorm) || (float)$qtdNorm <= 0) {
+                        $erros[] = 'Quantidade inicial deve ser numérica e maior que zero.';
+                    } else {
+                        $dados['quantidade_inicial'] = number_format((float)$qtdNorm, 2, '.', '');
+                    }
+                }
             }
 
             $skuKey = mb_strtolower($sku);
@@ -1190,6 +1236,78 @@ function importacao_planilha_gravar(PDO $pdo, string $tipo, array $validadas): i
                 $st->bindValue(':preco', $d['preco'] ?? '0.00', PDO::PARAM_STR);
                 $st->bindValue(':estoque_minimo', (int)($d['estoque_minimo'] ?? 0), PDO::PARAM_INT);
                 $st->execute();
+                $produtoId = (int)$pdo->lastInsertId();
+
+                $estoqueNome = trim((string)($d['estoque_nome'] ?? ''));
+                $estoqueLocalizacao = trim((string)($d['estoque_localizacao'] ?? ''));
+                $quantidadeInicial = trim((string)($d['quantidade_inicial'] ?? ''));
+                $observacaoEstoque = trim((string)($d['observacao_estoque'] ?? ''));
+
+                $deveProcessarEstoqueInicial =
+                    $quantidadeInicial !== '' ||
+                    $estoqueNome !== '' ||
+                    $estoqueLocalizacao !== '' ||
+                    $observacaoEstoque !== '';
+
+                if ($deveProcessarEstoqueInicial && $produtoId > 0) {
+                    $estoqueId = 0;
+                    $stmtEstoque = $pdo->prepare('
+                        SELECT id
+                        FROM estoques
+                        WHERE LOWER(TRIM(nome)) = LOWER(TRIM(:nome))
+                        LIMIT 1
+                    ');
+                    $stmtEstoque->bindValue(':nome', $estoqueNome);
+                    $stmtEstoque->execute();
+                    $estoqueExistente = $stmtEstoque->fetch(PDO::FETCH_ASSOC);
+
+                    if ($estoqueExistente) {
+                        $estoqueId = (int)$estoqueExistente['id'];
+                    } else {
+                        $stmtCriarEstoque = $pdo->prepare('
+                            INSERT INTO estoques (nome, localizacao, ativo, criado_em, atualizado_em)
+                            VALUES (:nome, :localizacao, 1, NOW(), NOW())
+                        ');
+                        $stmtCriarEstoque->bindValue(':nome', $estoqueNome);
+                        $loc = $estoqueLocalizacao !== '' ? $estoqueLocalizacao : null;
+                        $stmtCriarEstoque->bindValue(':localizacao', $loc, $loc !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+                        $stmtCriarEstoque->execute();
+                        $estoqueId = (int)$pdo->lastInsertId();
+                    }
+
+                    if ($estoqueId > 0) {
+                        $prefixoObservacao = '[Importação Produtos] Estoque inicial';
+                        $obsMov = $prefixoObservacao . ($observacaoEstoque !== '' ? ' - ' . $observacaoEstoque : '');
+                        $qtd = number_format((float)str_replace(',', '.', $quantidadeInicial), 2, '.', '');
+
+                        $stmtMov = $pdo->prepare('
+                            INSERT INTO movimentacoes_estoque (
+                                produto_id,
+                                estoque_id,
+                                usuario_id,
+                                tipo_movimento,
+                                quantidade,
+                                custo_unitario,
+                                observacao,
+                                criado_em
+                            ) VALUES (
+                                :produto_id,
+                                :estoque_id,
+                                NULL,
+                                \'entrada\',
+                                :quantidade,
+                                NULL,
+                                :observacao,
+                                NOW()
+                            )
+                        ');
+                        $stmtMov->bindValue(':produto_id', $produtoId, PDO::PARAM_INT);
+                        $stmtMov->bindValue(':estoque_id', $estoqueId, PDO::PARAM_INT);
+                        $stmtMov->bindValue(':quantidade', $qtd, PDO::PARAM_STR);
+                        $stmtMov->bindValue(':observacao', $obsMov);
+                        $stmtMov->execute();
+                    }
+                }
                 $inseridos++;
             } elseif ($tipo === 'marcas_veiculo') {
                 $st = $pdo->prepare('INSERT INTO marcas_veiculo (nome, ativo, criado_em, atualizado_em) VALUES (:nome, 1, NOW(), NOW())');

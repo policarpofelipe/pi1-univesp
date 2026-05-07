@@ -100,6 +100,7 @@ function opcoes_modelo_importacao(PDO $pdo, string $tipo): array
         return [
             'tipo_peca_nome' => opcoes_lista_nome($pdo, 'tipos_peca'),
             'marca_produto_nome' => opcoes_lista_nome($pdo, 'marcas_produto'),
+            'estoque_nome' => opcoes_lista_nome($pdo, 'estoques'),
         ];
     }
     if ($tipo === 'modelos_veiculo') {
