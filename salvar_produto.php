@@ -28,8 +28,48 @@ $estoqueMinimo = (string)($_POST['estoque_minimo'] ?? '0');
 $ativo = (string)($_POST['ativo'] ?? '1');
 $ativo = ($ativo === '0') ? 0 : 1;
 
-$redirecionarForm = function (string $erro) use ($id): void {
-    header('Location: form_produto.php?erro=' . $erro . ($id > 0 ? '&id=' . $id : ''));
+$estoqueModo = (string)($_POST['estoque_modo'] ?? 'existente');
+if (!in_array($estoqueModo, ['existente', 'novo'], true)) {
+    $estoqueModo = 'existente';
+}
+$estoqueId = (int)($_POST['estoque_id'] ?? 0);
+$novoEstoqueNome = trim((string)($_POST['novo_estoque_nome'] ?? ''));
+$novaLocalizacaoEstoque = trim((string)($_POST['nova_localizacao_estoque'] ?? ''));
+$quantidadeInicialInformada = trim((string)($_POST['quantidade_inicial'] ?? ''));
+$observacaoEstoque = trim((string)($_POST['observacao_estoque'] ?? ''));
+
+$usuarioId = (int)($_SESSION['usuario_id'] ?? 0);
+
+$redirecionarForm = function (string $erro) use (
+    $id,
+    $estoqueModo,
+    $estoqueId,
+    $novoEstoqueNome,
+    $novaLocalizacaoEstoque,
+    $quantidadeInicialInformada,
+    $observacaoEstoque
+): void {
+    $params = ['erro=' . urlencode($erro)];
+    if ($id > 0) {
+        $params[] = 'id=' . $id;
+    }
+    $params[] = 'estoque_modo=' . urlencode($estoqueModo);
+    if ($estoqueId > 0) {
+        $params[] = 'estoque_id=' . $estoqueId;
+    }
+    if ($novoEstoqueNome !== '') {
+        $params[] = 'novo_estoque_nome=' . urlencode($novoEstoqueNome);
+    }
+    if ($novaLocalizacaoEstoque !== '') {
+        $params[] = 'nova_localizacao_estoque=' . urlencode($novaLocalizacaoEstoque);
+    }
+    if ($quantidadeInicialInformada !== '') {
+        $params[] = 'quantidade_inicial=' . urlencode($quantidadeInicialInformada);
+    }
+    if ($observacaoEstoque !== '') {
+        $params[] = 'observacao_estoque=' . urlencode($observacaoEstoque);
+    }
+    header('Location: form_produto.php?' . implode('&', $params));
     exit;
 };
 
@@ -85,6 +125,28 @@ if (!is_numeric($estoqueMinimo) || (int)$estoqueMinimo < 0) {
     $estoqueMinimo = '0';
 }
 
+$deveProcessarEstoqueInicial =
+    $quantidadeInicialInformada !== '' ||
+    $estoqueId > 0 ||
+    $novoEstoqueNome !== '' ||
+    $novaLocalizacaoEstoque !== '' ||
+    $observacaoEstoque !== '';
+
+$quantidadeInicial = 0.0;
+if ($deveProcessarEstoqueInicial) {
+    if ($quantidadeInicialInformada === '') {
+        $redirecionarForm('quantidade_invalida');
+    }
+    $quantidadeInicialNormalizada = str_replace(',', '.', $quantidadeInicialInformada);
+    if (!is_numeric($quantidadeInicialNormalizada)) {
+        $redirecionarForm('quantidade_invalida');
+    }
+    $quantidadeInicial = (float)$quantidadeInicialNormalizada;
+    if ($quantidadeInicial <= 0) {
+        $redirecionarForm('quantidade_invalida');
+    }
+}
+
 try {
     /*
     |--------------------------------------------------------------------------
@@ -122,6 +184,41 @@ try {
 
     if (!$stmtMarca->fetch()) {
         $redirecionarForm('marca_obrigatoria');
+    }
+
+    if ($deveProcessarEstoqueInicial) {
+        if ($estoqueModo === 'novo') {
+            if ($novoEstoqueNome === '') {
+                $redirecionarForm('estoque_obrigatorio');
+            }
+            $stmtNomeEstoque = $pdo->prepare("
+                SELECT id
+                FROM estoques
+                WHERE LOWER(TRIM(nome)) = LOWER(TRIM(:nome))
+                LIMIT 1
+            ");
+            $stmtNomeEstoque->bindValue(':nome', $novoEstoqueNome);
+            $stmtNomeEstoque->execute();
+            if ($stmtNomeEstoque->fetch()) {
+                $redirecionarForm('estoque_duplicado');
+            }
+        } else {
+            if ($estoqueId <= 0) {
+                $redirecionarForm('estoque_obrigatorio');
+            }
+            $stmtEstoque = $pdo->prepare("
+                SELECT id
+                FROM estoques
+                WHERE id = :id
+                  AND ativo = 1
+                LIMIT 1
+            ");
+            $stmtEstoque->bindValue(':id', $estoqueId, PDO::PARAM_INT);
+            $stmtEstoque->execute();
+            if (!$stmtEstoque->fetch()) {
+                $redirecionarForm('estoque_obrigatorio');
+            }
+        }
     }
 
     if ($id > 0) {
@@ -230,6 +327,88 @@ try {
         $stmtUpdate->bindValue(':ativo', $ativo, PDO::PARAM_INT);
         $stmtUpdate->bindValue(':id', $id, PDO::PARAM_INT);
         $stmtUpdate->execute();
+
+        $produtoIdFinal = $id;
+
+        if ($deveProcessarEstoqueInicial) {
+            if ($estoqueModo === 'novo') {
+                $stmtCriarEstoque = $pdo->prepare("
+                    INSERT INTO estoques (nome, localizacao, ativo, criado_em, atualizado_em)
+                    VALUES (:nome, :localizacao, 1, NOW(), NOW())
+                ");
+                $stmtCriarEstoque->bindValue(':nome', $novoEstoqueNome);
+                $stmtCriarEstoque->bindValue(
+                    ':localizacao',
+                    $novaLocalizacaoEstoque !== '' ? $novaLocalizacaoEstoque : null,
+                    $novaLocalizacaoEstoque !== '' ? PDO::PARAM_STR : PDO::PARAM_NULL
+                );
+                $stmtCriarEstoque->execute();
+                $estoqueId = (int)$pdo->lastInsertId();
+            }
+
+            $prefixoObservacao = '[Form Produto] Estoque inicial';
+            $observacaoMovimentacao = $prefixoObservacao . ($observacaoEstoque !== '' ? ' - ' . $observacaoEstoque : '');
+
+            $stmtMovExistente = $pdo->prepare("
+                SELECT id
+                FROM movimentacoes_estoque
+                WHERE produto_id = :produto_id
+                  AND tipo_movimento = 'entrada'
+                  AND observacao LIKE :prefixo
+                ORDER BY id DESC
+                LIMIT 1
+            ");
+            $stmtMovExistente->bindValue(':produto_id', $produtoIdFinal, PDO::PARAM_INT);
+            $stmtMovExistente->bindValue(':prefixo', $prefixoObservacao . '%');
+            $stmtMovExistente->execute();
+            $movExistente = $stmtMovExistente->fetch(PDO::FETCH_ASSOC);
+
+            if ($movExistente) {
+                $stmtAtualizarMov = $pdo->prepare("
+                    UPDATE movimentacoes_estoque
+                    SET estoque_id = :estoque_id,
+                        usuario_id = :usuario_id,
+                        quantidade = :quantidade,
+                        observacao = :observacao
+                    WHERE id = :id
+                    LIMIT 1
+                ");
+                $stmtAtualizarMov->bindValue(':estoque_id', $estoqueId, PDO::PARAM_INT);
+                $stmtAtualizarMov->bindValue(':usuario_id', $usuarioId > 0 ? $usuarioId : null, $usuarioId > 0 ? PDO::PARAM_INT : PDO::PARAM_NULL);
+                $stmtAtualizarMov->bindValue(':quantidade', number_format($quantidadeInicial, 2, '.', ''), PDO::PARAM_STR);
+                $stmtAtualizarMov->bindValue(':observacao', $observacaoMovimentacao);
+                $stmtAtualizarMov->bindValue(':id', (int)$movExistente['id'], PDO::PARAM_INT);
+                $stmtAtualizarMov->execute();
+            } else {
+                $stmtInserirMov = $pdo->prepare("
+                    INSERT INTO movimentacoes_estoque (
+                        produto_id,
+                        estoque_id,
+                        usuario_id,
+                        tipo_movimento,
+                        quantidade,
+                        custo_unitario,
+                        observacao,
+                        criado_em
+                    ) VALUES (
+                        :produto_id,
+                        :estoque_id,
+                        :usuario_id,
+                        'entrada',
+                        :quantidade,
+                        NULL,
+                        :observacao,
+                        NOW()
+                    )
+                ");
+                $stmtInserirMov->bindValue(':produto_id', $produtoIdFinal, PDO::PARAM_INT);
+                $stmtInserirMov->bindValue(':estoque_id', $estoqueId, PDO::PARAM_INT);
+                $stmtInserirMov->bindValue(':usuario_id', $usuarioId > 0 ? $usuarioId : null, $usuarioId > 0 ? PDO::PARAM_INT : PDO::PARAM_NULL);
+                $stmtInserirMov->bindValue(':quantidade', number_format($quantidadeInicial, 2, '.', ''), PDO::PARAM_STR);
+                $stmtInserirMov->bindValue(':observacao', $observacaoMovimentacao);
+                $stmtInserirMov->execute();
+            }
+        }
 
         header('Location: listar_produtos.php?sucesso=editado');
         exit;
@@ -346,6 +525,56 @@ try {
     $stmtInsert->bindValue(':estoque_minimo', (int)$estoqueMinimo, PDO::PARAM_INT);
     $stmtInsert->bindValue(':ativo', $ativo, PDO::PARAM_INT);
     $stmtInsert->execute();
+
+    $produtoIdFinal = (int)$pdo->lastInsertId();
+
+    if ($deveProcessarEstoqueInicial) {
+        if ($estoqueModo === 'novo') {
+            $stmtCriarEstoque = $pdo->prepare("
+                INSERT INTO estoques (nome, localizacao, ativo, criado_em, atualizado_em)
+                VALUES (:nome, :localizacao, 1, NOW(), NOW())
+            ");
+            $stmtCriarEstoque->bindValue(':nome', $novoEstoqueNome);
+            $stmtCriarEstoque->bindValue(
+                ':localizacao',
+                $novaLocalizacaoEstoque !== '' ? $novaLocalizacaoEstoque : null,
+                $novaLocalizacaoEstoque !== '' ? PDO::PARAM_STR : PDO::PARAM_NULL
+            );
+            $stmtCriarEstoque->execute();
+            $estoqueId = (int)$pdo->lastInsertId();
+        }
+
+        $prefixoObservacao = '[Form Produto] Estoque inicial';
+        $observacaoMovimentacao = $prefixoObservacao . ($observacaoEstoque !== '' ? ' - ' . $observacaoEstoque : '');
+
+        $stmtInserirMov = $pdo->prepare("
+            INSERT INTO movimentacoes_estoque (
+                produto_id,
+                estoque_id,
+                usuario_id,
+                tipo_movimento,
+                quantidade,
+                custo_unitario,
+                observacao,
+                criado_em
+            ) VALUES (
+                :produto_id,
+                :estoque_id,
+                :usuario_id,
+                'entrada',
+                :quantidade,
+                NULL,
+                :observacao,
+                NOW()
+            )
+        ");
+        $stmtInserirMov->bindValue(':produto_id', $produtoIdFinal, PDO::PARAM_INT);
+        $stmtInserirMov->bindValue(':estoque_id', $estoqueId, PDO::PARAM_INT);
+        $stmtInserirMov->bindValue(':usuario_id', $usuarioId > 0 ? $usuarioId : null, $usuarioId > 0 ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        $stmtInserirMov->bindValue(':quantidade', number_format($quantidadeInicial, 2, '.', ''), PDO::PARAM_STR);
+        $stmtInserirMov->bindValue(':observacao', $observacaoMovimentacao);
+        $stmtInserirMov->execute();
+    }
 
     header('Location: listar_produtos.php?sucesso=cadastrado');
     exit;

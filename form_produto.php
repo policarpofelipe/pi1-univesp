@@ -36,6 +36,9 @@ $mapaErros = [
     'upload_invalido'               => 'Não foi possível processar o upload. Verifique formato e tamanho do arquivo.',
     'imagem_principal_invalida'     => 'Não foi possível definir a imagem principal.',
     'imagem_exclusao_falhou'        => 'Não foi possível excluir a imagem selecionada.',
+    'estoque_obrigatorio'           => 'Selecione um local de estoque ou cadastre um novo.',
+    'estoque_duplicado'             => 'Já existe um local de estoque com esse nome.',
+    'quantidade_invalida'           => 'Informe uma quantidade inicial válida e maior que zero.',
 ];
 $mapaSucesso = [
     'imagem_cadastrada'             => 'Imagem(ns) enviada(s) com sucesso.',
@@ -114,6 +117,35 @@ foreach ($marcas as $marca) {
 
 /*
 |--------------------------------------------------------------------------
+| Carregar estoques ativos
+|--------------------------------------------------------------------------
+*/
+$stmtEstoques = $pdo->query("
+    SELECT id, nome, localizacao
+    FROM estoques
+    WHERE ativo = 1
+    ORDER BY nome ASC
+");
+$estoques = $stmtEstoques->fetchAll(PDO::FETCH_ASSOC);
+$opcoesEstoques = ['' => 'Selecione um local de estoque'];
+foreach ($estoques as $estoque) {
+    $local = trim((string)($estoque['localizacao'] ?? ''));
+    $rotulo = (string)$estoque['nome'] . ($local !== '' ? ' (' . $local . ')' : '');
+    $opcoesEstoques[(string)$estoque['id']] = $rotulo;
+}
+
+$estoqueModoForm = (string)($_GET['estoque_modo'] ?? 'existente');
+if (!in_array($estoqueModoForm, ['existente', 'novo'], true)) {
+    $estoqueModoForm = 'existente';
+}
+$estoqueIdForm = (int)($_GET['estoque_id'] ?? 0);
+$novoEstoqueNomeForm = trim((string)($_GET['novo_estoque_nome'] ?? ''));
+$novaLocalizacaoEstoqueForm = trim((string)($_GET['nova_localizacao_estoque'] ?? ''));
+$quantidadeInicialForm = trim((string)($_GET['quantidade_inicial'] ?? ''));
+$observacaoEstoqueForm = trim((string)($_GET['observacao_estoque'] ?? ''));
+
+/*
+|--------------------------------------------------------------------------
 | Carregar produto para edição
 |--------------------------------------------------------------------------
 */
@@ -162,6 +194,43 @@ if ($modoEdicao) {
             'estoque_minimo'     => (string)($produto['estoque_minimo'] ?? '0'),
             'ativo'              => (string)($produto['ativo'] ?? '1'),
         ];
+    }
+}
+
+if ($modoEdicao && $erroCodigo === '') {
+    $stmtMovInicial = $pdo->prepare("
+        SELECT
+            me.estoque_id,
+            me.quantidade,
+            me.observacao,
+            e.nome AS estoque_nome,
+            e.localizacao
+        FROM movimentacoes_estoque me
+        INNER JOIN estoques e ON e.id = me.estoque_id
+        WHERE me.produto_id = :produto_id
+          AND me.tipo_movimento = 'entrada'
+          AND me.observacao LIKE '[Form Produto] Estoque inicial%'
+        ORDER BY me.id DESC
+        LIMIT 1
+    ");
+    $stmtMovInicial->bindValue(':produto_id', (int)$dados['id'], PDO::PARAM_INT);
+    $stmtMovInicial->execute();
+    $movInicial = $stmtMovInicial->fetch(PDO::FETCH_ASSOC);
+    if ($movInicial) {
+        $estoqueModoForm = 'existente';
+        $estoqueIdForm = (int)($movInicial['estoque_id'] ?? 0);
+        $quantidadeInicialForm = number_format((float)($movInicial['quantidade'] ?? 0), 2, '.', '');
+        $obs = (string)($movInicial['observacao'] ?? '');
+        $prefixo = '[Form Produto] Estoque inicial';
+        if (str_starts_with($obs, $prefixo)) {
+            $resto = trim(substr($obs, strlen($prefixo)));
+            if (str_starts_with($resto, '-')) {
+                $resto = trim(substr($resto, 1));
+            }
+            $observacaoEstoqueForm = $resto;
+        } else {
+            $observacaoEstoqueForm = $obs;
+        }
     }
 }
 
@@ -345,6 +414,68 @@ if ($modoEdicao && (int)$dados['id'] > 0) {
                                 'id' => 'ativo',
                             ]) ?>
                         </div>
+
+                        <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <h3 class="text-base font-semibold text-slate-900">Estoque e localização inicial (opcional)</h3>
+                            <p class="mt-1 text-xs text-slate-600">
+                                Sem alterar o banco: ao salvar, o sistema registra uma movimentação de entrada inicial vinculada ao produto.
+                            </p>
+
+                            <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                    <input type="radio" name="estoque_modo" value="existente" <?= $estoqueModoForm !== 'novo' ? 'checked' : '' ?>>
+                                    Selecionar local existente
+                                </label>
+                                <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                    <input type="radio" name="estoque_modo" value="novo" <?= $estoqueModoForm === 'novo' ? 'checked' : '' ?>>
+                                    Cadastrar novo local
+                                </label>
+                            </div>
+
+                            <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div id="bloco-estoque-existente" style="<?= $estoqueModoForm === 'novo' ? 'display:none;' : '' ?>">
+                                    <label for="estoque_id" class="<?= classe_label() ?>">Local de estoque</label>
+                                    <?= select_padrao('estoque_id', $opcoesEstoques, (string)$estoqueIdForm, ['id' => 'estoque_id']) ?>
+                                </div>
+
+                                <div id="bloco-estoque-novo" style="<?= $estoqueModoForm !== 'novo' ? 'display:none;' : '' ?>">
+                                    <label for="novo_estoque_nome" class="<?= classe_label() ?>">Nome do novo local</label>
+                                    <?= input_texto('novo_estoque_nome', $novoEstoqueNomeForm, [
+                                        'id' => 'novo_estoque_nome',
+                                        'maxlength' => '100',
+                                        'placeholder' => 'Ex.: Prateleira A - Loja'
+                                    ]) ?>
+                                </div>
+
+                                <div id="bloco-localizacao-nova" style="<?= $estoqueModoForm !== 'novo' ? 'display:none;' : '' ?>">
+                                    <label for="nova_localizacao_estoque" class="<?= classe_label() ?>">Endereço interno / localização</label>
+                                    <?= input_texto('nova_localizacao_estoque', $novaLocalizacaoEstoqueForm, [
+                                        'id' => 'nova_localizacao_estoque',
+                                        'maxlength' => '150',
+                                        'placeholder' => 'Ex.: Corredor B, nível 2, box 07'
+                                    ]) ?>
+                                </div>
+
+                                <div>
+                                    <label for="quantidade_inicial" class="<?= classe_label() ?>">Quantidade inicial</label>
+                                    <?= input_numero('quantidade_inicial', $quantidadeInicialForm, [
+                                        'id' => 'quantidade_inicial',
+                                        'step' => '0.01',
+                                        'min' => '0.01',
+                                        'placeholder' => 'Preencha para registrar o estoque inicial'
+                                    ]) ?>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label for="observacao_estoque" class="<?= classe_label() ?>">Observação da movimentação inicial</label>
+                                    <?= textarea_padrao('observacao_estoque', $observacaoEstoqueForm, [
+                                        'id' => 'observacao_estoque',
+                                        'rows' => '2',
+                                        'placeholder' => 'Ex.: saldo inicial no cadastro do produto'
+                                    ]) ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row">
@@ -457,6 +588,28 @@ if ($modoEdicao && (int)$dados['id'] > 0) {
         inputSkuInterno.dispatchEvent(new Event('input', { bubbles: true }));
         inputSkuInterno.focus();
     });
+})();
+
+(() => {
+    const radios = document.querySelectorAll('input[name="estoque_modo"]');
+    const blocoExistente = document.getElementById('bloco-estoque-existente');
+    const blocoNovo = document.getElementById('bloco-estoque-novo');
+    const blocoLocalizacaoNova = document.getElementById('bloco-localizacao-nova');
+
+    if (!radios.length || !blocoExistente || !blocoNovo || !blocoLocalizacaoNova) {
+        return;
+    }
+
+    const atualizarModo = () => {
+        const modo = document.querySelector('input[name="estoque_modo"]:checked')?.value || 'existente';
+        const ehNovo = modo === 'novo';
+        blocoExistente.style.display = ehNovo ? 'none' : '';
+        blocoNovo.style.display = ehNovo ? '' : 'none';
+        blocoLocalizacaoNova.style.display = ehNovo ? '' : 'none';
+    };
+
+    radios.forEach((radio) => radio.addEventListener('change', atualizarModo));
+    atualizarModo();
 })();
 </script>
 
