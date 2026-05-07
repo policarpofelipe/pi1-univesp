@@ -128,9 +128,6 @@ try {
                             </p>
                         </div>
 
-                        <div class="flex flex-wrap gap-2">
-                            <?= botao_link('painel.php', 'Voltar ao painel', 'cancelar') ?>
-                        </div>
                     </div>
                 </div>
             </div>
